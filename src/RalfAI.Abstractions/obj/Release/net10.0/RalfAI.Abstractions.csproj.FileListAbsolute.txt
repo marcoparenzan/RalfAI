@@ -1,0 +1,12 @@
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\bin\Release\net10.0\RalfAI.Abstractions.deps.json
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\bin\Release\net10.0\RalfAI.Abstractions.dll
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\bin\Release\net10.0\RalfAI.Abstractions.pdb
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\RalfAI.Abstractions.csproj.AssemblyReference.cache
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\RalfAI.Abstractions.GeneratedMSBuildEditorConfig.editorconfig
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\RalfAI.Abstractions.AssemblyInfoInputs.cache
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\RalfAI.Abstractions.AssemblyInfo.cs
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\RalfAI.Abstractions.csproj.CoreCompileInputs.cache
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\RalfAI.Abstractions.dll
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\refint\RalfAI.Abstractions.dll
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\RalfAI.Abstractions.pdb
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Abstractions\obj\Release\net10.0\ref\RalfAI.Abstractions.dll

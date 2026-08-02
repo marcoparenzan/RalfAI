@@ -1,0 +1,15 @@
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\bin\Release\net10.0\RalfAI.Core.deps.json
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\bin\Release\net10.0\RalfAI.Core.dll
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\bin\Release\net10.0\RalfAI.Core.pdb
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\bin\Release\net10.0\RalfAI.Abstractions.dll
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\bin\Release\net10.0\RalfAI.Abstractions.pdb
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.Core.csproj.AssemblyReference.cache
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.Core.GeneratedMSBuildEditorConfig.editorconfig
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.Core.AssemblyInfoInputs.cache
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.Core.AssemblyInfo.cs
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.Core.csproj.CoreCompileInputs.cache
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.C.DE964921.Up2Date
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.Core.dll
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\refint\RalfAI.Core.dll
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\RalfAI.Core.pdb
+D:\Dev\2026\repos\FoundryCodeExperiments\src\RalfAI.Core\obj\Release\net10.0\ref\RalfAI.Core.dll

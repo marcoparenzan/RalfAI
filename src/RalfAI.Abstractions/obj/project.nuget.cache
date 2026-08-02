@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "mktJ0AKbz5g=",
+  "success": true,
+  "projectFilePath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.ai\\10.8.3\\microsoft.extensions.ai.10.8.3.nupkg.sha512",
+    "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.ai.abstractions\\10.8.3\\microsoft.extensions.ai.abstractions.10.8.3.nupkg.sha512",
+    "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\10.0.10\\microsoft.extensions.caching.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.10\\microsoft.extensions.dependencyinjection.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.10\\microsoft.extensions.logging.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.10\\microsoft.extensions.primitives.10.0.10.nupkg.sha512",
+    "C:\\Users\\marco\\.nuget\\packages\\system.numerics.tensors\\10.0.10\\system.numerics.tensors.10.0.10.nupkg.sha512"
+  ],
+  "logs": []
+}

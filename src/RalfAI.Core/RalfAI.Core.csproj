@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Microsoft Agent Framework: provider-agnostic agent/tool-calling engine on top of
+         Microsoft.Extensions.AI.IChatClient. Anthropic connector is still prerelease. -->
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.16.0" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.16.0" />
+    <PackageReference Include="Microsoft.Agents.AI.Anthropic" Version="1.16.0-preview.260730.1" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.51.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RalfAI.Abstractions\RalfAI.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

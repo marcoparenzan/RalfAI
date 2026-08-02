@@ -1,0 +1,32 @@
+{
+    "//": "Template for an external config file used via --config <path> or the RALFAI_CONFIG_PATH",
+    "//_": "environment variable — see README.md 'Configure' section. Copy this file somewhere",
+    "//__": "outside the tool's install directory (e.g. D:\\Configurations\\RalfAI\\config.json) and fill in real values.",
+
+    "AgentContext": "markdown",
+    "AIProvider": "foundry",
+    "AzureAIFoundry": {
+        "Endpoint": "<your-foundry-or-azure-openai-endpoint>",
+        "ApiKey": "<your-api-key>",
+        "ModelId": "<your-deployment-name>",
+        "RateLimits": {
+            "RequestsPerMinute": 20,
+            "TokensPerMinute": 20000,
+            "SafetyFactor": 1.25
+        }
+    },
+    "OpenAI": {
+        "ApiKey": "<your-openai-api-key>",
+        "ModelId": "gpt-5.1"
+    },
+    "Anthropic": {
+        "ApiKey": "<your-anthropic-api-key>",
+        "ModelId": "claude-sonnet-4-5"
+    },
+    "AzureSpeech": {
+        "Region": "<your-speech-region>",
+        "ApiKey": "<your-speech-api-key>",
+        "RecognitionLanguage": "en-US",
+        "VoiceName": "en-US-JennyNeural"
+    }
+}

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets a plain console/classlib project host Kestrel + static-file middleware for the
+         preview server, without switching to the Web SDK. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RalfAI.Abstractions\RalfAI.Abstractions.csproj" />
+    <ProjectReference Include="..\RalfAI.Core\RalfAI.Core.csproj" />
+  </ItemGroup>
+
+</Project>

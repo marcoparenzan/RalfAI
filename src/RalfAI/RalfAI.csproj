@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ralf</AssemblyName>
+    <RootNamespace>RalfAI</RootNamespace>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <!-- Suppress SK experimental-API warnings; the AzureAIInference connector is stable enough for use -->
+    <NoWarn>$(NoWarn);SKEXP0070;SKEXP0001</NoWarn>
+
+    <!-- dotnet tool packaging (dotnet pack, then dotnet tool install as a global tool) -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>ralf</ToolCommandName>
+    <PackageId>RalfAI</PackageId>
+    <Version>1.0.0</Version>
+    <Description>RalfAI — an autonomous coding agent CLI for .NET, Markdown, and HTML/CSS/JS projects.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.57.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RalfAI.Abstractions\RalfAI.Abstractions.csproj" />
+    <ProjectReference Include="..\RalfAI.Core\RalfAI.Core.csproj" />
+    <ProjectReference Include="..\RalfAI.Contexts.DotNet\RalfAI.Contexts.DotNet.csproj" />
+    <ProjectReference Include="..\RalfAI.Contexts.Markdown\RalfAI.Contexts.Markdown.csproj" />
+    <ProjectReference Include="..\RalfAI.Contexts.HtmlApps\RalfAI.Contexts.HtmlApps.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- CopyToOutputDirectory alone is enough: PackAsTool packages the whole publish output
+         (which already includes this), so AppContext.BaseDirectory-based config loading finds
+         it correctly after a global install too. -->
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
