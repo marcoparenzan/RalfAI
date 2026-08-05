@@ -15,7 +15,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>ralf</ToolCommandName>
     <PackageId>RalfAI</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Description>RalfAI — an autonomous coding agent CLI for .NET, Markdown, and HTML/CSS/JS projects.</Description>
   </PropertyGroup>
 

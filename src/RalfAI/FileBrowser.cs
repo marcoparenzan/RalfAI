@@ -1,25 +1,32 @@
+using System.Diagnostics;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
 namespace RalfAI;
 
 /// <summary>
-/// A single-pane file browser: navigate the filesystem, view files, and rename/delete/create
-/// folders — used both to pick RalfAI's target folder (at startup with no CLI argument, or
-/// via F7 during a session) and as a lightweight general-purpose browser. Runs entirely inside
-/// the console via raw key reads, like <see cref="InputCollector"/>.
+/// A single-pane file browser: navigate the filesystem, view files, open them in an external
+/// editor, and rename/delete/create folders — used both to pick RalfAI's target folder (at
+/// startup with no CLI argument, or via F7 during a session) and as a lightweight
+/// general-purpose browser. Runs entirely inside the console via raw key reads, like
+/// <see cref="InputCollector"/>.
 /// </summary>
 public sealed class FileBrowser
 {
+    /// <summary>Default external editor command when nothing is configured (see <see cref="Pick"/>).</summary>
+    public const string DefaultEditor = "code.exe";
+
+    private readonly string _editorCommand;
     private string _path;
     private List<FileSystemEntry> _entries = [];
     private int _selected;
     private int _scrollOffset;
     private string? _message;
 
-    private FileBrowser(string startDirectory)
+    private FileBrowser(string startDirectory, string editorCommand)
     {
         _path = Directory.Exists(startDirectory) ? Path.GetFullPath(startDirectory) : Directory.GetCurrentDirectory();
+        _editorCommand = editorCommand;
         Reload();
     }
 
@@ -28,7 +35,11 @@ public sealed class FileBrowser
     /// they cancelled (F10/Esc). Falls back to a plain text prompt when stdin is redirected,
     /// since key-by-key reading requires a real console.
     /// </summary>
-    public static string? Pick(string startDirectory)
+    /// <param name="editorCommand">
+    /// Command used by F4 to open the selected file externally — resolved by the caller from
+    /// the <c>Editor</c> config key (falls back to <see cref="DefaultEditor"/>, VS Code).
+    /// </param>
+    public static string? Pick(string startDirectory, string editorCommand = DefaultEditor)
     {
         if (Console.IsInputRedirected)
         {
@@ -45,7 +56,7 @@ public sealed class FileBrowser
             return string.IsNullOrWhiteSpace(path) ? null : path;
         }
 
-        return new FileBrowser(startDirectory).Run();
+        return new FileBrowser(startDirectory, editorCommand).Run();
     }
 
     // ── Main loop ────────────────────────────────────────────────────────────
@@ -78,10 +89,11 @@ public sealed class FileBrowser
                         case ConsoleKey.Enter:     EnterSelected(); break;
                         case ConsoleKey.Backspace: GoUp(); break;
 
-                        case ConsoleKey.F1: action = Action.Help;   innerDone = true; break;
-                        case ConsoleKey.F2: action = Action.Rename; innerDone = true; break;
-                        case ConsoleKey.F3: action = Action.View;   innerDone = true; break;
-                        case ConsoleKey.F7: action = Action.MkDir;  innerDone = true; break;
+                        case ConsoleKey.F1: action = Action.Help;         innerDone = true; break;
+                        case ConsoleKey.F2: action = Action.Rename;       innerDone = true; break;
+                        case ConsoleKey.F3: action = Action.View;         innerDone = true; break;
+                        case ConsoleKey.F4: action = Action.OpenExternal; innerDone = true; break;
+                        case ConsoleKey.F7: action = Action.MkDir;        innerDone = true; break;
 
                         case ConsoleKey.F8:
                         case ConsoleKey.Delete:
@@ -107,17 +119,18 @@ public sealed class FileBrowser
 
             switch (action)
             {
-                case Action.Quit:   return picked;
-                case Action.Help:   ShowHelp(); break;
-                case Action.Rename: RenameSelected(); break;
-                case Action.View:   ViewSelected(); break;
-                case Action.MkDir:  MakeDirectory(); break;
-                case Action.Delete: DeleteSelected(); break;
+                case Action.Quit:         return picked;
+                case Action.Help:         ShowHelp(); break;
+                case Action.Rename:       RenameSelected(); break;
+                case Action.View:         ViewSelected(); break;
+                case Action.OpenExternal: OpenExternal(); break;
+                case Action.MkDir:        MakeDirectory(); break;
+                case Action.Delete:       DeleteSelected(); break;
             }
         }
     }
 
-    private enum Action { None, Quit, Help, Rename, View, MkDir, Delete }
+    private enum Action { None, Quit, Help, Rename, View, OpenExternal, MkDir, Delete }
 
     // ── Navigation ───────────────────────────────────────────────────────────
 
@@ -313,6 +326,35 @@ public sealed class FileBrowser
         Console.ReadKey(intercept: true);
     }
 
+    /// <summary>
+    /// Opens the selected file in the configured external editor (<see cref="_editorCommand"/>,
+    /// resolved by the caller from the <c>Editor</c> config key — <see cref="DefaultEditor"/>,
+    /// VS Code, if unset). Fire-and-forget: doesn't wait for the editor to close.
+    /// </summary>
+    private void OpenExternal()
+    {
+        var entry = SelectedEntry();
+        if (entry is null || entry.Value.IsDirectory)
+        {
+            _message = "[yellow]Select a file to open.[/]";
+            return;
+        }
+
+        var path = Path.Combine(_path, entry.Value.Name);
+        try
+        {
+            var psi = new ProcessStartInfo(_editorCommand) { UseShellExecute = true };
+            psi.ArgumentList.Add(path);
+            Process.Start(psi);
+            _message = $"[green]Opened {Markup.Escape(entry.Value.Name)} in {Markup.Escape(_editorCommand)}.[/]";
+        }
+        catch (Exception ex)
+        {
+            _message = $"[red]Could not open '{Markup.Escape(_editorCommand)}': {Markup.Escape(ex.Message)}. " +
+                        "Set \"Editor\" in appsettings.json to the right command.[/]";
+        }
+    }
+
     private static void ShowHelp()
     {
         var table = new Table()
@@ -327,6 +369,7 @@ public sealed class FileBrowser
         table.AddRow("[cyan]Backspace[/]",   "Go up one level");
         table.AddRow("[green]F9[/]",         "Use the current folder as RalfAI target");
         table.AddRow("[cyan]F3[/]",          "View file (read-only preview)");
+        table.AddRow("[cyan]F4[/]",          "Open file in external editor (Editor config, default VS Code)");
         table.AddRow("[cyan]F2[/]",          "Rename");
         table.AddRow("[cyan]F7[/]",          "Create new folder");
         table.AddRow("[red]F8 / Del[/]",     "Delete (asks for confirmation)");
@@ -351,7 +394,8 @@ public sealed class FileBrowser
 
         var hint = _message
             ?? "[dim]↑↓ move · PgUp/PgDn page · Enter open · ⌫ up · F9 use folder · " +
-               "F2 rename · F7 mkdir · F8/Del delete · F3 view · F1 help · F10/Esc cancel[/]";
+               "F2 rename · F7 mkdir · F8/Del delete · F3 view · F4 open external · " +
+               "F1 help · F10/Esc cancel[/]";
 
         return new Rows(panel, new Markup(hint));
     }

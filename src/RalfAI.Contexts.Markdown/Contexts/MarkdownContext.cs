@@ -44,21 +44,41 @@ public sealed class MarkdownContext : IAgentContext
         - FileSystem.DeleteFile  — delete a file
         - Web.FetchUrl           — download the content of an HTTP/HTTPS URL
 
-        A few engine-level tools (AI.Ask, and Speech.Speak/Speech.Listen when voice is
-        configured) are also available regardless of context — see the system message
-        appended after this prompt for details.
+        A few engine-level tools (AI.Ask, Image.* for JPG/PNG manipulation and AI generation, and
+        Speech.Speak/Speech.Listen when voice is configured) are also available regardless of
+        context — see the system message appended after this prompt for details.
+
+        ## File Naming
+        All files live at the **target folder root** — never nest documentation under a `docs/`
+        subfolder. When the objective is documenting a software project, prefer this fixed set
+        of names over ad-hoc ones:
+        - `README.md`       — what it is, how to install/run it
+        - `USAGE.md`         — day-to-day usage: commands, options, examples
+        - `ARCHITECTURE.md` — how it's built internally: layout, key design decisions
+        - `ROADMAP.md`       — what's done, planned, and explicitly out of scope
+        Only create the ones that fit the objective — this doesn't apply to doc sets that
+        aren't about a software project (notes, specs, etc.), where file names should follow
+        the user's own convention or a sensible topic-based one.
+
+        Regardless of what kind of Markdown content this is, also maintain `PROMPTS.md` at the
+        root: a running log of every objective you were given, in order (see Workflow below) —
+        it's what makes the doc set's history traceable to the requests that drove it.
 
         ## Workflow
         When given an objective:
-        1. **Explore** — check existing files with ListFiles to avoid overwriting work or
+        1. **Log** — append the objective to `PROMPTS.md` as a new numbered entry (create the
+           file on the first objective): the request as given — verbatim, or lightly trimmed if
+           long/noisy — plus a one-line summary of what you're about to do. Do this before
+           anything else, so the log reflects intent even if the rest of the turn fails.
+        2. **Explore** — check existing files with ListFiles to avoid overwriting work or
            duplicating content. If the user provides a URL, call Web.FetchUrl to read the
            linked source material before writing.
-        2. **Plan** — briefly state what files you will create or update (2–3 sentences).
-        3. **Write** — produce clear, well-structured Markdown: sensible headings, short
+        3. **Plan** — briefly state what files you will create or update (2–3 sentences).
+        4. **Write** — produce clear, well-structured Markdown: sensible headings, short
            paragraphs, code fences for code, tables where they aid clarity.
-        4. **Review** — re-read what you wrote with ReadFile and fix inconsistencies, broken
+        5. **Review** — re-read what you wrote with ReadFile and fix inconsistencies, broken
            links, or missing sections before reporting.
-        5. **Report** — summarise which files were created or changed and why.
+        6. **Report** — summarise which files were created or changed and why.
 
         ## Rules
         - Keep file names lowercase-with-hyphens unless the user's existing convention differs.

@@ -862,6 +862,22 @@
           "buildTransitive/netstandard2.0/OpenAI.targets": {}
         }
       },
+      "SixLabors.ImageSharp/3.1.11": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "build/_._": {}
+        }
+      },
       "Spectre.Console/0.57.1": {
         "type": "package",
         "dependencies": {
@@ -1015,7 +1031,8 @@
           "Microsoft.Extensions.Configuration": "10.0.0",
           "Microsoft.Extensions.Configuration.EnvironmentVariables": "10.0.0",
           "Microsoft.Extensions.Configuration.Json": "10.0.0",
-          "RalfAI.Abstractions": "1.0.0"
+          "RalfAI.Abstractions": "1.0.0",
+          "SixLabors.ImageSharp": "3.1.11"
         },
         "compile": {
           "bin/placeholder/RalfAI.Core.dll": {}
@@ -2150,6 +2167,22 @@
         "openai.nuspec"
       ]
     },
+    "SixLabors.ImageSharp/3.1.11": {
+      "sha512": "JfPLyigLthuE50yi6tMt7Amrenr/fA31t2CvJyhy/kQmfulIBAqo5T/YFUSRHtuYPXRSaUHygFeh6Qd933EoSw==",
+      "type": "package",
+      "path": "sixlabors.imagesharp/3.1.11",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "build/SixLabors.ImageSharp.props",
+        "lib/net6.0/SixLabors.ImageSharp.dll",
+        "lib/net6.0/SixLabors.ImageSharp.xml",
+        "sixlabors.imagesharp.128.png",
+        "sixlabors.imagesharp.3.1.11.nupkg.sha512",
+        "sixlabors.imagesharp.nuspec"
+      ]
+    },
     "Spectre.Console/0.57.1": {
       "sha512": "h/B0CJLR5Ba8yq+iVjjZR9JXMS+8a1syHmHhyZ6w5m8rHDWLGOlaKAhzJanHJL62rZxynLeVOx+43MKvskJ1lA==",
       "type": "package",
@@ -2319,7 +2352,7 @@
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "restore": {
       "projectUniqueName": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI\\RalfAI.csproj",
       "projectName": "RalfAI",

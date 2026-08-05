@@ -102,6 +102,19 @@ read-aloud (`F3`):
 }
 ```
 
+**AI image generation (optional)** — add `ImageModelId` under the active provider's section
+(`AzureAIFoundry` or `OpenAI`) to enable the `Image.GenerateAI` tool (logos, icons,
+illustrations from a text prompt):
+
+```json
+"AzureAIFoundry": { "Endpoint": "...", "ApiKey": "...", "ModelId": "...", "ImageModelId": "dall-e-3" },
+"OpenAI":         { "ApiKey": "...", "ModelId": "gpt-5.1", "ImageModelId": "gpt-image-1" }
+```
+
+Leave `ImageModelId` empty/absent to leave the tool disabled. Anthropic has no
+image-generation API, so `Image.GenerateAI` is unavailable when `AIProvider` is `anthropic`
+regardless of config.
+
 ## Use
 
 ```console
@@ -115,7 +128,11 @@ ralf --list-contexts          # show available contexts and exit
 
 If no folder is given and none is remembered yet, a full-screen file browser opens
 (`↑↓` navigate, `Enter` open folder, `⌫` up, `F9` use folder, `F2` rename, `F7` new folder,
-`F8`/`Del` delete, `F3` view file, `F10`/`Esc` cancel).
+`F8`/`Del` delete, `F3` view file, `F4` open file in an external editor, `F10`/`Esc` cancel).
+The same browser opens on `F7` during a session (see the key table below) to switch folders.
+
+`F4` runs the command in the `Editor` config key (`RALFAI_Editor` env override), defaulting to
+`code.exe` (VS Code) if unset — set it to whatever editor/IDE you use.
 
 Once running, type a message (paste freely, multi-line) and:
 
@@ -133,6 +150,7 @@ Once running, type a message (paste freely, multi-line) and:
 | `F8` | toggle debug messages (tool calls, rate-limit notices) |
 | `F10` / `Ctrl+Q` | quit |
 | `Ctrl+C` | interrupt the current turn (press twice to force-quit) |
+| `Esc` / `Ctrl+X` | while the agent is working: same interrupt as `Ctrl+C` |
 
 The whole session runs in the terminal's alternate screen buffer — your normal scrollback
 is untouched and restored on exit.
@@ -145,8 +163,16 @@ is untouched and restored on exit.
 | `markdown` | A set of Markdown documentation files |
 | `html` | Static HTML/CSS/JS apps — Tailwind via CDN, vanilla JS, one ES class per file, previewed over local HTTP |
 
-`dotnet` and `html` both use a `src/` (code) · `docs/` (documentation) · `ops/`
-(config/deployment) top-level layout inside the target folder.
+`dotnet` and `html` both use a `src/` (code) · `ops/` (config/deployment) top-level layout
+inside the target folder. Documentation is markdown files at the target folder **root** —
+never a `docs/` subfolder — using the same fixed set of names as this repo:
+`README.md`, `USAGE.md`, `ARCHITECTURE.md`, `ROADMAP.md` (only the ones that fit the size of
+what's being built), plus `PROMPTS.md` — a running, numbered log of every objective the agent
+was given for that project, appended to before any other work on a turn. Unlike the other
+four, `PROMPTS.md` isn't optional past the first objective: it's what makes a project's
+history traceable to the requests that drove it. The `markdown` context follows the same
+convention when the objective is documenting a software project (`PROMPTS.md` always, the
+other four when applicable).
 
 The `html` context also registers a `StaticServer` tool: the agent starts a local Kestrel
 server rooted at `src/` and reports the preview URL, since browsers block

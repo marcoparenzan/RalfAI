@@ -19,7 +19,7 @@ namespace RalfAI;
 /// Interactive key bindings (live prompt only — see F1 for the full reference):
 ///   Ctrl+Enter        submit the current buffer
 ///   Enter              insert a newline (multi-line compose / paste)
-///   Esc                clear the buffer and start over
+///   Esc                clear the buffer and start over (while composing)
 ///   F1                 show command reference (full-screen overlay)
 ///   F2                 dictate a line via the microphone (requires AzureSpeech configuration)
 ///   F3                 read the agent's last response aloud (requires AzureSpeech configuration)
@@ -28,6 +28,12 @@ namespace RalfAI;
 ///   F7                 switch to a different target folder
 ///   F8                 toggle debug messages (tool calls, rate-limit notices)
 ///   F10 / Ctrl+Q       quit RalfAI
+///   Ctrl+C             interrupt the current turn while the agent is working (twice = force quit) — handled in RalfAIApp, not here
+///   Esc / Ctrl+X       same interrupt as Ctrl+C, while the agent is working — handled in RalfAIApp, not here
+///
+/// Piped/scripted input (redirected stdin, see <see cref="CollectPlain"/>) has no function
+/// keys — it uses typed "/"-commands instead, with their own reference shown by "/help"
+/// (<see cref="ShowHelpOverlayPlain"/>), distinct from the interactive one above.
 /// </summary>
 public sealed class InputCollector(SpeechService? speech = null)
 {
@@ -181,7 +187,7 @@ public sealed class InputCollector(SpeechService? speech = null)
                 ctx.Refresh();
             });
 
-            if (showHelp) ShowHelpOverlay();
+            if (showHelp) ShowHelpOverlayInteractive();
         }
 
         try { Console.CursorVisible = false; } catch (IOException) { }
@@ -284,7 +290,7 @@ public sealed class InputCollector(SpeechService? speech = null)
                     return string.Join("\n", _lines).Trim();
 
                 case "/help":
-                    ShowHelpOverlay();
+                    ShowHelpOverlayPlain();
                     continue;
 
                 case "/speak":
@@ -331,13 +337,10 @@ public sealed class InputCollector(SpeechService? speech = null)
         }
     }
 
-    // ── F1 / /help — full-screen overlay, not part of the persistent prompt ─
+    // ── F1 — full-screen overlay for the interactive (live) prompt ──────────
 
-    private static void ShowHelpOverlay()
+    private static void ShowHelpOverlayInteractive()
     {
-        AnsiConsole.Clear();
-        AnsiConsole.WriteLine();
-
         var table = new Table()
             .RoundedBorder()
             .BorderColor(Color.Grey)
@@ -345,7 +348,7 @@ public sealed class InputCollector(SpeechService? speech = null)
             .AddColumn("[bold]What it does[/]");
 
         table.AddRow("[green]Ctrl+Enter[/]", "Send the current buffer to the agent");
-        table.AddRow("[yellow]Esc[/]",       "Clear the buffer and start fresh");
+        table.AddRow("[yellow]Esc[/]",       "While composing: clear the buffer and start fresh");
         table.AddRow("[cyan]F2[/]",          "Dictate a line via microphone (needs AzureSpeech config)");
         table.AddRow("[cyan]F3[/]",          "Read the agent's last response aloud (needs AzureSpeech config)");
         table.AddRow("[cyan]F5[/]",          "Clear the screen");
@@ -354,12 +357,46 @@ public sealed class InputCollector(SpeechService? speech = null)
         table.AddRow("[cyan]F8[/]",          "Toggle debug messages (tool calls, rate-limit notices)");
         table.AddRow("[grey]F1[/]",          "Show this table");
         table.AddRow("[red]F10 / Ctrl+Q[/]", "Quit RalfAI");
+        table.AddRow("[yellow]Ctrl+C[/]",    "While the agent is working: interrupt the current turn (twice = force quit)");
+        table.AddRow("[yellow]Esc / Ctrl+X[/]", "While the agent is working: same interrupt as Ctrl+C");
 
+        AnsiConsole.Clear();
+        AnsiConsole.WriteLine();
         AnsiConsole.Write(Align.Center(table));
         AnsiConsole.WriteLine();
         AnsiConsole.Write(Align.Center(new Markup("[dim]Premi un tasto per tornare…[/]")));
 
+        // Safe here: this overlay only runs on the live (non-redirected) path.
         Console.ReadKey(intercept: true);
         AnsiConsole.Clear();
+    }
+
+    // ── /help — printed reference for piped/scripted input (no function keys there) ──
+
+    private static void ShowHelpOverlayPlain()
+    {
+        var table = new Table()
+            .RoundedBorder()
+            .BorderColor(Color.Grey)
+            .AddColumn(new TableColumn("[bold]Command[/]").Centered())
+            .AddColumn("[bold]What it does[/]");
+
+        table.AddRow("[green]/exe[/]",            "Send the accumulated buffer to the agent");
+        table.AddRow("[yellow]/cancel[/]",        "Clear the buffer without sending");
+        table.AddRow("[cyan]/voice[/]",           "Dictate a line via microphone, appended to the buffer (needs AzureSpeech config)");
+        table.AddRow("[cyan]/speak[/]",           "Read the agent's last response aloud (needs AzureSpeech config)");
+        table.AddRow("[cyan]/clear[/]",           "Clear the screen");
+        table.AddRow("[cyan]/switch-context[/]",  "Switch to a different generation context");
+        table.AddRow("[cyan]/switch-folder[/]",   "Switch to a different target folder (file browser)");
+        table.AddRow("[cyan]/toggle-debug[/]",    "Toggle debug messages (tool calls, rate-limit notices)");
+        table.AddRow("[grey]/help[/]",            "Show this table");
+        table.AddRow("[red]exit / /exit[/]",      "Quit RalfAI (EOF/Ctrl+Z also works)");
+
+        // No Console.ReadKey here (unlike the interactive overlay): stdin is redirected on
+        // this path, so reading a key would throw — just print and let the next ReadLine()
+        // prompt continue the loop.
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine();
     }
 }

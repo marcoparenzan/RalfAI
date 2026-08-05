@@ -45,7 +45,7 @@ ralf --list-contexts
 
 Altri flag: `--debug` (mostra le tool-call in tempo reale fin dall'avvio) e
 `--config <path>` (usa un file di configurazione alternativo — vedi
-[README.md](README.md#dove-vive-il-file-di-configurazione)).
+[README.md](README.md#where-the-config-file-lives)).
 
 ## Sessione interattiva
 
@@ -86,11 +86,18 @@ di gestione.
 | `Backspace` | sali di un livello |
 | `F9` | usa la cartella corrente come target RalfAI |
 | `F3` | visualizza il file selezionato (sola lettura, max 200 KB, no binari) |
+| `F4` | apre il file selezionato in un editor esterno (vedi sotto) |
 | `F2` | rinomina l'elemento selezionato |
 | `F7` | crea una nuova cartella |
 | `F8` / `Del` | elimina (chiede conferma) |
 | `F1` | mostra questa tabella |
 | `F10` / `Esc` | annulla e torna indietro |
+
+`F4` lancia il comando configurato sotto la chiave `Editor` in `appsettings.json` (override
+via `RALFAI_Editor`), passandogli il percorso completo del file selezionato come argomento —
+default **`code.exe`** (VS Code) se non configurato. Non aspetta che l'editor si chiuda: apre
+e torna subito al file browser. Se il comando non è nel `PATH` o non esiste, viene mostrato un
+messaggio d'errore con l'indicazione di correggere `Editor`.
 
 ### Input da pipe/script
 
@@ -118,19 +125,36 @@ Ogni context (`dotnet`, `markdown`, `html`) ha il proprio set di tool e il propr
 sistema — vedi la tabella in [README.md](README.md#contexts). Il flusso del context `dotnet`,
 preso come esempio rappresentativo:
 
-1. **Esplora** la cartella con `FileSystem.ListFiles` prima di scrivere, per non sovrascrivere
+1. **Logga** la richiesta in `PROMPTS.md` (voce numerata, creato alla prima richiesta) prima di
+   fare qualunque altra cosa — vedi [Log dei prompt](#log-dei-prompt-promptsmd) sotto.
+2. **Esplora** la cartella con `FileSystem.ListFiles` prima di scrivere, per non sovrascrivere
    lavoro esistente. Se nel messaggio c'è una URL, la scarica con `Web.FetchUrl` per leggere
    specifiche/documentazione.
-2. **Pianifica** in 2-3 frasi cosa costruirà.
-3. **Scaffolda** con `dotnet new` (`DotNet.RunDotnetNew`, `--framework net10.0`), dentro `src/`.
-4. **Implementa** scrivendo i file sorgente con `FileSystem.WriteFile`.
-5. **Compila** con `DotNet.RunBuild` puntato su `src/`; in caso di errori, corregge e ricompila
+3. **Pianifica** in 2-3 frasi cosa costruirà.
+4. **Scaffolda** con `dotnet new` (`DotNet.RunDotnetNew`, `--framework net10.0`), dentro `src/`.
+5. **Implementa** scrivendo i file sorgente con `FileSystem.WriteFile`.
+6. **Compila** con `DotNet.RunBuild` puntato su `src/`; in caso di errori, corregge e ricompila
    (fino a 10 iterazioni).
-6. **Testa** con `DotNet.RunTest`; corregge finché i test non passano (fino a 10 iterazioni).
-7. **Riporta** un riepilogo di cosa ha costruito e come eseguirlo.
+7. **Testa** con `DotNet.RunTest`; corregge finché i test non passano (fino a 10 iterazioni).
+8. **Riporta** un riepilogo di cosa ha costruito e come eseguirlo.
 
-I progetti `dotnet` e `html` usano entrambi un layout `src/` (codice) · `docs/` (documentazione) ·
-`ops/` (config/deployment) dentro la cartella target.
+I progetti `dotnet` e `html` usano entrambi un layout `src/` (codice) · `ops/` (config/deployment)
+dentro la cartella target. La documentazione (`README.md`, `USAGE.md`, `ARCHITECTURE.md`,
+`ROADMAP.md`) vive sempre alla **radice** della cartella target, mai in una sottocartella `docs/`
+— stessa convenzione di questo repo. Il context `markdown` segue la stessa convenzione quando
+l'obiettivo è documentare un progetto software. `PROMPTS.md` è l'eccezione: viene sempre
+mantenuto, in ogni context, a partire dalla prima richiesta (vedi sotto).
+
+### Log dei prompt (`PROMPTS.md`)
+
+Ogni context, in ogni progetto generato, mantiene `PROMPTS.md` alla radice della cartella
+target: un log numerato e cronologico di ogni richiesta ricevuta dall'agente per quel progetto,
+con una riga di riepilogo di cosa è stato fatto in risposta. Viene aggiornato come primo passo di
+ogni turno, prima di qualunque altra azione — così riflette l'intento anche se il resto del turno
+fallisce. A differenza degli altri quattro file (`README.md`/`USAGE.md`/`ARCHITECTURE.md`/
+`ROADMAP.md`, creati solo se ha senso per le dimensioni del progetto), `PROMPTS.md` non è
+opzionale: è quello che rende la storia di un progetto tracciabile fino alle richieste che
+l'hanno guidata.
 
 Ogni chiamata a strumento è visibile in tempo reale quando `F8`/`--debug` è attivo:
 
@@ -155,6 +179,29 @@ per quell'API, con test che usano un HttpMessageHandler finto.
 Aggiungi un endpoint minimal API GET /health che ritorna 200 OK, senza rompere
 la build esistente.
 ```
+
+## Immagini (JPG/PNG)
+
+L'agente ha accesso a un set di tool `Image.*` in ogni context, senza bisogno di configurazione:
+
+- **`Image.GetInfo`** — dimensioni, formato, dimensione file.
+- **`Image.Resize`**, **`Image.Crop`**, **`Image.Rotate`**, **`Image.Flip`**,
+  **`Image.Grayscale`**, **`Image.ConvertFormat`** — manipolazione di file `.jpg`/`.jpeg`/`.png`
+  già presenti nella cartella target (es. ridimensionare uno screenshot, convertire un asset da
+  PNG a JPG).
+
+Non c'è bisogno di chiederli esplicitamente: l'agente li usa quando la richiesta lo richiede
+(es. "ridimensiona logo.png a 256x256").
+
+**`Image.GenerateAI`** (opzionale) genera una nuova immagine — logo, icona, illustrazione — da
+una descrizione testuale, tramite un modello di generazione immagini (DALL-E/gpt-image) su Azure
+AI Foundry o OpenAI. Richiede `ImageModelId` configurato sotto la sezione del provider attivo
+(vedi [README.md](README.md#configure)); se assente, il tool semplicemente non è registrato —
+nessun impatto sul resto dell'app. Non disponibile con `AIProvider` `anthropic` (nessuna API di
+generazione immagini). La generazione può richiedere qualche secondo: mentre è in corso, la
+descrizione del tool resta visibile nella riga di stato (spinner), e con `F8`/`--debug` attivo
+compaiono anche le righe `⏺`/`⎿` con il prompt e l'esito — lo stesso meccanismo di visibilità
+delle tool-call di [Cosa fa l'agente](#cosa-fa-lagente-a-ogni-richiesta-context-dotnet).
 
 ## Log della sessione
 
@@ -192,7 +239,7 @@ non è impattato.
 ## Configurazione rate limiting
 
 In `appsettings.json`, sotto `AzureAIFoundry.RateLimits` (usata per il pacing indipendentemente
-dal provider AI attivo — vedi [README.md](README.md#scegliere-un-provider) per la scelta del
+dal provider AI attivo — vedi [README.md](README.md#choosing-a-provider) per la scelta del
 provider):
 
 | Chiave | Significato | Default |
@@ -222,3 +269,6 @@ presente, altrimenti attende 60s.
 - **`Nessun parlato riconosciuto.`** — il microfono non ha catturato audio comprensibile entro il
   timeout di silenzio dell'SDK; riprova parlando più vicino al microfono o subito dopo aver
   attivato la dettatura.
+- **`Could not open '<comando>'...`** su `F4` nel file browser — il comando configurato sotto
+  `Editor` (default `code.exe`) non è nel `PATH` o non esiste; correggi `Editor` in
+  `appsettings.json` (o `RALFAI_Editor`) con il comando giusto per il tuo editor.

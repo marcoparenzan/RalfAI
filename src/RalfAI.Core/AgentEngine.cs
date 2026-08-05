@@ -88,12 +88,21 @@ public sealed class AgentEngine
         Action<AgentNotice>? noticeHandler = null;
         var rateLimiter = new RateLimiter(rpm, tpm, safety, n => noticeHandler?.Invoke(n));
         var speech = SpeechService.FromConfig(config);
+        var imageGen = RalfAI.ImageGeneration.ImageGenerationService.FromConfig(config);
 
         var (chatClient, modelId) = BuildChatClient(config, contextKey);
 
+        var image = new ImagePlugin(targetFolder);
         var tools = new List<AITool>(context.GetTools(targetFolder))
         {
-            AIFunctionFactory.Create(new AIPlugin(chatClient).Ask, name: "AI_Ask")
+            AIFunctionFactory.Create(new AIPlugin(chatClient).Ask, name: "AI_Ask"),
+            AIFunctionFactory.Create(image.GetInfo,       name: "Image_GetInfo"),
+            AIFunctionFactory.Create(image.Resize,        name: "Image_Resize"),
+            AIFunctionFactory.Create(image.Crop,          name: "Image_Crop"),
+            AIFunctionFactory.Create(image.Rotate,        name: "Image_Rotate"),
+            AIFunctionFactory.Create(image.Flip,          name: "Image_Flip"),
+            AIFunctionFactory.Create(image.Grayscale,     name: "Image_Grayscale"),
+            AIFunctionFactory.Create(image.ConvertFormat, name: "Image_ConvertFormat"),
         };
         if (speech is not null)
         {
@@ -101,8 +110,14 @@ public sealed class AgentEngine
             tools.Add(AIFunctionFactory.Create(speechPlugin.Speak, name: "Speech_Speak"));
             tools.Add(AIFunctionFactory.Create(speechPlugin.Listen, name: "Speech_Listen"));
         }
+        if (imageGen is not null)
+        {
+            var imageGenPlugin = new ImageGenerationPlugin(imageGen, targetFolder);
+            tools.Add(AIFunctionFactory.Create(imageGenPlugin.GenerateAI, name: "Image_GenerateAI"));
+        }
 
-        var systemPrompt = context.BuildSystemPrompt(targetFolder) + BuildUniversalToolsPrompt(speech is not null);
+        var systemPrompt = context.BuildSystemPrompt(targetFolder)
+            + BuildUniversalToolsPrompt(speech is not null, imageGen is not null);
 
         // ToolCallStarted/ToolCallCompleted/Notice are instance events, but the middleware and
         // rate limiter callback have to be wired before the instance exists — buffer through a
@@ -301,7 +316,7 @@ public sealed class AgentEngine
     /// opposed to the context's own <see cref="IAgentContext.GetTools"/>), so the model knows
     /// they exist regardless of which context is active.
     /// </summary>
-    private static string BuildUniversalToolsPrompt(bool hasSpeech)
+    private static string BuildUniversalToolsPrompt(bool hasSpeech, bool hasImageGen)
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine();
@@ -309,6 +324,18 @@ public sealed class AgentEngine
         sb.AppendLine("## Engine Tools (always available, independent of context)");
         sb.AppendLine("- AI.Ask — delegate an isolated sub-question or sub-task to the same model " +
                        "(e.g. summarize a long file) without adding it to the main conversation history.");
+        sb.AppendLine("- Image.GetInfo — read a JPG/PNG image's dimensions, format and file size.");
+        sb.AppendLine("- Image.Resize — resize a JPG/PNG image (optionally keeping aspect ratio).");
+        sb.AppendLine("- Image.Crop — crop a rectangular region out of a JPG/PNG image.");
+        sb.AppendLine("- Image.Rotate — rotate a JPG/PNG image by an arbitrary angle.");
+        sb.AppendLine("- Image.Flip — mirror a JPG/PNG image horizontally or vertically.");
+        sb.AppendLine("- Image.Grayscale — convert a JPG/PNG image to grayscale.");
+        sb.AppendLine("- Image.ConvertFormat — convert a JPG/PNG image between .jpg and .png.");
+        if (hasImageGen)
+        {
+            sb.AppendLine("- Image.GenerateAI — generate a new image (e.g. a logo or icon) from a " +
+                           "text prompt and save it as JPG/PNG.");
+        }
         if (hasSpeech)
         {
             sb.AppendLine("- Speech.Speak — speak text aloud through the configured voice.");

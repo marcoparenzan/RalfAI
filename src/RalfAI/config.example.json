@@ -2,13 +2,17 @@
     "//": "Template for an external config file used via --config <path> or the RALFAI_CONFIG_PATH",
     "//_": "environment variable — see README.md 'Configure' section. Copy this file somewhere",
     "//__": "outside the tool's install directory (e.g. D:\\Configurations\\RalfAI\\config.json) and fill in real values.",
+    "//___": "ImageModelId (under AzureAIFoundry/OpenAI) is optional — leave empty to disable Image.GenerateAI.",
+    "//____": "Editor is the command F4 uses to open a file from the file browser (default: code.exe).",
 
     "AgentContext": "markdown",
+    "Editor": "code.exe",
     "AIProvider": "foundry",
     "AzureAIFoundry": {
         "Endpoint": "<your-foundry-or-azure-openai-endpoint>",
         "ApiKey": "<your-api-key>",
         "ModelId": "<your-deployment-name>",
+        "ImageModelId": "",
         "RateLimits": {
             "RequestsPerMinute": 20,
             "TokensPerMinute": 20000,
@@ -17,7 +21,8 @@
     },
     "OpenAI": {
         "ApiKey": "<your-openai-api-key>",
-        "ModelId": "gpt-5.1"
+        "ModelId": "gpt-5.1",
+        "ImageModelId": ""
     },
     "Anthropic": {
         "ApiKey": "<your-anthropic-api-key>",

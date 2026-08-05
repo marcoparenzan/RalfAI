@@ -50,17 +50,28 @@ public sealed class HtmlAppContext : IAgentContext
         - StaticServer.Start     — serve src/ over local HTTP and return the preview URL
         - StaticServer.Stop      — stop the preview server
 
-        A few engine-level tools (AI.Ask, and Speech.Speak/Speech.Listen when voice is
-        configured) are also available regardless of context — see the system message
-        appended after this prompt for details.
+        A few engine-level tools (AI.Ask, Image.* for JPG/PNG manipulation and AI generation, and
+        Speech.Speak/Speech.Listen when voice is configured) are also available regardless of
+        context — see the system message appended after this prompt for details.
 
         ## Project Structure
         Every project uses this top-level layout inside the target folder:
         - `src/`  — the app itself: index.html, js/, assets/
-        - `docs/` — documentation: README, usage notes
         - `ops/`  — configuration and operational files: deployment scripts, static-hosting configs
         Write and read all app files under `src/` (e.g. `src/index.html`, `src/js/main.js`,
         `src/assets/`) — never the target folder root.
+
+        Documentation is markdown files at the **target folder root** — never a `docs/`
+        subfolder. Use this fixed set of names, one file per concern:
+        - `README.md`       — what the app is, how to preview it
+        - `USAGE.md`         — day-to-day usage: pages, interactions, examples
+        - `ARCHITECTURE.md` — how it's built internally: layout, key design decisions
+        - `ROADMAP.md`       — what's done, planned, and explicitly out of scope
+        - `PROMPTS.md`       — running log of every objective you were given, in order (see below)
+        Only create the ones that make sense for the size of what you're building — a small
+        app may only need `README.md`. `PROMPTS.md` is the exception: keep it up to date from
+        the very first objective, since it's what makes the app's history traceable to the
+        requests that drove it.
 
         ## Stack Conventions
         - Styling: Tailwind CSS via the Play CDN — add
@@ -75,17 +86,21 @@ public sealed class HtmlAppContext : IAgentContext
 
         ## Development Workflow
         When given an objective:
-        1. **Explore** — check existing files with ListFiles to avoid overwriting work.
+        1. **Log** — append the objective to `PROMPTS.md` as a new numbered entry (create the
+           file on the first objective): the request as given — verbatim, or lightly trimmed if
+           long/noisy — plus a one-line summary of what you're about to do. Do this before
+           anything else, so the log reflects intent even if the rest of the turn fails.
+        2. **Explore** — check existing files with ListFiles to avoid overwriting work.
            If the user provides a URL, call Web.FetchUrl to read the linked specification
            or documentation before planning.
-        2. **Plan** — briefly state what you will build (2–3 sentences): the page(s), the
+        3. **Plan** — briefly state what you will build (2–3 sentences): the page(s), the
            classes, and how they interact.
-        3. **Implement** — write src/index.html, then each class file under src/js/, then
+        4. **Implement** — write src/index.html, then each class file under src/js/, then
            src/js/main.js wiring them together. Keep classes small and focused.
-        4. **Review** — re-read what you wrote with ReadFile and check for obvious mistakes
+        5. **Review** — re-read what you wrote with ReadFile and check for obvious mistakes
            (unclosed tags, mismatched imports/exports, missing script references).
-        5. **Preview** — call StaticServer.Start and report the URL it returns.
-        6. **Report** — summarise what was built and give the preview URL from step 5.
+        6. **Preview** — call StaticServer.Start and report the URL it returns.
+        7. **Report** — summarise what was built and give the preview URL from step 6.
 
         ## Rules
         - Never introduce a build step (no npm, no bundler, no transpiler) — everything runs

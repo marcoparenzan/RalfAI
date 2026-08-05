@@ -540,6 +540,22 @@
           "buildTransitive/netstandard2.0/OpenAI.targets": {}
         }
       },
+      "SixLabors.ImageSharp/3.1.11": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "build/_._": {}
+        }
+      },
       "System.ClientModel/1.14.0": {
         "type": "package",
         "dependencies": {
@@ -613,7 +629,8 @@
           "Microsoft.Agents.AI.Anthropic": "1.16.0-preview.260730.1",
           "Microsoft.Agents.AI.OpenAI": "1.16.0",
           "Microsoft.CognitiveServices.Speech": "1.51.1",
-          "RalfAI.Abstractions": "1.0.0"
+          "RalfAI.Abstractions": "1.0.0",
+          "SixLabors.ImageSharp": "3.1.11"
         },
         "compile": {
           "bin/placeholder/RalfAI.Core.dll": {}
@@ -1227,6 +1244,22 @@
         "lib/netstandard2.0/OpenAI.xml",
         "openai.2.10.0.nupkg.sha512",
         "openai.nuspec"
+      ]
+    },
+    "SixLabors.ImageSharp/3.1.11": {
+      "sha512": "JfPLyigLthuE50yi6tMt7Amrenr/fA31t2CvJyhy/kQmfulIBAqo5T/YFUSRHtuYPXRSaUHygFeh6Qd933EoSw==",
+      "type": "package",
+      "path": "sixlabors.imagesharp/3.1.11",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "build/SixLabors.ImageSharp.props",
+        "lib/net6.0/SixLabors.ImageSharp.dll",
+        "lib/net6.0/SixLabors.ImageSharp.xml",
+        "sixlabors.imagesharp.128.png",
+        "sixlabors.imagesharp.3.1.11.nupkg.sha512",
+        "sixlabors.imagesharp.nuspec"
       ]
     },
     "System.ClientModel/1.14.0": {

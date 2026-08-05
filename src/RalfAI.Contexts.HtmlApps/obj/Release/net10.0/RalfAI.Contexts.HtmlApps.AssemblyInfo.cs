@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RalfAI.Contexts.HtmlApps")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d8860a8130adb4139c180bba2f7fff8dcbc2018b")]
 [assembly: System.Reflection.AssemblyProductAttribute("RalfAI.Contexts.HtmlApps")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RalfAI.Contexts.HtmlApps")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

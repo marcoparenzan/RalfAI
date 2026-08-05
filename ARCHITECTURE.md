@@ -5,7 +5,7 @@
 ```
 RalfAI.Abstractions       IAgentContext — the only thing every other project depends on
 RalfAI.Core                the engine: AgentEngine, RateLimiter, ConversationLogger,
-                            generic tools (FileSystem, Web, AI, Speech), voice
+                            generic tools (FileSystem, Web, AI, Image, Speech), voice
 RalfAI.Contexts.DotNet     IAgentContext for .NET projects + the DotNet tool
 RalfAI.Contexts.Markdown   IAgentContext for Markdown doc sets
 RalfAI.Contexts.HtmlApps   IAgentContext for static HTML/CSS/JS apps + the StaticServer tool
@@ -45,6 +45,12 @@ adding a fourth provider means adding one case to that switch and nothing else.
 3. Add a case for it in `BuildChatClient`'s `switch`.
 4. Document the new `AIProvider` value and its config section in `README.md`.
 
+Image generation (`ImageGenerationService`, `RalfAI.Core/ImageGeneration/`) is a separate
+concern with its own provider switch keyed off the same `AIProvider` value — adding a chat
+provider doesn't automatically add image-generation support for it; that needs its own
+`FromXxx(IConfiguration)` case in `ImageGenerationService.FromConfig`, built on that
+provider's `ImageClient`-equivalent API (if it has one).
+
 ## The plugin (tool) system
 
 There's no "plugin" type — a tool is just a C# method with a `[Description]` attribute (from
@@ -74,7 +80,12 @@ the debug tool-call line, the session log, the system prompt's tool list.
   `DotNet_*` + `Web_FetchUrl`; `HtmlAppContext` adds `StaticServer_Start`/`Stop` on top.
 - **Engine tools** — available in *every* context regardless of stack, registered directly
   in `AgentEngine.CreateAsync`: `AI_Ask` (delegate an isolated sub-question to the same
-  chat client) and, when `AzureSpeech` is configured, `Speech_Speak`/`Speech_Listen`.
+  chat client); `Image_GetInfo`/`Resize`/`Crop`/`Rotate`/`Flip`/`Grayscale`/`ConvertFormat`
+  (JPG/PNG manipulation via `ImagePlugin`, `SixLabors.ImageSharp` — always registered, no
+  config needed); `Image_GenerateAI` (text-to-image via `ImageGenerationPlugin` +
+  `ImageGenerationService`, only when `ImageModelId` is configured under the active
+  provider — Anthropic has no image-generation API); and, when `AzureSpeech` is configured,
+  `Speech_Speak`/`Speech_Listen`.
 
 Both kinds end up in the same `List<AITool>` passed to `chatClient.AsAIAgent(tools: ...)` —
 the model can't tell them apart, and doesn't need to.
@@ -130,6 +141,12 @@ Written inside the *target* folder (not the tool's install directory):
 - `config.yaml` — remembers that folder's `context:` and `debug:` settings (see
   `FolderConfigStore`), so `ralf <folder>` with no other flags picks up where you left off.
 
+Not to be confused with `PROMPTS.md` (written at the target folder **root**, not inside
+`.ralfai/`): `.ralfai/session.md` is the engine's own full-fidelity log (every turn, every
+tool call), not part of the deliverable; `PROMPTS.md` is a curated, project-facing history
+that each context's system prompt instructs the model to maintain as one of its outputs — see
+[USAGE.md](USAGE.md#log-dei-prompt-promptsmd).
+
 ## Console frontend
 
 `RalfAIApp` + `InputCollector` + `FileBrowser` are Spectre.Console-based and know nothing
@@ -137,3 +154,11 @@ about AI providers or tools — they only see `AgentEngine`'s public surface (`S
 events, `Messages`). The whole interactive session runs inside the terminal's alternate
 screen buffer (`FullScreenConsole`), the same mechanism `vim`/`less`/`htop` use, so nothing
 leaks into the user's normal scrollback.
+
+`FileBrowser` (F9-to-pick UI, used both at startup with no CLI folder and via F7 mid-session)
+has one app-level side effect independent of `AgentEngine`: F4 shell-launches the selected
+file in an external editor via `Process.Start(UseShellExecute: true)`, fire-and-forget. The
+command comes from the `Editor` config key (`RALFAI_Editor` env override), resolved by the
+caller (`Program.cs`/`RalfAIApp.SwitchFolder`) and passed into `FileBrowser.Pick` — `FileBrowser`
+itself has no `IConfiguration` dependency, it just takes a plain string, defaulting to
+`FileBrowser.DefaultEditor` (`code.exe`) if the key is unset.

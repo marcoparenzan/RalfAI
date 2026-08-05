@@ -363,7 +363,8 @@ public sealed class RalfAIApp
 
     private async Task SwitchFolder()
     {
-        var picked = FileBrowser.Pick(_session.TargetFolder);
+        var editorCommand = _config["Editor"] ?? FileBrowser.DefaultEditor;
+        var picked = FileBrowser.Pick(_session.TargetFolder, editorCommand);
         AnsiConsole.Clear();
 
         if (picked is null)

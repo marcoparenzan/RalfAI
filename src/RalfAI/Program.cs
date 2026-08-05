@@ -25,6 +25,10 @@ var configFlagValue = configFlagIndex >= 0 && configFlagIndex + 1 < args.Length
 // as it was on exit (same technique vim/less/htop use). No-ops when output isn't a real console.
 using var fullScreen = FullScreenConsole.Enter();
 
+// Loaded before the folder picker so F4 (open in external editor) can use it there too.
+var configuration = RalfAIConfig.Load(configFlagValue);
+var editorCommand = configuration["Editor"] ?? FileBrowser.DefaultEditor;
+
 string targetFolder;
 if (positional.Length == 0)
 {
@@ -37,7 +41,7 @@ if (positional.Length == 0)
     }
     else
     {
-        var picked = FileBrowser.Pick(Directory.GetCurrentDirectory());
+        var picked = FileBrowser.Pick(Directory.GetCurrentDirectory(), editorCommand);
         if (picked is null) return 1;
         targetFolder = Path.GetFullPath(picked);
     }
@@ -49,8 +53,6 @@ else
 
 Directory.CreateDirectory(targetFolder);
 LastFolderStore.Save(targetFolder);
-
-var configuration = RalfAIConfig.Load(configFlagValue);
 
 // --context flag wins, then the target folder's own remembered context
 // (.ralfai/config.yaml), then appsettings/env "AgentContext", then ContextRegistry.DefaultName.
