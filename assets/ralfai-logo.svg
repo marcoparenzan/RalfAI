@@ -1,0 +1,45 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="960" height="320" viewBox="0 0 960 320" role="img" aria-labelledby="title desc">
+  <title id="title">RalfAI logo</title>
+  <desc id="desc">A gradient hexagonal mark containing a stylized R and connected AI nodes, followed by the RalfAI wordmark.</desc>
+  <defs>
+    <linearGradient id="brand" x1="48" y1="36" x2="272" y2="284" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#28C7FA"/>
+      <stop offset="0.48" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#A855F7"/>
+    </linearGradient>
+    <linearGradient id="word" x1="342" y1="98" x2="842" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E6F7FF"/>
+      <stop offset="0.6" stop-color="#C7D2FE"/>
+      <stop offset="1" stop-color="#D8B4FE"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Transparent canvas; suitable for light and dark README themes. -->
+  <path d="M160 24 278 92v136l-118 68L42 228V92z" fill="#0B1020" stroke="url(#brand)" stroke-width="8"/>
+  <path d="M160 44 260 102v116l-100 58-100-58V102z" fill="none" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="2"/>
+
+  <!-- Stylized R: terminal-like stem and forward-moving leg. -->
+  <path d="M100 226V92h69c44 0 69 21 69 57 0 27-14 45-39 53l44 50h-43l-53-62h-31v36zm16-105v40h50c24 0 36-6 36-20s-12-20-36-20z"
+        fill="url(#brand)" filter="url(#glow)"/>
+
+  <!-- Neural/circuit nodes, integrated into the R bowl. -->
+  <g stroke="#8BE9FD" stroke-width="4" stroke-linecap="round" fill="none">
+    <path d="M170 104 214 78M206 142h43M184 183l45 31"/>
+  </g>
+  <g fill="#F5FBFF" stroke="url(#brand)" stroke-width="4">
+    <circle cx="170" cy="104" r="7"/><circle cx="214" cy="78" r="8"/>
+    <circle cx="206" cy="142" r="7"/><circle cx="249" cy="142" r="8"/>
+    <circle cx="184" cy="183" r="7"/><circle cx="229" cy="214" r="8"/>
+  </g>
+
+  <!-- Wordmark uses a system font stack and remains editable in the SVG source. -->
+  <text x="330" y="210" fill="#172033" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="142" font-weight="750" letter-spacing="-7">Ralf</text>
+  <text x="642" y="210" fill="url(#brand)" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="142" font-weight="800" letter-spacing="-7">AI</text>
+  <circle cx="868" cy="102" r="10" fill="#28C7FA"/>
+  <circle cx="895" cy="80" r="6" fill="#A855F7"/>
+  <path d="M868 102 895 80" stroke="url(#brand)" stroke-width="4" stroke-linecap="round"/>
+</svg>

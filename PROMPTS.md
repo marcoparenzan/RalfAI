@@ -1,4 +1,4 @@
-# Prompts
+﻿# Prompts
 
 Log cronologico e numerato delle richieste che hanno guidato la realizzazione di RalfAI — la
 stessa convenzione (`PROMPTS.md` alla radice, aggiornato a ogni obiettivo, prima di qualunque
@@ -133,7 +133,7 @@ install` in `README.md`. Verificato con un pack di prova che non serve alcuna mo
 Aggiunto `PROMPTS.md` come quinto file nel set canonico di documentazione — l'unico non
 opzionale: ogni context (`dotnet`, `html`, `markdown`) ora apre ogni turno con un passo "Log"
 che ci scrive prima di qualunque altra azione, così la storia di un progetto generato resta
-tracciabile fino alle richieste che l'hanno guidata. Questo stesso file applica la convenzione
+tracciabile fino alle richieste che l'ha guidata. Questo stesso file applica la convenzione
 a ritroso a RalfAI.
 
 ## 16. "Aggiungi la possibilità di aprire un file durante la selezione: default code.exe, altrimenti variabile nel file di config"
@@ -161,3 +161,14 @@ Due parti:
   dentro un `README.md` inglese, uno verso una sezione mai esistita in `ARCHITECTURE.md`), un
   link relativo a un file sorgente che risaliva di una cartella di troppo, e una voce di
   ROADMAP che citava una classe (`AgentContextFactory`) ormai rinominata (`ContextRegistry`).
+
+## 18. "Vuoi creare il logo del progetto? Una immagine?" — "procedi"
+
+Creazione di un logo moderno e minimale per RalfAI, in formato SVG sorgente e PNG per README,
+con integrazione nel repository e aggiornamento della documentazione.
+
+## 19. "Vorrei che l'editor da CLI permetta di editare la richiesta con maggior ricchezza....non posso cancellare ad esempio...e quando incollo da clipboard, perdo caratteri. usa i filesd claude per la storia dello sviluppo. E convertila in una tua storia"
+
+Migliorerò l'editor interattivo della richiesta con cancellazione e incolla affidabile, quindi
+userò i file di storia di Claude presenti nel repository come fonte per riscrivere la storia
+dello sviluppo in una narrazione autonoma e coerente di RalfAI.

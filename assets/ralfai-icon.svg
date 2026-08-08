@@ -1,0 +1,13 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 320 320" role="img" aria-labelledby="title">
+  <title id="title">RalfAI icon</title>
+  <defs>
+    <linearGradient id="brand" x1="48" y1="36" x2="272" y2="284" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#28C7FA"/><stop offset=".48" stop-color="#6366F1"/><stop offset="1" stop-color="#A855F7"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path d="M160 18 284 89v142l-124 71L36 231V89z" fill="#0B1020" stroke="url(#brand)" stroke-width="9"/>
+  <path d="M97 230V86h74c47 0 74 23 74 61 0 29-15 48-42 57l47 54h-46l-57-67h-33v39zm17-112v43h54c26 0 39-7 39-22s-13-21-39-21z" fill="url(#brand)" filter="url(#glow)"/>
+  <g stroke="#8BE9FD" stroke-width="4" stroke-linecap="round"><path d="m171 99 47-28M210 141h46m-61 46 48 34"/></g>
+  <g fill="#F5FBFF" stroke="url(#brand)" stroke-width="4"><circle cx="171" cy="99" r="8"/><circle cx="218" cy="71" r="9"/><circle cx="210" cy="141" r="8"/><circle cx="256" cy="141" r="9"/><circle cx="195" cy="187" r="8"/><circle cx="243" cy="221" r="9"/></g>
+</svg>

@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "ralf/1.0.0": {
+      "ralf/1.1.0": {
         "dependencies": {
           "RalfAI.Abstractions": "1.0.0",
           "RalfAI.Contexts.DotNet": "1.0.0",
@@ -691,7 +691,7 @@
     }
   },
   "libraries": {
-    "ralf/1.0.0": {
+    "ralf/1.1.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

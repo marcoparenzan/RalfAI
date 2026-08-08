@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyDescriptionAttribute(("RalfAI — an autonomous coding agent CLI for .NET, Markdown, and HTML/CSS/JS proje" +
     "cts."))]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.1.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.0+d8860a8130adb4139c180bba2f7fff8dcbc2018b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.0+8c7d5fd8ca78229a7a0084261a97490ed0e580f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("ralf")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ralf")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.1.0.0")]

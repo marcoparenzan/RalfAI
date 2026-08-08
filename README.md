@@ -1,5 +1,10 @@
 # RalfAI
 
+<p align="center">
+  <img src="assets/ralfai-logo.svg" alt="RalfAI — autonomous coding agent" width="680">
+</p>
+
+
 An autonomous coding agent CLI. Point it at a folder, pick a context (.NET, Markdown docs,
 or a static HTML/CSS/JS app), and it builds/edits files, runs `dotnet build`/`dotnet test`,
 fetches URLs, previews HTML apps over local HTTP, and optionally talks to you (speech in/out)
