@@ -15,3 +15,10 @@ legge l'usage propagato dagli SDK e calcola una stima dalle tariffe configurate;
 La CLI usa `PromptBuffer`, separato e testabile, per modifica multi-riga e navigazione. Studio
 usa Blazor dentro un `BlazorWebView`; `WorkspaceService` confina letture/scritture alla root e
 Monaco comunica con Razor via JS interop. Markdig genera la preview Markdown.
+
+`DirectoryListing` (elenco/formattazione directory) e `FileViewer` (viewer di file scorrevole,
+paginato, con numeri di riga) sono condivisi tra `FileBrowser` (picker a singolo pannello per la
+cartella target) e `NortonCommander` (`F9`/`/files`, file manager a doppio pannello con
+copia/sposta/rinomina/mkdir/delete/apertura esterna) — nessuna dipendenza da `IConfiguration`:
+il comando dell'editor esterno (chiave `Editor`) viene risolto dai chiamanti e passato come
+stringa.

@@ -35,7 +35,8 @@ dotnet run --project src/RalfAI.Studio/RalfAI.Studio -- [cartella]
 La CLI mostra la versione sopra ogni prompt. L'editor supporta cursore visibile, frecce,
 Home/End, Backspace/Delete e incolla atomico con `Ctrl+V`; `Ctrl+Enter` invia. Durante un turno
 mostra fasi operative e tool call (persistenti con `F8`). Dopo la risposta mostra token e costo
-stimato; ogni turno è registrato in `.ralfai/cost-history.jsonl`.
+stimato; ogni turno è registrato in `.ralfai/cost-history.jsonl`. `F9` (o `/files`) apre un file
+manager a doppio pannello in stile Norton Commander, con viewer di file scorrevole.
 
 Il costo dipende dalle tariffe configurate sotto `Pricing:<provider>:<model>` e non è una fattura:
 le chat API normalmente restituiscono i token, non l'importo monetario.

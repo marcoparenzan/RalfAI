@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyDescriptionAttribute(("RalfAI Studio — a Blazor Hybrid workspace with file tree, Monaco editor, and Mark" +
     "down preview."))]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.2.4.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.2.4+179d2d496c5b5e008efa29108904e0823b2da79d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.2.4+ab0fe746be19e245c7134dd14c11daee5147925b")]
 [assembly: System.Reflection.AssemblyProductAttribute("RalfAI.Studio")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RalfAI.Studio")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.2.4.0")]

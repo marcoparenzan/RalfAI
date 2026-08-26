@@ -82,6 +82,7 @@ public sealed class InputCollector(SpeechService? speech = null)
                     case ConsoleKey.F6: result = "/switch-context"; exit = true; break;
                     case ConsoleKey.F7: result = "/switch-folder"; exit = true; break;
                     case ConsoleKey.F8: result = "/toggle-debug"; exit = true; break;
+                    case ConsoleKey.F9: result = "/files"; exit = true; break;
                     default:
                         // Tab is a control char (handled above) — anything else that's
                         // still a control char here isn't printable text, skip it.
@@ -186,6 +187,7 @@ public sealed class InputCollector(SpeechService? speech = null)
                 case "/switch-context": return "/switch-context";
                 case "/switch-folder": return "/switch-folder";
                 case "/toggle-debug": return "/toggle-debug";
+                case "/files": return "/files";
                 case "/voice":
                     if (speech is null)
                     {
@@ -221,6 +223,7 @@ public sealed class InputCollector(SpeechService? speech = null)
         table.AddRow("[yellow]Esc[/]", "Clear the current draft");
         table.AddRow("[cyan]F2 / F3[/]", "Dictate / read the last response aloud");
         table.AddRow("[cyan]F5 / F6 / F7 / F8[/]", "Clear screen / context / folder / debug");
+        table.AddRow("[cyan]F9[/]", "Open the file manager (Norton Commander-style, dual-pane)");
         table.AddRow("[grey]F1[/]", "Show this table");
         table.AddRow("[red]F10 / Ctrl+Q[/]", "Quit RalfAI");
         table.AddRow("[yellow]Ctrl+C / Esc / Ctrl+X[/]", "While working: interrupt the current turn");
@@ -243,6 +246,7 @@ public sealed class InputCollector(SpeechService? speech = null)
         table.AddRow("[cyan]/clear[/]", "Clear the screen");
         table.AddRow("[cyan]/switch-context / /switch-folder[/]", "Switch context / folder");
         table.AddRow("[cyan]/toggle-debug[/]", "Toggle debug messages");
+        table.AddRow("[cyan]/files[/]", "Open the file manager (Norton Commander-style, dual-pane)");
         table.AddRow("[grey]/help[/]", "Show this table");
         table.AddRow("[red]exit / /exit[/]", "Quit RalfAI");
         AnsiConsole.WriteLine();

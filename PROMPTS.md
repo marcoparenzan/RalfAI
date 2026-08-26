@@ -120,3 +120,7 @@ Riprodurrò e correggerò il packaging del launcher: verificherò il contenuto d
 ## 27. "il problema è che se scrivo nella ui di studio, quando clicco non fa niente non riesco a selezionare niente, l'albero non si contrae o espande, non posso cliccare alcun file e vederne il contenuto, men che meno avere la preview markdown"
 
 Diagnosticherò il circuito interattivo Blazor Hybrid e l'interoperabilità Monaco, correggerò eventi di albero, apertura file, editing e preview Markdown, quindi ripacchettizzerò e proverò il tool aggiornato.
+
+## 28. "Puoi implementare un file manager stile Norton Commander con viewer di file?"
+
+Realizzerò un file manager CLI a doppio pannello in stile Norton Commander (Tab per cambiare pannello, F3 view, F4 edit esterno, F5 copy, F6 move/rename, F7 mkdir, F8 delete), con un viewer di file scorrevole e paginato condiviso anche dal file browser esistente, raggiungibile con F9/`/files`; aggiungerò test per la logica di elenco/formattazione directory.

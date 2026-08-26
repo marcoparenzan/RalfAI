@@ -130,6 +130,13 @@ public sealed class RalfAIApp
                 continue;
             }
 
+            if (text.Equals("/files", StringComparison.OrdinalIgnoreCase))
+            {
+                var editorCommand = _config["Editor"] ?? FileBrowser.DefaultEditor;
+                NortonCommander.Open(_session.TargetFolder, editorCommand);
+                continue;
+            }
+
             // ── LLM processing turn ──────────────────────────────────────────
             AgentTurnResult? turnResult = null;
 

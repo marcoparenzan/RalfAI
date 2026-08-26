@@ -18,7 +18,7 @@ public sealed class FileBrowser
 
     private readonly string _editorCommand;
     private string _path;
-    private List<FileSystemEntry> _entries = [];
+    private List<DirectoryEntry> _entries = [];
     private int _selected;
     private int _scrollOffset;
     private string? _message;
@@ -171,36 +171,14 @@ public sealed class FileBrowser
         }
     }
 
-    private FileSystemEntry? SelectedEntry()
+    private DirectoryEntry? SelectedEntry()
         => _selected >= 0 && _selected < _entries.Count ? _entries[_selected] : null;
 
     private void Reload()
     {
-        _entries = LoadEntries(_path);
+        _entries = DirectoryListing.Load(_path);
         _selected = 0;
         _scrollOffset = 0;
-    }
-
-    private static List<FileSystemEntry> LoadEntries(string path)
-    {
-        var entries = new List<FileSystemEntry>();
-        try
-        {
-            var di = new DirectoryInfo(path);
-            if (di.Parent is not null)
-                entries.Add(new FileSystemEntry("..", true, 0));
-
-            foreach (var d in di.GetDirectories().OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase))
-                entries.Add(new FileSystemEntry(d.Name, true, 0));
-
-            foreach (var f in di.GetFiles().OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase))
-                entries.Add(new FileSystemEntry(f.Name, false, f.Length));
-        }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
-        {
-            // Leave entries as loaded so far (possibly just ".."); the panel just looks empty.
-        }
-        return entries;
     }
 
     // ── File operations (run outside the Live display) ─────────────────────
@@ -292,38 +270,8 @@ public sealed class FileBrowser
             return;
         }
 
-        var path = Path.Combine(_path, entry.Value.Name);
-        string content;
-        try
-        {
-            var info = new FileInfo(path);
-            if (info.Length > 200_000)
-            {
-                _message = "[yellow]File too large to preview (>200 KB) — use an editor instead.[/]";
-                return;
-            }
-
-            var bytes = File.ReadAllBytes(path);
-            if (bytes.Take(8000).Any(b => b == 0))
-            {
-                _message = "[yellow]Binary file — cannot preview.[/]";
-                return;
-            }
-
-            content = System.Text.Encoding.UTF8.GetString(bytes);
-        }
-        catch (Exception ex)
-        {
-            _message = $"[red]Could not read file: {Markup.Escape(ex.Message)}[/]";
-            return;
-        }
-
+        FileViewer.Show(Path.Combine(_path, entry.Value.Name), entry.Value.Name);
         AnsiConsole.Clear();
-        AnsiConsole.Write(new Rule($"[bold]{Markup.Escape(entry.Value.Name)}[/]").LeftJustified());
-        AnsiConsole.WriteLine(content);
-        AnsiConsole.Write(new Rule());
-        AnsiConsole.MarkupLine("[dim]Premi un tasto per tornare…[/]");
-        Console.ReadKey(intercept: true);
     }
 
     /// <summary>
@@ -368,7 +316,7 @@ public sealed class FileBrowser
         table.AddRow("[cyan]Enter[/]",       "Open folder");
         table.AddRow("[cyan]Backspace[/]",   "Go up one level");
         table.AddRow("[green]F9[/]",         "Use the current folder as RalfAI target");
-        table.AddRow("[cyan]F3[/]",          "View file (read-only preview)");
+        table.AddRow("[cyan]F3[/]",          "View file (scrollable, read-only)");
         table.AddRow("[cyan]F4[/]",          "Open file in external editor (Editor config, default VS Code)");
         table.AddRow("[cyan]F2[/]",          "Rename");
         table.AddRow("[cyan]F7[/]",          "Create new folder");
@@ -413,8 +361,8 @@ public sealed class FileBrowser
         {
             var e = _entries[i];
             var name = e.IsDirectory ? $"{e.Name}/" : e.Name;
-            var sizeText = e.IsDirectory ? "" : FormatSize(e.Size);
-            var line = $"{Truncate(name, 60),-60}{sizeText,10}";
+            var sizeText = e.IsDirectory ? "" : DirectoryListing.FormatSize(e.Size);
+            var line = $"{DirectoryListing.Truncate(name, 60),-60}{sizeText,10}";
 
             var escaped = Markup.Escape(line);
             if (i == _selected)
@@ -430,29 +378,11 @@ public sealed class FileBrowser
 
         return new Panel(string.Join("\n", lines))
         {
-            Header = new PanelHeader($" {Markup.Escape(Truncate(_path, 70))} "),
+            Header = new PanelHeader($" {Markup.Escape(DirectoryListing.Truncate(_path, 70))} "),
             Border = BoxBorder.Rounded,
             BorderStyle = Style.Parse("cyan"),
             Padding = new Padding(1, 0, 1, 0),
             Expand = true
         };
     }
-
-    private static string Truncate(string text, int maxLength)
-        => text.Length <= maxLength ? text : "…" + text[^(maxLength - 1)..];
-
-    private static string FormatSize(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB"];
-        double size = bytes;
-        var unit = 0;
-        while (size >= 1024 && unit < units.Length - 1)
-        {
-            size /= 1024;
-            unit++;
-        }
-        return unit == 0 ? $"{bytes} B" : $"{size:0.#} {units[unit]}";
-    }
-
-    private readonly record struct FileSystemEntry(string Name, bool IsDirectory, long Size);
 }

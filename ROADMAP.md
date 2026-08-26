@@ -123,6 +123,17 @@ una sezione mai esistita in `ARCHITECTURE.md`), un link relativo a un file sorge
 di una cartella di troppo, e la voce "Context non più hardcoded" che citava una classe
 (`AgentContextFactory`) non più presente nel codice (oggi `ContextRegistry`).
 
+### File manager a doppio pannello stile Norton Commander (`F9`/`/files`)
+Nuovo `NortonCommander`: due pannelli directory affiancati, `Tab` per cambiare quello attivo,
+barra F-key classica (F3 view, F4 edit esterno, F5 copy, F6 move/rename, F7 mkdir, F8 delete,
+F10/Esc quit) — copia e sposta usano di default la cartella dell'altro pannello come
+destinazione. Nuovo `FileViewer` condiviso (scorrevole in verticale/orizzontale, numeri di riga,
+rileva i binari, gestisce file fino a 5 MB) sostituisce il vecchio dump statico del `FileBrowser`
+esistente, che lo riusa anch'esso per `F3` — `FileBrowser` resta il picker semplice a singolo
+pannello per la cartella target (avvio senza argomenti, cambio cartella). Estratto anche
+`DirectoryListing` (elenco/formattazione directory) per non duplicare quella logica fra i due.
+Dettagli in [ARCHITECTURE.md](ARCHITECTURE.md) e [USAGE.md](USAGE.md#file-manager).
+
 ## 📋 Pianificato
 
 ### Interfaccia grafica (Desktop/Web)

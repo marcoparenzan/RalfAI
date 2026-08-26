@@ -18,6 +18,26 @@ La testata del prompt riporta sempre `RalfAI v<version>`, context, modello e car
 - `Ctrl+V` o `Shift+Insert`: incolla atomico, senza consumare eventi tastiera;
 - `Enter`: nuova riga; `Ctrl+Enter`: invio; `Esc`: pulizia bozza.
 
+### File manager
+
+`F9` (o `/files` con stdin rediretto) apre un file manager a doppio pannello in stile Norton
+Commander sulla cartella del progetto:
+
+- `Tab`: cambia pannello attivo; frecce/`PgUp`/`PgDn`/`Home`/`End`: naviga; `Enter`: apri
+  cartella; `Backspace`: sali di un livello;
+- `F3`: viewer di file scorrevole (verticale e orizzontale, con numeri di riga; niente dump
+  d'un colpo solo, gestisce anche file grandi finché restano testo);
+- `F4`: apre il file selezionato nell'editor esterno configurato (stessa chiave `Editor`
+  dell'editor del prompt);
+- `F5`: copia nella cartella dell'altro pannello (percorso di destinazione modificabile);
+- `F6`: sposta/rinomina — stesso percorso della cartella corrente rinomina, un percorso diverso
+  sposta;
+- `F7`: nuova cartella nel pannello attivo; `F8`/`Del`: elimina (chiede conferma);
+- `F1`: tabella comandi; `F10`/`Esc`: chiude e torna al prompt.
+
+Il file browser a schermo intero mostrato all'avvio senza cartella (o cambiando cartella target)
+resta un secondo strumento più semplice, a singolo pannello, con lo stesso viewer (`F3`).
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.
