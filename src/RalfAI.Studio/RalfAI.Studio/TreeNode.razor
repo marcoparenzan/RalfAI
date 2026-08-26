@@ -1,0 +1,35 @@
+﻿<div class="tree-node @(Entry.IsDirectory ? "directory" : "file") @(IsSelected ? "selected" : null)"
+     title="@Entry.Path"
+     @onclick="ActivateAsync">
+  <span class="twisty">@(Entry.IsDirectory ? (_expanded ? "▾" : "▸") : "·")</span>
+  <span>@Entry.Name</span>
+</div>
+@if (Entry.IsDirectory && _expanded)
+{
+  <div class="children">
+    @foreach (var child in Entry.Children)
+    {
+      <TreeNode Entry="child" OnOpen="OnOpen" SelectedPath="SelectedPath" />
+    }
+  </div>
+}
+
+@code {
+  [Parameter, EditorRequired] public WorkspaceEntry Entry { get; set; } = null!;
+  [Parameter, EditorRequired] public EventCallback<WorkspaceEntry> OnOpen { get; set; }
+  [Parameter] public string? SelectedPath { get; set; }
+
+  private bool _expanded;
+  private bool IsSelected => string.Equals(Entry.Path, SelectedPath, StringComparison.OrdinalIgnoreCase);
+
+  private async Task ActivateAsync()
+  {
+      if (Entry.IsDirectory)
+      {
+          _expanded = !_expanded;
+          return;
+      }
+
+      await OnOpen.InvokeAsync(Entry);
+  }
+}

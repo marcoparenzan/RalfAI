@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>RalfAI</id>
+    <version>1.1.1</version>
+    <authors>ralf</authors>
+    <description>RalfAI — an autonomous coding agent CLI for .NET, Markdown, and HTML/CSS/JS projects.</description>
+    <packageTypes>
+      <packageType name="DotnetTool" />
+    </packageTypes>
+    <repository type="git" commit="179d2d496c5b5e008efa29108904e0823b2da79d" />
+  </metadata>
+  <files>
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\obj\Release\net10.0\DotnetToolSettings.xml" target="tools\net10.0\any\DotnetToolSettings.xml" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Anthropic.dll" target="tools\net10.0\any\Anthropic.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\appsettings.json" target="tools\net10.0\any\appsettings.json" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Azure.AI.OpenAI.dll" target="tools\net10.0\any\Azure.AI.OpenAI.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Azure.Core.dll" target="tools\net10.0\any\Azure.Core.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Google.Protobuf.dll" target="tools\net10.0\any\Google.Protobuf.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Agents.AI.Abstractions.dll" target="tools\net10.0\any\Microsoft.Agents.AI.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Agents.AI.Anthropic.dll" target="tools\net10.0\any\Microsoft.Agents.AI.Anthropic.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Agents.AI.dll" target="tools\net10.0\any\Microsoft.Agents.AI.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Agents.AI.OpenAI.dll" target="tools\net10.0\any\Microsoft.Agents.AI.OpenAI.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Bcl.AsyncInterfaces.dll" target="tools\net10.0\any\Microsoft.Bcl.AsyncInterfaces.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.CognitiveServices.Speech.csharp.dll" target="tools\net10.0\any\Microsoft.CognitiveServices.Speech.csharp.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.AI.Abstractions.dll" target="tools\net10.0\any\Microsoft.Extensions.AI.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.AI.dll" target="tools\net10.0\any\Microsoft.Extensions.AI.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.AI.Evaluation.dll" target="tools\net10.0\any\Microsoft.Extensions.AI.Evaluation.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.AI.OpenAI.dll" target="tools\net10.0\any\Microsoft.Extensions.AI.OpenAI.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.Caching.Abstractions.dll" target="tools\net10.0\any\Microsoft.Extensions.Caching.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.Compliance.Abstractions.dll" target="tools\net10.0\any\Microsoft.Extensions.Compliance.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.DependencyInjection.Abstractions.dll" target="tools\net10.0\any\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.Logging.Abstractions.dll" target="tools\net10.0\any\Microsoft.Extensions.Logging.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.Primitives.dll" target="tools\net10.0\any\Microsoft.Extensions.Primitives.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.Extensions.VectorData.Abstractions.dll" target="tools\net10.0\any\Microsoft.Extensions.VectorData.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Microsoft.ML.Tokenizers.dll" target="tools\net10.0\any\Microsoft.ML.Tokenizers.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\OpenAI.dll" target="tools\net10.0\any\OpenAI.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\ralf.deps.json" target="tools\net10.0\any\ralf.deps.json" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\ralf.dll" target="tools\net10.0\any\ralf.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\ralf.pdb" target="tools\net10.0\any\ralf.pdb" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\ralf.runtimeconfig.json" target="tools\net10.0\any\ralf.runtimeconfig.json" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Abstractions.dll" target="tools\net10.0\any\RalfAI.Abstractions.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Abstractions.pdb" target="tools\net10.0\any\RalfAI.Abstractions.pdb" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Contexts.DotNet.dll" target="tools\net10.0\any\RalfAI.Contexts.DotNet.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Contexts.DotNet.pdb" target="tools\net10.0\any\RalfAI.Contexts.DotNet.pdb" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Contexts.HtmlApps.dll" target="tools\net10.0\any\RalfAI.Contexts.HtmlApps.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Contexts.HtmlApps.pdb" target="tools\net10.0\any\RalfAI.Contexts.HtmlApps.pdb" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Contexts.Markdown.dll" target="tools\net10.0\any\RalfAI.Contexts.Markdown.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Contexts.Markdown.pdb" target="tools\net10.0\any\RalfAI.Contexts.Markdown.pdb" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Core.dll" target="tools\net10.0\any\RalfAI.Core.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\RalfAI.Core.pdb" target="tools\net10.0\any\RalfAI.Core.pdb" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\SixLabors.ImageSharp.dll" target="tools\net10.0\any\SixLabors.ImageSharp.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Spectre.Console.Ansi.dll" target="tools\net10.0\any\Spectre.Console.Ansi.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\Spectre.Console.dll" target="tools\net10.0\any\Spectre.Console.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\System.ClientModel.dll" target="tools\net10.0\any\System.ClientModel.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\System.Memory.Data.dll" target="tools\net10.0\any\System.Memory.Data.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\System.Numerics.Tensors.dll" target="tools\net10.0\any\System.Numerics.Tensors.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.core.so" target="tools\net10.0\any\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.core.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" target="tools\net10.0\any\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" target="tools\net10.0\any\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" target="tools\net10.0\any\runtimes\android-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.core.so" target="tools\net10.0\any\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.core.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" target="tools\net10.0\any\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" target="tools\net10.0\any\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" target="tools\net10.0\any\runtimes\android-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.core.so" target="tools\net10.0\any\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.core.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" target="tools\net10.0\any\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" target="tools\net10.0\any\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" target="tools\net10.0\any\runtimes\android-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\ios-arm64\native\libMicrosoft.CognitiveServices.Speech.core.a" target="tools\net10.0\any\runtimes\ios-arm64\native\libMicrosoft.CognitiveServices.Speech.core.a" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\iossimulator-arm64\native\libMicrosoft.CognitiveServices.Speech.core.a" target="tools\net10.0\any\runtimes\iossimulator-arm64\native\libMicrosoft.CognitiveServices.Speech.core.a" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\iossimulator-x64\native\libMicrosoft.CognitiveServices.Speech.core.a" target="tools\net10.0\any\runtimes\iossimulator-x64\native\libMicrosoft.CognitiveServices.Speech.core.a" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" target="tools\net10.0\any\runtimes\linux-arm64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.core.so" target="tools\net10.0\any\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.core.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" target="tools\net10.0\any\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.codec.so" target="tools\net10.0\any\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.codec.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" target="tools\net10.0\any\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" target="tools\net10.0\any\runtimes\linux-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\native\libpal_azure_c_shared.so" target="tools\net10.0\any\runtimes\linux-arm64\native\libpal_azure_c_shared.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm64\native\libpal_azure_c_shared_openssl3.so" target="tools\net10.0\any\runtimes\linux-arm64\native\libpal_azure_c_shared_openssl3.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" target="tools\net10.0\any\runtimes\linux-arm\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.core.so" target="tools\net10.0\any\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.core.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" target="tools\net10.0\any\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.codec.so" target="tools\net10.0\any\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.codec.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" target="tools\net10.0\any\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" target="tools\net10.0\any\runtimes\linux-arm\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\native\libpal_azure_c_shared.so" target="tools\net10.0\any\runtimes\linux-arm\native\libpal_azure_c_shared.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-arm\native\libpal_azure_c_shared_openssl3.so" target="tools\net10.0\any\runtimes\linux-arm\native\libpal_azure_c_shared_openssl3.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" target="tools\net10.0\any\runtimes\linux-x64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.core.so" target="tools\net10.0\any\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.core.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" target="tools\net10.0\any\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.codec.so" target="tools\net10.0\any\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.codec.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" target="tools\net10.0\any\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" target="tools\net10.0\any\runtimes\linux-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\native\libpal_azure_c_shared.so" target="tools\net10.0\any\runtimes\linux-x64\native\libpal_azure_c_shared.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\linux-x64\native\libpal_azure_c_shared_openssl3.so" target="tools\net10.0\any\runtimes\linux-x64\native\libpal_azure_c_shared_openssl3.so" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\maccatalyst-arm64\native\libMicrosoft.CognitiveServices.Speech.core.a" target="tools\net10.0\any\runtimes\maccatalyst-arm64\native\libMicrosoft.CognitiveServices.Speech.core.a" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\maccatalyst-x64\native\libMicrosoft.CognitiveServices.Speech.core.a" target="tools\net10.0\any\runtimes\maccatalyst-x64\native\libMicrosoft.CognitiveServices.Speech.core.a" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\osx-arm64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" target="tools\net10.0\any\runtimes\osx-arm64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\osx-arm64\native\libMicrosoft.CognitiveServices.Speech.core.dylib" target="tools\net10.0\any\runtimes\osx-arm64\native\libMicrosoft.CognitiveServices.Speech.core.dylib" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\osx-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.dylib" target="tools\net10.0\any\runtimes\osx-arm64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.dylib" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\osx-x64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" target="tools\net10.0\any\runtimes\osx-x64\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\osx-x64\native\libMicrosoft.CognitiveServices.Speech.core.dylib" target="tools\net10.0\any\runtimes\osx-x64\native\libMicrosoft.CognitiveServices.Speech.core.dylib" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\osx-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.dylib" target="tools\net10.0\any\runtimes\osx-x64\native\libMicrosoft.CognitiveServices.Speech.extension.kws.ort.dylib" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.core.dll" target="tools\net10.0\any\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.core.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.extension.audio.sys.dll" target="tools\net10.0\any\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.extension.audio.sys.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.extension.kws.dll" target="tools\net10.0\any\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.extension.kws.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.extension.kws.ort.dll" target="tools\net10.0\any\runtimes\win-arm64\native\Microsoft.CognitiveServices.Speech.extension.kws.ort.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.core.dll" target="tools\net10.0\any\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.core.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.audio.sys.dll" target="tools\net10.0\any\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.audio.sys.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.codec.dll" target="tools\net10.0\any\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.codec.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.kws.dll" target="tools\net10.0\any\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.kws.dll" />
+    <file src="D:\Dev\2026\repos\RalfAI\src\RalfAI\bin\Release\net10.0\publish\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.kws.ort.dll" target="tools\net10.0\any\runtimes\win-x64\native\Microsoft.CognitiveServices.Speech.extension.kws.ort.dll" />
+  </files>
+</package>

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "ralfai": {
+      "version": "1.2.0",
+      "commands": [
+        "ralf"
+      ],
+      "rollForward": false
+    },
+    "ralfai.studio": {
+      "version": "1.2.4",
+      "commands": [
+        "ralf-studio"
+      ],
+      "rollForward": false
+    }
+  }
+}

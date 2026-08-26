@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>RalfAI.Studio</id>
+    <version>1.2.1</version>
+    <authors>RalfAI.Studio.Tool</authors>
+    <description>RalfAI Studio — a Blazor Hybrid workspace with file tree, Monaco editor, and Markdown preview.</description>
+    <tags>dotnet-tool blazor-hybrid monaco markdown editor</tags>
+    <packageTypes>
+      <packageType name="DotnetTool" />
+    </packageTypes>
+    <repository type="git" commit="179d2d496c5b5e008efa29108904e0823b2da79d" />
+  </metadata>
+</package>

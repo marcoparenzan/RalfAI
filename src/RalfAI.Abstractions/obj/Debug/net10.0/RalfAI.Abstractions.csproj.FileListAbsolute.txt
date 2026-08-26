@@ -23,3 +23,16 @@ D:\Dev\2026\repos\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstra
 D:\Dev\2026\repos\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\refint\RalfAI.Abstractions.dll
 D:\Dev\2026\repos\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.pdb
 D:\Dev\2026\repos\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\ref\RalfAI.Abstractions.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\bin\Debug\net10.0\RalfAI.Abstractions.deps.json
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\bin\Debug\net10.0\RalfAI.Abstractions.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\bin\Debug\net10.0\RalfAI.Abstractions.pdb
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.csproj.AssemblyReference.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.GeneratedMSBuildEditorConfig.editorconfig
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.AssemblyInfoInputs.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.AssemblyInfo.cs
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.csproj.CoreCompileInputs.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.sourcelink.json
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\refint\RalfAI.Abstractions.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\RalfAI.Abstractions.pdb
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Abstractions\obj\Debug\net10.0\ref\RalfAI.Abstractions.dll

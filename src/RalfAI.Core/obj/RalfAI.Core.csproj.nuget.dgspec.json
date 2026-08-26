@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj": {}
+    "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj": {}
   },
   "projects": {
-    "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj": {
+    "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj",
+        "projectUniqueName": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj",
         "projectName": "RalfAI.Abstractions",
-        "projectPath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj",
+        "projectPath": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj",
         "packagesPath": "C:\\Users\\marco\\.nuget\\packages\\",
-        "outputPath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\obj\\",
+        "outputPath": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Abstractions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -26,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "D:\\Dev\\NuGetLocalFeed": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -73,7 +74,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400-preview.0.26322.102/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -351,14 +352,14 @@
         }
       }
     },
-    "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj": {
+    "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj",
+        "projectUniqueName": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj",
         "projectName": "RalfAI.Core",
-        "projectPath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj",
+        "projectPath": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Core\\RalfAI.Core.csproj",
         "packagesPath": "C:\\Users\\marco\\.nuget\\packages\\",
-        "outputPath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Core\\obj\\",
+        "outputPath": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -373,6 +374,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "D:\\Dev\\NuGetLocalFeed": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -380,8 +382,8 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj": {
-                "projectPath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj"
+              "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj": {
+                "projectPath": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj"
               }
             }
           }
@@ -456,7 +458,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400-preview.0.26322.102/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

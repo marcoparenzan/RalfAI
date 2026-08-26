@@ -1,274 +1,78 @@
-# Guida all'uso
+﻿# Guida all'uso
 
-RalfAI è un agente di coding autonomo a riga di comando, distribuito come
-[.NET global tool](https://learn.microsoft.com/dotnet/core/tools/global-tools) (`ralf`). Per come è
-fatto internamente vedi [ARCHITECTURE.md](ARCHITECTURE.md); per l'installazione e la configurazione
-completa (provider AI, rate limiting, voce) vedi [README.md](README.md). Questa guida copre l'uso
-quotidiano una volta installato.
-
-## Avvio
+## CLI
 
 ```bash
-ralf                          # apre un folder picker (ricorda l'ultima cartella usata)
-ralf "C:\path\to\output-folder"
+ralf
+ralf D:\progetto --context dotnet --debug
+ralf --version
 ```
 
-L'argomento posizionale con la cartella target è **opzionale**: se non lo passi e non c'è ancora
-una cartella ricordata da un avvio precedente, si apre un file browser a schermo intero (vedi
-[sotto](#file-browser)) per sceglierla. La cartella viene creata automaticamente se non esiste.
+La testata del prompt riporta sempre `RalfAI v<version>`, context, modello e cartella.
 
-In fase di sviluppo, dalla cartella `src/` del repo, si può anche lanciare senza installare il tool:
+### Editor
 
-```bash
-cd src
-dotnet run --project RalfAI -- "C:\path\to\output-folder"
-```
+- frecce e `Home`/`End`: spostamento del cursore;
+- `Ctrl+←/→` e `Ctrl+Home/End`: parola/documento;
+- `Backspace` e `Delete`: cancellazione;
+- `Ctrl+V` o `Shift+Insert`: incolla atomico, senza consumare eventi tastiera;
+- `Enter`: nuova riga; `Ctrl+Enter`: invio; `Esc`: pulizia bozza.
 
-### Scegliere il context
+### Progresso e costi
 
-```bash
-ralf "C:\path\to\output-folder" --context html
-ralf --list-contexts
-```
+Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.
+`F8` o `--debug` mantiene il log operativo a schermo. Non viene inventato o esposto il
+chain-of-thought privato: sono mostrate solo operazioni osservabili ed eventuale reasoning
+esplicitamente restituito dal provider.
 
-- `--context <nome>` ha priorità su tutto.
-- In alternativa si può impostare `"AgentContext": "dotnet"` in `appsettings.json` (o la variabile
-  d'ambiente `RALFAI_AgentContext`).
-- Se non specificato, il default è **`markdown`** (vedi [ARCHITECTURE.md](ARCHITECTURE.md) e
-  [ROADMAP.md](ROADMAP.md)) — non `dotnet`.
-- `--list-contexts` elenca tutti i context registrati (`dotnet`, `markdown`, `html`) senza avviare
-  una sessione.
-- Un nome sconosciuto fa fallire l'avvio con un errore che elenca i context registrati.
-- Ogni cartella target ricorda il proprio context (e il flag debug) in
-  `<cartella>/.ralfai/config.yaml`: rilanciare `ralf <cartella>` — o lasciare che si riprenda da
-  solo senza argomenti — riparte con lo stesso context.
-
-Altri flag: `--debug` (mostra le tool-call in tempo reale fin dall'avvio) e
-`--config <path>` (usa un file di configurazione alternativo — vedi
-[README.md](README.md#where-the-config-file-lives)).
-
-## Sessione interattiva
-
-L'intera sessione gira nello screen buffer alternato del terminale (la stessa tecnica di
-`vim`/`less`/`htop`): il tuo scrollback normale resta intatto e viene ripristinato all'uscita.
-Scrivi il messaggio (anche su più righe, incolla pure liberamente) e usa questi tasti:
-
-| Tasto | Azione |
-| --- | --- |
-| `Ctrl+Enter` | invia il messaggio |
-| `Enter` | va a capo nel buffer (composizione multi-riga) |
-| `Esc` | svuota il buffer corrente |
-| `F1` | mostra la tabella comandi a schermo intero |
-| `F2` | detta una riga via microfono (richiede `AzureSpeech`) |
-| `F3` | legge ad alta voce l'ultima risposta dell'agente (richiede `AzureSpeech`, `Esc` interrompe) |
-| `F5` | pulisce lo schermo |
-| `F6` | cambia generation context (`↑↓`/`Enter`/`Esc` nel menu) |
-| `F7` | cambia cartella target (apre il file browser) |
-| `F8` | attiva/disattiva i messaggi di debug (tool call, notice di rate-limit) |
-| `F10` / `Ctrl+Q` | esce da RalfAI |
-| `Ctrl+C` | interrompe il turno corrente (due volte forza la chiusura del processo) |
-| `Esc` / `Ctrl+X` durante l'elaborazione | interrompe il turno in corso (come il primo `Ctrl+C`) |
-
-Non c'è più una lista di comandi persistente sullo schermo: sopra il prompt vedi solo lo stato
-corrente (context · modello · cartella); premi `F1` quando ti serve il riepilogo dei tasti.
-
-### File browser
-
-Si apre all'avvio senza argomenti (nessuna cartella ricordata) o con `F7` durante una sessione:
-un pannello a singolo riquadro per navigare il filesystem, con anteprima file e piccole operazioni
-di gestione.
-
-| Tasto | Azione |
-| --- | --- |
-| `↑` / `↓` | muovi la selezione |
-| `PgUp` / `PgDn` | muovi la selezione di 10 |
-| `Enter` | apri la cartella selezionata |
-| `Backspace` | sali di un livello |
-| `F9` | usa la cartella corrente come target RalfAI |
-| `F3` | visualizza il file selezionato (sola lettura, max 200 KB, no binari) |
-| `F4` | apre il file selezionato in un editor esterno (vedi sotto) |
-| `F2` | rinomina l'elemento selezionato |
-| `F7` | crea una nuova cartella |
-| `F8` / `Del` | elimina (chiede conferma) |
-| `F1` | mostra questa tabella |
-| `F10` / `Esc` | annulla e torna indietro |
-
-`F4` lancia il comando configurato sotto la chiave `Editor` in `appsettings.json` (override
-via `RALFAI_Editor`), passandogli il percorso completo del file selezionato come argomento —
-default **`code.exe`** (VS Code) se non configurato. Non aspetta che l'editor si chiuda: apre
-e torna subito al file browser. Se il comando non è nel `PATH` o non esiste, viene mostrato un
-messaggio d'errore con l'indicazione di correggere `Editor`.
-
-### Input da pipe/script
-
-Se lo stdin è rediretto (es. `echo "..." | ralf ...`), l'input passa in modalità riga-per-riga
-(niente box interattivo, niente listener Esc, niente file browser a schermo intero): utile per
-test automatici o script. In questa modalità i tasti funzione non esistono, quindi le stesse azioni
-sono comandi testuali:
-
-- **`/exe`** invia il buffer accumulato all'agente.
-- **`/cancel`** svuota il buffer senza inviare.
-- **`/help`** mostra la tabella comandi.
-- **`/speak`** legge ad alta voce l'ultima risposta dell'agente (richiede `AzureSpeech`).
-- **`/clear`** pulisce lo schermo.
-- **`/switch-context`** cambia generation context.
-- **`/switch-folder`** cambia cartella target.
-- **`/toggle-debug`** attiva/disattiva i messaggi di debug.
-- **`/voice`** registra dal microfono e aggiunge il testo riconosciuto come riga nel buffer
-  (richiede `AzureSpeech` — vedi sotto): poi invii con `/exe` come di consueto. La registrazione si
-  ferma da sola quando l'SDK rileva una pausa nel parlato.
-- **`exit`** (o EOF/Ctrl+Z) chiude RalfAI.
-
-## Cosa fa l'agente a ogni richiesta (context `dotnet`)
-
-Ogni context (`dotnet`, `markdown`, `html`) ha il proprio set di tool e il proprio prompt di
-sistema — vedi la tabella in [README.md](README.md#contexts). Il flusso del context `dotnet`,
-preso come esempio rappresentativo:
-
-1. **Logga** la richiesta in `PROMPTS.md` (voce numerata, creato alla prima richiesta) prima di
-   fare qualunque altra cosa — vedi [Log dei prompt](#log-dei-prompt-promptsmd) sotto.
-2. **Esplora** la cartella con `FileSystem.ListFiles` prima di scrivere, per non sovrascrivere
-   lavoro esistente. Se nel messaggio c'è una URL, la scarica con `Web.FetchUrl` per leggere
-   specifiche/documentazione.
-3. **Pianifica** in 2-3 frasi cosa costruirà.
-4. **Scaffolda** con `dotnet new` (`DotNet.RunDotnetNew`, `--framework net10.0`), dentro `src/`.
-5. **Implementa** scrivendo i file sorgente con `FileSystem.WriteFile`.
-6. **Compila** con `DotNet.RunBuild` puntato su `src/`; in caso di errori, corregge e ricompila
-   (fino a 10 iterazioni).
-7. **Testa** con `DotNet.RunTest`; corregge finché i test non passano (fino a 10 iterazioni).
-8. **Riporta** un riepilogo di cosa ha costruito e come eseguirlo.
-
-I progetti `dotnet` e `html` usano entrambi un layout `src/` (codice) · `ops/` (config/deployment)
-dentro la cartella target. La documentazione (`README.md`, `USAGE.md`, `ARCHITECTURE.md`,
-`ROADMAP.md`) vive sempre alla **radice** della cartella target, mai in una sottocartella `docs/`
-— stessa convenzione di questo repo. Il context `markdown` segue la stessa convenzione quando
-l'obiettivo è documentare un progetto software. `PROMPTS.md` è l'eccezione: viene sempre
-mantenuto, in ogni context, a partire dalla prima richiesta (vedi sotto).
-
-### Log dei prompt (`PROMPTS.md`)
-
-Ogni context, in ogni progetto generato, mantiene `PROMPTS.md` alla radice della cartella
-target: un log numerato e cronologico di ogni richiesta ricevuta dall'agente per quel progetto,
-con una riga di riepilogo di cosa è stato fatto in risposta. Viene aggiornato come primo passo di
-ogni turno, prima di qualunque altra azione — così riflette l'intento anche se il resto del turno
-fallisce. A differenza degli altri quattro file (`README.md`/`USAGE.md`/`ARCHITECTURE.md`/
-`ROADMAP.md`, creati solo se ha senso per le dimensioni del progetto), `PROMPTS.md` non è
-opzionale: è quello che rende la storia di un progetto tracciabile fino alle richieste che
-l'hanno guidata.
-
-Ogni chiamata a strumento è visibile in tempo reale quando `F8`/`--debug` è attivo:
+Dopo ogni risposta compaiono durata, token e costo stimato. Lo storico JSON Lines è:
 
 ```text
-⏺ DotNet.RunBuild(projectPath=)
-    ⎿  $ dotnet build  Exit code: 0 ...
+<progetto>/.ralfai/cost-history.jsonl
 ```
 
-## Esempi di prompt
-
-```text
-Crea una console app che calcola i numeri di Fibonacci, con un metodo Fibonacci(int n)
-testato con xUnit per i casi 0, 1, 10 e un input negativo che deve lanciare un'eccezione.
-```
-
-```text
-Leggi la spec su https://example.com/api-spec.md e genera un client HTTP tipizzato
-per quell'API, con test che usano un HttpMessageHandler finto.
-```
-
-```text
-Aggiungi un endpoint minimal API GET /health che ritorna 200 OK, senza rompere
-la build esistente.
-```
-
-## Immagini (JPG/PNG)
-
-L'agente ha accesso a un set di tool `Image.*` in ogni context, senza bisogno di configurazione:
-
-- **`Image.GetInfo`** — dimensioni, formato, dimensione file.
-- **`Image.Resize`**, **`Image.Crop`**, **`Image.Rotate`**, **`Image.Flip`**,
-  **`Image.Grayscale`**, **`Image.ConvertFormat`** — manipolazione di file `.jpg`/`.jpeg`/`.png`
-  già presenti nella cartella target (es. ridimensionare uno screenshot, convertire un asset da
-  PNG a JPG).
-
-Non c'è bisogno di chiederli esplicitamente: l'agente li usa quando la richiesta lo richiede
-(es. "ridimensiona logo.png a 256x256").
-
-**`Image.GenerateAI`** (opzionale) genera una nuova immagine — logo, icona, illustrazione — da
-una descrizione testuale, tramite un modello di generazione immagini (DALL-E/gpt-image) su Azure
-AI Foundry o OpenAI. Richiede `ImageModelId` configurato sotto la sezione del provider attivo
-(vedi [README.md](README.md#configure)); se assente, il tool semplicemente non è registrato —
-nessun impatto sul resto dell'app. Non disponibile con `AIProvider` `anthropic` (nessuna API di
-generazione immagini). La generazione può richiedere qualche secondo: mentre è in corso, la
-descrizione del tool resta visibile nella riga di stato (spinner), e con `F8`/`--debug` attivo
-compaiono anche le righe `⏺`/`⎿` con il prompt e l'esito — lo stesso meccanismo di visibilità
-delle tool-call di [Cosa fa l'agente](#cosa-fa-lagente-a-ogni-richiesta-context-dotnet).
-
-## Log della sessione
-
-Ogni turno (utente, agente, tool call) viene scritto in `<target>/.ralfai/session.md`. Al riavvio
-di RalfAI sulla stessa cartella, la sessione precedente viene ricaricata automaticamente (tool
-call e blocchi "thinking" esclusi dalla history rimandata al modello). Nella stessa cartella
-`.ralfai/` vive anche `config.yaml`, che ricorda il context e il flag debug di quella cartella.
-
-## Voce (Speech-to-Text / Text-to-Speech)
-
-Richiede una risorsa **Azure AI Speech** configurata in `appsettings.json`:
+Configurare le tariffe USD per milione di token:
 
 ```json
-"AzureSpeech": {
-  "Region": "westeurope",
-  "ApiKey": "<speech-api-key>",
-  "RecognitionLanguage": "it-IT",
-  "VoiceName": "it-IT-IsabellaNeural"
+"Pricing": {
+  "openai": {
+    "gpt-5.1": { "InputUsdPerMillionTokens": 1.25, "OutputUsdPerMillionTokens": 10.0 }
+  }
 }
 ```
 
-(anche qui vale l'override via `RALFAI_AzureSpeech__Region` /
-`RALFAI_AzureSpeech__ApiKey`). Se `Region`/`ApiKey` restano vuoti, `F2`/`F3` (o `/voice`/`/speak`
-in modalità pipe) rispondono con un messaggio d'errore invece di funzionare — il resto dell'app
-non è impattato.
+## RalfAI Studio (Blazor Hybrid)
 
-- **`F2`** (interattivo) / **`/voice`** (pipe) — attiva il microfono, ascolta finché non rileva
-  una pausa, e aggiunge il testo riconosciuto come nuova riga nel buffer corrente. Puoi combinarlo
-  con testo digitato a mano nello stesso messaggio, prima di inviare con `Ctrl+Enter`/`/exe`.
-- **`F3`** (interattivo) / **`/speak`** (pipe) — legge ad alta voce l'ultima risposta finale
-  dell'agente (quella già mostrata a schermo).
-- `RecognitionLanguage` (default `it-IT`) e `VoiceName` (default `it-IT-IsabellaNeural`) sono
-  configurabili per usare un'altra lingua/voce fra quelle supportate da Azure AI Speech.
+Installazione globale e avvio:
 
-## Configurazione rate limiting
+```powershell
+.\ops\install-studio-tool.ps1
+ralf-studio D:\progetto
+```
 
-In `appsettings.json`, sotto `AzureAIFoundry.RateLimits` (usata per il pacing indipendentemente
-dal provider AI attivo — vedi [README.md](README.md#choosing-a-provider) per la scelta del
-provider):
+Verifica versione e guida:
 
-| Chiave | Significato | Default |
-|---|---|---|
-| `RequestsPerMinute` | limite RPM dell'endpoint | 20 |
-| `TokensPerMinute` | limite TPM dell'endpoint | 20000 |
-| `SafetyFactor` | margine di sicurezza sul pacing (1.25 = spazia le richieste come se il limite fosse il 25% più stretto) | 1.25 |
+```powershell
+ralf-studio --version
+ralf-studio --help
+```
 
-Su risposta 429 il client fa retry (fino a 3 tentativi) rispettando l'header `Retry-After` se
-presente, altrimenti attende 60s.
+Per installarlo nel manifest locale usare `install-studio-tool.ps1 -Local`, quindi eseguirlo
+dalla cartella `src` con `dotnet tool run ralf-studio -- D:\progetto`.
 
-## Troubleshooting
+In alternativa, senza installazione:
 
-- **`AzureAIFoundry:Endpoint missing...`** — manca `Endpoint`/`ApiKey` in `appsettings.json` o
-  nelle variabili d'ambiente `RALFAI_AzureAIFoundry__Endpoint` /
-  `RALFAI_AzureAIFoundry__ApiKey` (solo se `AIProvider` è `foundry`, il default — vedi
-  [README.md](README.md)).
-- **`Unknown context '<nome>'`** — il nome passato a `--context` non è registrato; i nomi
-  disponibili sono elencati nel messaggio d'errore (o con `ralf --list-contexts`).
-- **Build/test che non convergono dopo 10 iterazioni** — l'agente si ferma e spiega il problema
-  residuo nella risposta finale invece di continuare all'infinito.
-- **`dotnet` non trovato** durante l'esecuzione (context `dotnet`) — verifica che il .NET SDK sia
-  nel `PATH` del processo che esegue RalfAI.
-- **`Voice non configurata...`** su `F2`/`F3` (o `/voice`/`/speak` in modalità pipe) — manca
-  `Region`/`ApiKey` sotto `AzureSpeech` in `appsettings.json` (o le relative variabili
-  d'ambiente).
-- **`Nessun parlato riconosciuto.`** — il microfono non ha catturato audio comprensibile entro il
-  timeout di silenzio dell'SDK; riprova parlando più vicino al microfono o subito dopo aver
-  attivato la dettatura.
-- **`Could not open '<comando>'...`** su `F4` nel file browser — il comando configurato sotto
-  `Editor` (default `code.exe`) non è nel `PATH` o non esiste; correggi `Editor` in
-  `appsettings.json` (o `RALFAI_Editor`) con il comando giusto per il tuo editor.
+```bash
+dotnet run --project src/RalfAI.Studio/RalfAI.Studio -- D:\progetto
+```
+
+Richiede Windows, .NET 10 Runtime e WebView2. Offre file tree (esclude `.git`, `bin`, `obj`),
+Monaco Editor con syntax highlighting, salvataggio con `Ctrl+S` e preview Markdown live tramite
+Markdig. Monaco è caricato da CDN e richiede connettività al primo avvio.
+
+## Installazione/aggiornamento tool CLI
+
+```powershell
+.\ops\install-tool.ps1        # globale
+.\ops\install-tool.ps1 -Local # manifest locale sotto src
+```

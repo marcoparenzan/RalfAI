@@ -1,0 +1,22 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>RalfAI Studio</title>
+  <base href="/">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div id="app">Loading RalfAI Studio…</div>
+  <div id="blazor-error-ui">
+    RalfAI Studio encountered an unexpected UI error.
+    <a href="" class="reload">Reload</a>
+    <button class="dismiss" type="button">×</button>
+  </div>
+  <!-- Dependencies must exist before Blazor starts and invokes ralfEditor.initialize. -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+  <script src="editor.js"></script>
+  <script src="_framework/blazor.webview.js"></script>
+</body>
+</html>

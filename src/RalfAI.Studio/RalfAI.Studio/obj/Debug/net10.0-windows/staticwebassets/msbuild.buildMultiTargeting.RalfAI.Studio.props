@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\RalfAI.Studio.props" />
+</Project>

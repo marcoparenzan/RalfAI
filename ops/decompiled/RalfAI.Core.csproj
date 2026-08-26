@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>RalfAI.Core</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>14.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="Microsoft.Agents.AI.Abstractions">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.agents.ai.abstractions\1.16.0\lib\net10.0\Microsoft.Agents.AI.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.AI.Abstractions">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.ai.abstractions\10.8.3\lib\net10.0\Microsoft.Extensions.AI.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.configuration.abstractions\10.0.3\lib\net10.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="RalfAI.Abstractions">
+      <HintPath>src/RalfAI.Core/bin/Debug/net10.0/RalfAI.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ClientModel">
+      <HintPath>c:\users\marco\.nuget\packages\system.clientmodel\1.14.0\lib\net10.0\System.ClientModel.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenAI">
+      <HintPath>c:\users\marco\.nuget\packages\openai\2.10.0\lib\net10.0\OpenAI.dll</HintPath>
+    </Reference>
+    <Reference Include="Anthropic">
+      <HintPath>c:\users\marco\.nuget\packages\anthropic\12.35.1\lib\net9.0\Anthropic.dll</HintPath>
+    </Reference>
+    <Reference Include="Azure.AI.OpenAI">
+      <HintPath>c:\users\marco\.nuget\packages\azure.ai.openai\2.1.0\lib\netstandard2.0\Azure.AI.OpenAI.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.AI">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.ai\10.8.3\lib\net10.0\Microsoft.Extensions.AI.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.configuration\10.0.0\lib\net10.0\Microsoft.Extensions.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CognitiveServices.Speech.csharp">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.cognitiveservices.speech\1.51.1\lib\netstandard2.0\Microsoft.CognitiveServices.Speech.csharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory.Data">
+      <HintPath>c:\users\marco\.nuget\packages\system.memory.data\10.0.3\lib\net10.0\System.Memory.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="SixLabors.ImageSharp">
+      <HintPath>c:\users\marco\.nuget\packages\sixlabors.imagesharp\3.1.11\lib\net6.0\SixLabors.ImageSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.AI.OpenAI">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.ai.openai\10.6.0\lib\net10.0\Microsoft.Extensions.AI.OpenAI.dll</HintPath>
+    </Reference>
+    <Reference Include="Azure.Core">
+      <HintPath>c:\users\marco\.nuget\packages\azure.core\1.44.1\lib\net6.0\Azure.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Json">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.configuration.json\10.0.0\lib\net10.0\Microsoft.Extensions.Configuration.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.FileExtensions">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.configuration.fileextensions\10.0.0\lib\net10.0\Microsoft.Extensions.Configuration.FileExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.EnvironmentVariables">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.configuration.environmentvariables\10.0.0\lib\net10.0\Microsoft.Extensions.Configuration.EnvironmentVariables.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Agents.AI">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.agents.ai\1.16.0\lib\net10.0\Microsoft.Agents.AI.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+      <HintPath>c:\users\marco\.nuget\packages\microsoft.extensions.logging.abstractions\10.0.10\lib\net10.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

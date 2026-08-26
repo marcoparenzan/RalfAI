@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RalfAI.Contexts.DotNet")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d8860a8130adb4139c180bba2f7fff8dcbc2018b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+179d2d496c5b5e008efa29108904e0823b2da79d")]
 [assembly: System.Reflection.AssemblyProductAttribute("RalfAI.Contexts.DotNet")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RalfAI.Contexts.DotNet")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

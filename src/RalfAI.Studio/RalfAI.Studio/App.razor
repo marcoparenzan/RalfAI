@@ -1,0 +1,151 @@
+﻿@inject WorkspaceService Workspace
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="shell">
+  <header>
+    <strong>RalfAI Studio</strong><span>v@Version</span><span class="root">@Workspace.Root</span>
+    <button type="button" @onclick="SaveAsync" disabled="@(_selected is null || !_editorReady)">Save (Ctrl+S)</button>
+  </header>
+  <main>
+    <aside>
+      <div class="pane-title">FILES</div>
+      @foreach (var entry in _tree)
+      {
+        <TreeNode Entry="entry" OnOpen="OpenAsync" SelectedPath="_selected" />
+      }
+    </aside>
+    <section class="editor">
+      <div class="pane-title">@(_selected ?? "Select a file") @if (_dirty) { <b>●</b> }</div>
+      <div id="monaco"></div>
+    </section>
+    <section class="preview">
+      <div class="pane-title">MARKDOWN PREVIEW</div>
+      <article class="markdown">@((MarkupString)_preview)</article>
+    </section>
+  </main>
+  <footer class="@(_hasError ? "error" : null)">@_status</footer>
+</div>
+
+@code {
+  private readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+  private IReadOnlyList<WorkspaceEntry> _tree = [];
+  private string? _selected;
+  private string _preview = "<p>Select a Markdown file to preview it.</p>";
+  private string _status = "Starting editor…";
+  private bool _dirty;
+  private bool _editorReady;
+  private bool _hasError;
+  private DotNetObjectReference<App>? _reference;
+  private static string Version => typeof(App).Assembly.GetName().Version?.ToString(3) ?? "unknown";
+
+  protected override void OnInitialized()
+  {
+      try
+      {
+          _tree = Workspace.GetTree();
+          _status = $"Ready · {_tree.Count} root entries";
+      }
+      catch (Exception ex)
+      {
+          SetError($"Cannot read workspace: {ex.Message}");
+      }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+      if (!firstRender) return;
+      _reference = DotNetObjectReference.Create(this);
+      try
+      {
+          await JS.InvokeVoidAsync("ralfEditor.initialize", _reference);
+          _editorReady = true;
+          _status = "Ready · click folders to expand and files to open";
+          StateHasChanged();
+      }
+      catch (Exception ex)
+      {
+          SetError($"Editor initialization failed: {ex.Message}");
+          StateHasChanged();
+      }
+  }
+
+  private async Task OpenAsync(WorkspaceEntry entry)
+  {
+      if (entry.IsDirectory) return;
+      _selected = entry.Path;
+      _dirty = false;
+      _hasError = false;
+      UpdatePreview(Workspace.Read(entry.Path));
+      _status = $"Opening {entry.Path}…";
+      StateHasChanged();
+
+      try
+      {
+          if (!_editorReady)
+              throw new InvalidOperationException("Monaco Editor is not ready. Check the status bar for initialization errors.");
+
+          var content = Workspace.Read(entry.Path);
+          await JS.InvokeVoidAsync("ralfEditor.setValue", content, LanguageFor(entry.Path));
+          UpdatePreview(content);
+          _status = $"Opened {entry.Path}";
+      }
+      catch (Exception ex)
+      {
+          SetError($"Cannot open {entry.Path}: {ex.Message}");
+      }
+  }
+
+  private async Task SaveAsync()
+  {
+      if (_selected is null || !_editorReady) return;
+      try
+      {
+          var content = await JS.InvokeAsync<string>("ralfEditor.getValue");
+          await Workspace.WriteAsync(_selected, content);
+          UpdatePreview(content);
+          _dirty = false;
+          _hasError = false;
+          _status = $"Saved {_selected} at {DateTime.Now:T}";
+      }
+      catch (Exception ex)
+      {
+          SetError($"Cannot save {_selected}: {ex.Message}");
+      }
+  }
+
+  [JSInvokable]
+  public Task EditorChanged(string content)
+  {
+      _dirty = true;
+      UpdatePreview(content);
+      StateHasChanged();
+      return Task.CompletedTask;
+  }
+
+  [JSInvokable]
+  public Task SaveFromKeyboard() => SaveAsync();
+
+  private void UpdatePreview(string content) => _preview = _selected?.EndsWith(".md", StringComparison.OrdinalIgnoreCase) == true
+      ? Markdown.ToHtml(content, _markdownPipeline)
+      : "<p class='muted'>Preview is available for Markdown files.</p>";
+
+  private void SetError(string message)
+  {
+      _hasError = true;
+      _status = message;
+  }
+
+  private static string LanguageFor(string path) => Path.GetExtension(path).ToLowerInvariant() switch
+  {
+      ".cs" => "csharp", ".razor" => "razor", ".json" => "json", ".js" => "javascript",
+      ".ts" => "typescript", ".css" => "css", ".html" => "html", ".xml" or ".csproj" => "xml",
+      ".md" => "markdown", ".yml" or ".yaml" => "yaml", _ => "plaintext"
+  };
+
+  public ValueTask DisposeAsync()
+  {
+      _reference?.Dispose();
+      return ValueTask.CompletedTask;
+  }
+}

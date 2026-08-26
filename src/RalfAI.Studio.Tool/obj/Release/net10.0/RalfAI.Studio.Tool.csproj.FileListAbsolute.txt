@@ -1,0 +1,15 @@
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\RalfAI.Studio.Tool.exe
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\RalfAI.Studio.Tool.deps.json
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\RalfAI.Studio.Tool.runtimeconfig.json
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\RalfAI.Studio.Tool.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\RalfAI.Studio.Tool.pdb
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.GeneratedMSBuildEditorConfig.editorconfig
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.AssemblyInfoInputs.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.AssemblyInfo.cs
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.csproj.CoreCompileInputs.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.sourcelink.json
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\refint\RalfAI.Studio.Tool.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.pdb
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\RalfAI.Studio.Tool.genruntimeconfig.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\obj\Release\net10.0\ref\RalfAI.Studio.Tool.dll

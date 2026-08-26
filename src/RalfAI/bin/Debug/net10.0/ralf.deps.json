@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "ralf/1.1.0": {
+      "ralf/1.3.0": {
         "dependencies": {
           "RalfAI.Abstractions": "1.0.0",
           "RalfAI.Contexts.DotNet": "1.0.0",
@@ -70,8 +70,6 @@
           "Microsoft.Extensions.AI.Abstractions": "10.8.3",
           "Microsoft.Extensions.AI.Evaluation": "10.7.0",
           "Microsoft.Extensions.Compliance.Abstractions": "10.5.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
           "Microsoft.Extensions.VectorData.Abstractions": "10.7.0",
           "Microsoft.ML.Tokenizers": "2.0.0"
         },
@@ -101,8 +99,6 @@
           "Microsoft.Extensions.AI.Abstractions": "10.8.3",
           "Microsoft.Extensions.AI.Evaluation": "10.7.0",
           "Microsoft.Extensions.Compliance.Abstractions": "10.5.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
           "Microsoft.Extensions.VectorData.Abstractions": "10.7.0",
           "Microsoft.ML.Tokenizers": "2.0.0"
         },
@@ -121,8 +117,6 @@
           "Microsoft.Extensions.AI.Evaluation": "10.7.0",
           "Microsoft.Extensions.AI.OpenAI": "10.6.0",
           "Microsoft.Extensions.Compliance.Abstractions": "10.5.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
           "Microsoft.Extensions.VectorData.Abstractions": "10.7.0",
           "Microsoft.ML.Tokenizers": "2.0.0",
           "OpenAI": "2.10.0",
@@ -444,9 +438,6 @@
       "Microsoft.Extensions.AI/10.8.3": {
         "dependencies": {
           "Microsoft.Extensions.AI.Abstractions": "10.8.3",
-          "Microsoft.Extensions.Caching.Abstractions": "10.0.10",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
           "System.Numerics.Tensors": "10.0.10"
         },
         "runtime": {
@@ -487,52 +478,11 @@
           }
         }
       },
-      "Microsoft.Extensions.Caching.Abstractions/10.0.10": {
-        "dependencies": {
-          "Microsoft.Extensions.Primitives": "10.0.10"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Extensions.Caching.Abstractions.dll": {
-            "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.0.1026.32716"
-          }
-        }
-      },
       "Microsoft.Extensions.Compliance.Abstractions/10.5.0": {
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10"
-        },
         "runtime": {
           "lib/net10.0/Microsoft.Extensions.Compliance.Abstractions.dll": {
             "assemblyVersion": "10.5.0.0",
             "fileVersion": "10.500.26.21304"
-          }
-        }
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.10": {
-        "runtime": {
-          "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
-            "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.0.1026.32716"
-          }
-        }
-      },
-      "Microsoft.Extensions.Logging.Abstractions/10.0.10": {
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Extensions.Logging.Abstractions.dll": {
-            "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.0.1026.32716"
-          }
-        }
-      },
-      "Microsoft.Extensions.Primitives/10.0.10": {
-        "runtime": {
-          "lib/net10.0/Microsoft.Extensions.Primitives.dll": {
-            "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.0.1026.32716"
           }
         }
       },
@@ -598,7 +548,6 @@
       },
       "System.ClientModel/1.14.0": {
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
           "System.Memory.Data": "10.0.3"
         },
         "runtime": {
@@ -691,7 +640,7 @@
     }
   },
   "libraries": {
-    "ralf/1.1.0": {
+    "ralf/1.3.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -794,40 +743,12 @@
       "path": "microsoft.extensions.ai.openai/10.6.0",
       "hashPath": "microsoft.extensions.ai.openai.10.6.0.nupkg.sha512"
     },
-    "Microsoft.Extensions.Caching.Abstractions/10.0.10": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-4ZFBNE+jzR+CrWWlhOesnmywCW7pYKT0dxyAQRdL11yJwxe4jvcAu31eorFtEkoFeCDcUTeNssgPv2yaRRptaQ==",
-      "path": "microsoft.extensions.caching.abstractions/10.0.10",
-      "hashPath": "microsoft.extensions.caching.abstractions.10.0.10.nupkg.sha512"
-    },
     "Microsoft.Extensions.Compliance.Abstractions/10.5.0": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-xbWZji13Vb2jDJNtwVrKpI09jd8x3n3fL+GzhiLK+8O5Wc2A+GyqCZalST2fV46Pf0QfCwkXf83y+3/rDkCd7A==",
       "path": "microsoft.extensions.compliance.abstractions/10.5.0",
       "hashPath": "microsoft.extensions.compliance.abstractions.10.5.0.nupkg.sha512"
-    },
-    "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.10": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-z/2xXlFw2aLGjHyEm6E0tQ+In6VfzQzTrtArbQ2c0TQE16ZbyDCMGPvaUT9I0s8rgy9sRWlU2P9waW37qV04qA==",
-      "path": "microsoft.extensions.dependencyinjection.abstractions/10.0.10",
-      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.10.0.10.nupkg.sha512"
-    },
-    "Microsoft.Extensions.Logging.Abstractions/10.0.10": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-zkFxGYUvdxAvIKTyXHrmW+Sux53D4SezD9dMyZ6hrwwzPQJNuwCRy1f5W7AvYTqacEGhWF2XderRQG1OvbV8og==",
-      "path": "microsoft.extensions.logging.abstractions/10.0.10",
-      "hashPath": "microsoft.extensions.logging.abstractions.10.0.10.nupkg.sha512"
-    },
-    "Microsoft.Extensions.Primitives/10.0.10": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-5wu/GrYVd8mG2DVUw3vFJzF+O336TyTGg/Kmcgw9bfwYhCoFiV5lR5QeEmKecJyrW4W54nMfD3p3589E8a7czQ==",
-      "path": "microsoft.extensions.primitives/10.0.10",
-      "hashPath": "microsoft.extensions.primitives.10.0.10.nupkg.sha512"
     },
     "Microsoft.Extensions.VectorData.Abstractions/10.7.0": {
       "type": "package",

@@ -1,6 +1,12 @@
 using RalfAI;
 using RalfAI.Contexts;
 
+if (args.Contains("--version", StringComparer.Ordinal) || args.Contains("-v", StringComparer.Ordinal))
+{
+    Console.WriteLine($"RalfAI {AppVersion.Current}");
+    return 0;
+}
+
 if (args.Contains("--list-contexts", StringComparer.Ordinal))
 {
     foreach (var (key, ctx) in ContextRegistry.All())

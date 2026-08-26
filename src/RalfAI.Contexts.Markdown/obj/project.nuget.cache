@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "pan1sEcP+6M=",
+  "dgSpecHash": "9wtmFW0fci4=",
   "success": true,
-  "projectFilePath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Contexts.Markdown\\RalfAI.Contexts.Markdown.csproj",
+  "projectFilePath": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Contexts.Markdown\\RalfAI.Contexts.Markdown.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\marco\\.nuget\\packages\\anthropic\\12.35.1\\anthropic.12.35.1.nupkg.sha512",
     "C:\\Users\\marco\\.nuget\\packages\\azure.ai.openai\\2.1.0\\azure.ai.openai.2.1.0.nupkg.sha512",

@@ -1,4 +1,4 @@
-using Anthropic;
+﻿using Anthropic;
 using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Agents.AI;
@@ -11,194 +11,121 @@ using RalfAI.Voice;
 
 namespace RalfAI;
 
-/// <summary>
-/// The agent engine: Microsoft Agent Framework chat/tool-calling loop, rate limiting, logging,
-/// optional voice — everything that isn't tied to a specific frontend (console, WinForms/Blazor
-/// Hybrid, …). Frontends drive it via <see cref="SendAsync"/> and render by subscribing to
-/// <see cref="ToolCallStarted"/>/<see cref="ToolCallCompleted"/> and reading <see cref="Messages"/>.
-///
-/// Provider-agnostic by design: which AI backend to talk to (Azure AI Foundry, native OpenAI, or
-/// Anthropic Claude) is picked from config via <see cref="BuildChatClient"/>, each using that
-/// provider's own official .NET SDK behind the shared <see cref="IChatClient"/> abstraction —
-/// swapping providers doesn't touch anything else in this class.
-/// </summary>
 public sealed class AgentEngine
 {
     private readonly AIAgent _agent;
     private readonly AgentSession _agentSession;
     private readonly List<ChatMessage> _pendingResumeMessages;
-    private readonly List<AgentMessage> _messages = [];
+    private readonly List<AgentMessage> _messages;
     private readonly ConversationLogger _logger;
     private readonly RateLimiter _rateLimiter;
+    private readonly IConfiguration _configuration;
+    private readonly string _provider;
+    private readonly CostHistoryStore _costHistory;
 
     public IAgentContext Context { get; }
     public string ModelId { get; }
     public string TargetFolder { get; }
     public string LogPath => _logger.LogPath;
+    public string CostHistoryPath => _costHistory.Path;
+    public CostSummary GetCostSummary() => _costHistory.Summarize();
     public SpeechService? Speech { get; }
     public string? LastFinalText { get; private set; }
     public int ResumedMessageCount { get; }
     public IReadOnlyList<AgentMessage> Messages => _messages;
-
-    /// <summary>Raised just before a tool call runs (name + preview args).</summary>
     public event Action<ToolCallStart>? ToolCallStarted;
-
-    /// <summary>Raised right after a tool call returns (full args + result).</summary>
     public event Action<ToolCallResult>? ToolCallCompleted;
-
-    /// <summary>Pacing/TPM/429 notices from the rate limiter — purely informational.</summary>
     public event Action<AgentNotice>? Notice;
+    public event Action<TurnProgress>? Progress;
 
-    private AgentEngine(
-        AIAgent agent, AgentSession agentSession, string modelId, IAgentContext context, string targetFolder,
-        ConversationLogger logger, RateLimiter rateLimiter, SpeechService? speech,
-        List<ChatMessage> pendingResumeMessages, List<AgentMessage> resumedMessages)
+    private AgentEngine(AIAgent agent, AgentSession session, string modelId, IAgentContext context, string targetFolder,
+        ConversationLogger logger, RateLimiter limiter, SpeechService? speech, IConfiguration configuration,
+        string provider, List<ChatMessage> pending, List<AgentMessage> messages)
     {
-        _agent = agent;
-        _agentSession = agentSession;
-        ModelId = modelId;
-        Context = context;
-        TargetFolder = targetFolder;
-        _logger = logger;
-        _rateLimiter = rateLimiter;
-        Speech = speech;
-        _pendingResumeMessages = pendingResumeMessages;
-        _messages = resumedMessages;
-        ResumedMessageCount = resumedMessages.Count;
+        _agent = agent; _agentSession = session; ModelId = modelId; Context = context; TargetFolder = targetFolder;
+        _logger = logger; _rateLimiter = limiter; Speech = speech; _configuration = configuration; _provider = provider;
+        _pendingResumeMessages = pending; _messages = messages; ResumedMessageCount = messages.Count;
+        _costHistory = new CostHistoryStore(targetFolder);
     }
 
-    /// <summary>
-    /// Builds the engine: resolves the configured AI provider, registers this context's tools
-    /// plus the universal engine-level ones (AI.Ask, Speech.*), and replays any prior transcript
-    /// for this folder. Async because creating the framework's <see cref="AgentSession"/> is.
-    /// </summary>
-    public static async Task<AgentEngine> CreateAsync(
-        IConfiguration config, string targetFolder, string contextKey, IAgentContext context,
-        CancellationToken ct = default)
+    public static async Task<AgentEngine> CreateAsync(IConfiguration config, string targetFolder, string contextKey,
+        IAgentContext context, CancellationToken ct = default)
     {
         var logger = new ConversationLogger(targetFolder);
-
-        var rpm    = int.TryParse   (config["AzureAIFoundry:RateLimits:RequestsPerMinute"], out var r) ? r : 20;
-        var tpm    = int.TryParse   (config["AzureAIFoundry:RateLimits:TokensPerMinute"],   out var t) ? t : 20000;
-        var safety = double.TryParse(config["AzureAIFoundry:RateLimits:SafetyFactor"],
-                         System.Globalization.NumberStyles.Float,
-                         System.Globalization.CultureInfo.InvariantCulture,
-                         out var s) ? s : 1.25;
-
+        var rpm = int.TryParse(config["AzureAIFoundry:RateLimits:RequestsPerMinute"], out var r) ? r : 20;
+        var tpm = int.TryParse(config["AzureAIFoundry:RateLimits:TokensPerMinute"], out var t) ? t : 20000;
+        var safety = double.TryParse(config["AzureAIFoundry:RateLimits:SafetyFactor"], System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var s) ? s : 1.25;
         Action<AgentNotice>? noticeHandler = null;
-        var rateLimiter = new RateLimiter(rpm, tpm, safety, n => noticeHandler?.Invoke(n));
+        var limiter = new RateLimiter(rpm, tpm, safety, n => noticeHandler?.Invoke(n));
         var speech = SpeechService.FromConfig(config);
-        var imageGen = RalfAI.ImageGeneration.ImageGenerationService.FromConfig(config);
-
+        var imageGen = ImageGeneration.ImageGenerationService.FromConfig(config);
+        var provider = (config["AIProvider"] ?? "foundry").Trim().ToLowerInvariant();
         var (chatClient, modelId) = BuildChatClient(config, contextKey);
-
         var image = new ImagePlugin(targetFolder);
         var tools = new List<AITool>(context.GetTools(targetFolder))
         {
             AIFunctionFactory.Create(new AIPlugin(chatClient).Ask, name: "AI_Ask"),
-            AIFunctionFactory.Create(image.GetInfo,       name: "Image_GetInfo"),
-            AIFunctionFactory.Create(image.Resize,        name: "Image_Resize"),
-            AIFunctionFactory.Create(image.Crop,          name: "Image_Crop"),
-            AIFunctionFactory.Create(image.Rotate,        name: "Image_Rotate"),
-            AIFunctionFactory.Create(image.Flip,          name: "Image_Flip"),
-            AIFunctionFactory.Create(image.Grayscale,     name: "Image_Grayscale"),
-            AIFunctionFactory.Create(image.ConvertFormat, name: "Image_ConvertFormat"),
+            AIFunctionFactory.Create(image.GetInfo, name: "Image_GetInfo"),
+            AIFunctionFactory.Create(image.Resize, name: "Image_Resize"),
+            AIFunctionFactory.Create(image.Crop, name: "Image_Crop"),
+            AIFunctionFactory.Create(image.Rotate, name: "Image_Rotate"),
+            AIFunctionFactory.Create(image.Flip, name: "Image_Flip"),
+            AIFunctionFactory.Create(image.Grayscale, name: "Image_Grayscale"),
+            AIFunctionFactory.Create(image.ConvertFormat, name: "Image_ConvertFormat")
         };
         if (speech is not null)
         {
-            var speechPlugin = new SpeechPlugin(speech);
-            tools.Add(AIFunctionFactory.Create(speechPlugin.Speak, name: "Speech_Speak"));
-            tools.Add(AIFunctionFactory.Create(speechPlugin.Listen, name: "Speech_Listen"));
+            var plugin = new SpeechPlugin(speech);
+            tools.Add(AIFunctionFactory.Create(plugin.Speak, name: "Speech_Speak"));
+            tools.Add(AIFunctionFactory.Create(plugin.Listen, name: "Speech_Listen"));
         }
         if (imageGen is not null)
         {
-            var imageGenPlugin = new ImageGenerationPlugin(imageGen, targetFolder);
-            tools.Add(AIFunctionFactory.Create(imageGenPlugin.GenerateAI, name: "Image_GenerateAI"));
+            var plugin = new ImageGenerationPlugin(imageGen, targetFolder);
+            tools.Add(AIFunctionFactory.Create(plugin.GenerateAI, name: "Image_GenerateAI"));
         }
 
-        var systemPrompt = context.BuildSystemPrompt(targetFolder)
-            + BuildUniversalToolsPrompt(speech is not null, imageGen is not null);
-
-        // ToolCallStarted/ToolCallCompleted/Notice are instance events, but the middleware and
-        // rate limiter callback have to be wired before the instance exists — buffer through a
-        // local Action that gets redirected to the real events once the engine is constructed.
-        Action<ToolCallStart>? startHandler = null;
-        Action<ToolCallResult>? completedHandler = null;
-
-        var agent = chatClient
-            .AsAIAgent(instructions: systemPrompt, name: "RalfAI", tools: tools)
-            .AsBuilder()
-                .Use(async (AIAgent innerAgent, FunctionInvocationContext fctx,
-                            Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>> next,
-                            CancellationToken fct) =>
-                {
-                    var displayName = FriendlyToolName(fctx.Function.Name);
-                    var rawDescription = fctx.Function.Description;
-                    var description = string.IsNullOrWhiteSpace(rawDescription)
-                        ? displayName
-                        : rawDescription.Length > 80 ? rawDescription[..80].TrimEnd() + "…" : rawDescription;
-
-                    var argPairs = fctx.Arguments
-                        .Where(kv => kv.Value is not null)
-                        .Select(kv => (kv.Key, Value: kv.Value!.ToString() ?? ""))
-                        .ToList();
-                    var argPreview = string.Join(", ", argPairs.Select(a =>
-                    {
-                        var p = a.Value.Length > 40 ? a.Value[..40].Replace("\n", "↵") + "…" : a.Value.Replace("\n", "↵");
-                        return $"{a.Key}={p}";
-                    }));
-                    var argsForLog = string.Join(", ", argPairs.Select(a => $"{a.Key}={a.Value}"));
-
-                    startHandler?.Invoke(new ToolCallStart(displayName, description, argPreview, argsForLog));
-
-                    var result = await next(fctx, fct);
-
-                    var resultText = result?.ToString() ?? "";
-                    completedHandler?.Invoke(new ToolCallResult(displayName, argsForLog, resultText));
-                    logger.LogTool(displayName, argsForLog, resultText);
-
-                    return result;
-                })
-            .Build();
-
-        var agentSession = await agent.CreateSessionAsync().ConfigureAwait(false);
-
-        var existing = logger.LoadExistingHistory();
-        var resumeMessages = existing
-            .Select(e => new ChatMessage(e.Role == "user" ? ChatRole.User : ChatRole.Assistant, e.Content))
-            .ToList();
-        var resumedAgentMessages = existing.Select(e => new AgentMessage(e.Role, e.Content)).ToList();
-
-        var engine = new AgentEngine(
-            agent, agentSession, modelId, context, targetFolder, logger, rateLimiter, speech,
-            resumeMessages, resumedAgentMessages);
-
-        startHandler = call => engine.ToolCallStarted?.Invoke(call);
-        completedHandler = call => engine.ToolCallCompleted?.Invoke(call);
-        noticeHandler = notice => engine.Notice?.Invoke(notice);
-
+        Action<ToolCallStart>? started = null;
+        Action<ToolCallResult>? completed = null;
+        var agent = chatClient.AsAIAgent(context.BuildSystemPrompt(targetFolder) + UniversalPrompt(speech is not null, imageGen is not null), "RalfAI", tools: tools)
+            .AsBuilder().Use(async (AIAgent _, FunctionInvocationContext fctx,
+                Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>> next, CancellationToken token) =>
+            {
+                var name = FriendlyToolName(fctx.Function.Name);
+                var description = string.IsNullOrWhiteSpace(fctx.Function.Description) ? name : fctx.Function.Description;
+                var args = string.Join(", ", fctx.Arguments.Where(x => x.Value is not null).Select(x => $"{x.Key}={x.Value}"));
+                var preview = args.Length > 120 ? args[..120] + "…" : args;
+                started?.Invoke(new ToolCallStart(name, description, preview, args));
+                var result = await next(fctx, token);
+                var resultText = result?.ToString() ?? "";
+                completed?.Invoke(new ToolCallResult(name, args, resultText));
+                logger.LogTool(name, args, resultText);
+                return result;
+            }).Build();
+        var session = await agent.CreateSessionAsync().ConfigureAwait(false);
+        var history = logger.LoadExistingHistory();
+        var engine = new AgentEngine(agent, session, modelId, context, targetFolder, logger, limiter, speech, config, provider,
+            history.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList(),
+            history.Select(x => new AgentMessage(x.Role, x.Content)).ToList());
+        started = x => engine.ToolCallStarted?.Invoke(x);
+        completed = x => engine.ToolCallCompleted?.Invoke(x);
+        noticeHandler = x => engine.Notice?.Invoke(x);
         return engine;
     }
 
-    // ── Turn processing ──────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Sends one user message and returns the agent's final answer. Retries up to 3 times on
-    /// HTTP 429. On cancellation, the unanswered user message is removed from local history
-    /// before the <see cref="OperationCanceledException"/> is rethrown, so history stays
-    /// consistent. The first turn after resuming a session replays the prior transcript.
-    /// </summary>
     public async Task<AgentTurnResult> SendAsync(string userText, CancellationToken ct = default)
     {
-        _logger.LogUser(userText);
-        _messages.Add(new AgentMessage("user", userText));
-
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        Progress?.Invoke(new("prepare", $"Preparing request for {_provider}/{ModelId}", timer.Elapsed));
+        _logger.LogUser(userText); _messages.Add(new("user", userText));
         for (var attempt = 0; attempt <= 3; attempt++)
         {
             try
             {
-                await _rateLimiter.ThrottleAsync(EstimateTokens(_messages), ct);
-
+                Progress?.Invoke(new("rate-limit", "Checking request and token limits", timer.Elapsed));
+                await _rateLimiter.ThrottleAsync(_messages.Sum(m => m.Content.Length / 4 + 5), ct);
+                Progress?.Invoke(new("model", "Waiting for model response", timer.Elapsed));
                 AgentResponse response;
                 if (_pendingResumeMessages.Count > 0)
                 {
@@ -206,234 +133,56 @@ public sealed class AgentEngine
                     response = await _agent.RunAsync(seeded, _agentSession, cancellationToken: ct);
                     _pendingResumeMessages.Clear();
                 }
-                else
-                {
-                    response = await _agent.RunAsync(userText, _agentSession, cancellationToken: ct);
-                }
-
+                else response = await _agent.RunAsync(userText, _agentSession, cancellationToken: ct);
+                Progress?.Invoke(new("response", "Response received; extracting answer and usage", timer.Elapsed));
                 var raw = response.Text ?? "(no response)";
-                var (thinking, finalText) = ExtractThinking(raw);
-                var displayText = string.IsNullOrWhiteSpace(finalText) ? "(no final answer yet)" : finalText;
-                var historyText = string.IsNullOrWhiteSpace(finalText) ? raw : finalText;
-
-                _messages.Add(new AgentMessage("assistant", historyText));
-                LastFinalText = string.IsNullOrWhiteSpace(finalText) ? null : finalText;
-                _logger.LogAssistant(thinking, displayText);
-
-                return new AgentTurnResult(thinking, displayText, Error: null);
+                var (thinking, final) = ExtractThinking(raw);
+                var display = string.IsNullOrWhiteSpace(final) ? "(no final answer yet)" : final;
+                _messages.Add(new("assistant", string.IsNullOrWhiteSpace(final) ? raw : final));
+                LastFinalText = string.IsNullOrWhiteSpace(final) ? null : final;
+                _logger.LogAssistant(thinking, display);
+                timer.Stop();
+                var usage = TurnMetrics.Read(response, _configuration, _provider, ModelId);
+                await _costHistory.AppendAsync(new(DateTimeOffset.UtcNow, _provider, ModelId, usage?.InputTokens,
+                    usage?.OutputTokens, usage?.TotalTokens, usage?.EstimatedCostUsd, timer.Elapsed.TotalSeconds), ct);
+                Progress?.Invoke(new("complete", $"Turn saved; usage history → {_costHistory.Path}", timer.Elapsed));
+                return new(thinking, display, null, usage, timer.Elapsed);
             }
-            catch (OperationCanceledException)
-            {
-                if (_messages.Count > 0 && _messages[^1].Role == "user")
-                    _messages.RemoveAt(_messages.Count - 1);
-                throw;
-            }
-            catch (Exception ex) when (attempt < 3 && Is429(ex))
-            {
-                await _rateLimiter.RetryDelayAsync(ExtractRetryAfter(ex), ct);
-            }
-            catch (Exception ex)
-            {
-                return new AgentTurnResult(null, null, Error: ex.Message);
-            }
+            catch (OperationCanceledException) { if (_messages.LastOrDefault()?.Role == "user") _messages.RemoveAt(_messages.Count - 1); throw; }
+            catch (Exception ex) when (attempt < 3 && Is429(ex)) { await _rateLimiter.RetryDelayAsync(null, ct); }
+            catch (Exception ex) { timer.Stop(); return new(null, null, ex.Message, Duration: timer.Elapsed); }
         }
-
-        return new AgentTurnResult(null, null, Error: "Rate limit retry budget exceeded (HTTP 429).");
+        return new(null, null, "Rate limit retry budget exceeded (HTTP 429).", Duration: timer.Elapsed);
     }
 
-    // ── Reasoning extraction ─────────────────────────────────────────────────
-
-    /// <summary>
-    /// Reasoning models (e.g. DeepSeek-R1 style) emit a &lt;think&gt;…&lt;/think&gt;
-    /// block ahead of the final answer when called through an OpenAI-compatible endpoint.
-    /// Splits it out so callers only deal with the final answer, while the transcript log
-    /// keeps both.
-    /// </summary>
     private static (string? Thinking, string Final) ExtractThinking(string raw)
     {
-        const string openTag = "<think>";
-        const string closeTag = "</think>";
-
-        var openIdx = raw.IndexOf(openTag, StringComparison.OrdinalIgnoreCase);
-        if (openIdx < 0) return (null, raw.Trim());
-
-        var closeIdx = raw.IndexOf(closeTag, openIdx, StringComparison.OrdinalIgnoreCase);
-        if (closeIdx < 0)
-        {
-            // Truncated mid-thought (e.g. hit a token limit) — no final answer yet.
-            var thinkingOnly = raw[(openIdx + openTag.Length)..].Trim();
-            return (thinkingOnly, "");
-        }
-
-        var thinking = raw[(openIdx + openTag.Length)..closeIdx].Trim();
-        var final    = (raw[..openIdx] + raw[(closeIdx + closeTag.Length)..]).Trim();
-        return (string.IsNullOrWhiteSpace(thinking) ? null : thinking, final);
+        var open = raw.IndexOf("<think>", StringComparison.OrdinalIgnoreCase);
+        if (open < 0) return (null, raw.Trim());
+        var close = raw.IndexOf("</think>", open, StringComparison.OrdinalIgnoreCase);
+        if (close < 0) return (raw[(open + 7)..].Trim(), "");
+        var thought = raw[(open + 7)..close].Trim();
+        return (string.IsNullOrWhiteSpace(thought) ? null : thought, (raw[..open] + raw[(close + 8)..]).Trim());
     }
 
-    // ── Token helpers ────────────────────────────────────────────────────────
+    private static bool Is429(Exception ex) => ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase)
+        || ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase) || (ex.InnerException is not null && Is429(ex.InnerException));
+    private static string FriendlyToolName(string name) { var i = name.IndexOf('_'); return i > 0 ? name[..i] + "." + name[(i + 1)..] : name; }
+    private static string UniversalPrompt(bool speech, bool imageGen) => "\n\n## Engine tools\nAI.Ask and JPG/PNG manipulation are available."
+        + (imageGen ? " Image.GenerateAI is available." : "") + (speech ? " Speech.Speak and Speech.Listen are available." : "");
 
-    // 1 token ≈ 4 chars for English/code; +5 per message for role/structure overhead.
-    private static int EstimateTokens(IEnumerable<AgentMessage> messages)
-        => messages.Sum(m => m.Content.Length / 4 + 5);
-
-    // ── 429 detection and retry-after extraction ─────────────────────────────
-
-    private static bool Is429(Exception ex)
+    private static (IChatClient, string) BuildChatClient(IConfiguration config, string contextKey) =>
+        (config["AIProvider"] ?? "foundry").Trim().ToLowerInvariant() switch
+        { "openai" => BuildOpenAI(config), "anthropic" => BuildAnthropic(config), _ => BuildFoundry(config, contextKey) };
+    private static (IChatClient, string) BuildOpenAI(IConfiguration c) { var key = c["OpenAI:ApiKey"] ?? throw new InvalidOperationException("OpenAI:ApiKey missing"); var model = c["OpenAI:ModelId"] ?? "gpt-5.1"; return (new OpenAIClient(key).GetChatClient(model).AsIChatClient(), model); }
+    private static (IChatClient, string) BuildAnthropic(IConfiguration c) { var key = c["Anthropic:ApiKey"] ?? throw new InvalidOperationException("Anthropic:ApiKey missing"); var model = c["Anthropic:ModelId"] ?? "claude-sonnet-4-5"; return (new AnthropicClient { ApiKey = key }.AsIChatClient(model), model); }
+    private static (IChatClient, string) BuildFoundry(IConfiguration c, string context)
     {
-        // Azure OpenAI and native OpenAI both surface HTTP errors as System.ClientModel
-        // exceptions; Anthropic's SDK has its own hierarchy with a dedicated rate-limit type.
-        if (ex is System.ClientModel.ClientResultException cre && (int)cre.Status == 429)
-            return true;
-
-        if (ex is Anthropic.Exceptions.AnthropicRateLimitException)
-            return true;
-
-        if (ex.Message.Contains("429",            StringComparison.Ordinal) ||
-            ex.Message.Contains("TooManyRequests", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("rate limit",      StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("rate_limit",      StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        return ex.InnerException is not null && Is429(ex.InnerException);
-    }
-
-    private static TimeSpan? ExtractRetryAfter(Exception ex)
-    {
-        var match = System.Text.RegularExpressions.Regex.Match(
-            ex.Message,
-            @"retry.after[:\s]+(\d+)",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        return match.Success && int.TryParse(match.Groups[1].Value, out var s)
-            ? TimeSpan.FromSeconds(s)
-            : null;
-    }
-
-    // ── Universal tool docs ──────────────────────────────────────────────────
-
-    /// <summary>
-    /// Documents the engine-level tools registered directly by <see cref="CreateAsync"/> (as
-    /// opposed to the context's own <see cref="IAgentContext.GetTools"/>), so the model knows
-    /// they exist regardless of which context is active.
-    /// </summary>
-    private static string BuildUniversalToolsPrompt(bool hasSpeech, bool hasImageGen)
-    {
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine();
-        sb.AppendLine();
-        sb.AppendLine("## Engine Tools (always available, independent of context)");
-        sb.AppendLine("- AI.Ask — delegate an isolated sub-question or sub-task to the same model " +
-                       "(e.g. summarize a long file) without adding it to the main conversation history.");
-        sb.AppendLine("- Image.GetInfo — read a JPG/PNG image's dimensions, format and file size.");
-        sb.AppendLine("- Image.Resize — resize a JPG/PNG image (optionally keeping aspect ratio).");
-        sb.AppendLine("- Image.Crop — crop a rectangular region out of a JPG/PNG image.");
-        sb.AppendLine("- Image.Rotate — rotate a JPG/PNG image by an arbitrary angle.");
-        sb.AppendLine("- Image.Flip — mirror a JPG/PNG image horizontally or vertically.");
-        sb.AppendLine("- Image.Grayscale — convert a JPG/PNG image to grayscale.");
-        sb.AppendLine("- Image.ConvertFormat — convert a JPG/PNG image between .jpg and .png.");
-        if (hasImageGen)
-        {
-            sb.AppendLine("- Image.GenerateAI — generate a new image (e.g. a logo or icon) from a " +
-                           "text prompt and save it as JPG/PNG.");
-        }
-        if (hasSpeech)
-        {
-            sb.AppendLine("- Speech.Speak — speak text aloud through the configured voice.");
-            sb.AppendLine("- Speech.Listen — listen on the microphone for one utterance and return the recognized text.");
-        }
-        return sb.ToString();
-    }
-
-    /// <summary>"FileSystem_WriteFile" (a valid tool name — providers reject dots) → "FileSystem.WriteFile" for display/logging.</summary>
-    private static string FriendlyToolName(string name)
-    {
-        var idx = name.IndexOf('_');
-        return idx > 0 ? string.Concat(name.AsSpan(0, idx), ".", name.AsSpan(idx + 1)) : name;
-    }
-
-    // ── Provider selection ───────────────────────────────────────────────────
-
-    /// <summary>
-    /// Builds the <see cref="IChatClient"/> for the configured AI provider — each using that
-    /// provider's own official .NET SDK, not a shared connector:
-    ///
-    ///   AIProvider = "foundry" (default)  → Azure.AI.OpenAI against AzureAIFoundry:Endpoint
-    ///   AIProvider = "openai"             → OpenAI's own .NET SDK against the public API
-    ///   AIProvider = "anthropic"          → Anthropic's own .NET SDK (Claude)
-    /// </summary>
-    private static (IChatClient ChatClient, string ModelId) BuildChatClient(IConfiguration config, string contextKey)
-    {
-        var provider = (config["AIProvider"] ?? "foundry").Trim().ToLowerInvariant();
-
-        return provider switch
-        {
-            "openai"    => BuildOpenAI(config),
-            "anthropic" => BuildAnthropic(config),
-            _           => BuildFoundry(config, contextKey),
-        };
-    }
-
-    private static (IChatClient, string) BuildOpenAI(IConfiguration config)
-    {
-        var apiKey = config["OpenAI:ApiKey"]
-            ?? throw new InvalidOperationException(
-                "OpenAI:ApiKey missing in appsettings.json or RALFAI_OpenAI__ApiKey env var");
-        var modelId = config["OpenAI:ModelId"] ?? "gpt-5.1";
-
-        var client = new OpenAIClient(apiKey);
-        return (client.GetChatClient(modelId).AsIChatClient(), modelId);
-    }
-
-    private static (IChatClient, string) BuildAnthropic(IConfiguration config)
-    {
-        var apiKey = config["Anthropic:ApiKey"]
-            ?? throw new InvalidOperationException(
-                "Anthropic:ApiKey missing in appsettings.json or RALFAI_Anthropic__ApiKey env var");
-        var modelId = config["Anthropic:ModelId"] ?? "claude-sonnet-4-5";
-
-        var client = new AnthropicClient { ApiKey = apiKey };
-        return (client.AsIChatClient(modelId), modelId);
-    }
-
-    /// <summary>
-    /// Resolves which Foundry model deployment to use for a given context.
-    ///
-    ///   AzureAIFoundry:ContextModels:&lt;contextKey&gt;   → named model to use for this context
-    ///   AzureAIFoundry:DefaultModel                     → named model when the context has none
-    ///   AzureAIFoundry:Models:&lt;name&gt;:ModelId       → that named model's deployment id
-    ///
-    /// Falls back to the legacy flat AzureAIFoundry:ModelId (single global model, "deepseek-r1"
-    /// if unset) when no Models/ContextModels section is configured, so existing
-    /// appsettings.json files keep working unchanged.
-    /// </summary>
-    private static (IChatClient, string) BuildFoundry(IConfiguration config, string contextKey)
-    {
-        var endpoint = config["AzureAIFoundry:Endpoint"]
-            ?? throw new InvalidOperationException(
-                "AzureAIFoundry:Endpoint missing in appsettings.json or RALFAI_AzureAIFoundry__Endpoint env var");
-        var apiKey = config["AzureAIFoundry:ApiKey"]
-            ?? throw new InvalidOperationException(
-                "AzureAIFoundry:ApiKey missing in appsettings.json or RALFAI_AzureAIFoundry__ApiKey env var");
-
-        var modelName = config[$"AzureAIFoundry:ContextModels:{contextKey}"]
-            ?? config["AzureAIFoundry:DefaultModel"];
-
-        var modelId = config["AzureAIFoundry:ModelId"] ?? "deepseek-r1";
-        if (modelName is not null)
-        {
-            var section = config.GetSection($"AzureAIFoundry:Models:{modelName}");
-            if (section.Exists())
-                modelId = section["ModelId"] ?? modelName;
-        }
-
-        // The Foundry portal often shows a project URL (…/api/projects/<name>) or a full
-        // …/chat/completions URL; the Azure OpenAI client just wants the bare resource host.
-        var url = endpoint.TrimEnd('/');
-        if (url.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
-            url = url[..^"/chat/completions".Length].TrimEnd('/');
-        var host = new Uri(url).GetLeftPart(UriPartial.Authority);
-
-        var client = new AzureOpenAIClient(new Uri(host), new AzureKeyCredential(apiKey));
-        return (client.GetChatClient(modelId).AsIChatClient(), modelId);
+        var endpoint = c["AzureAIFoundry:Endpoint"] ?? throw new InvalidOperationException("AzureAIFoundry:Endpoint missing");
+        var key = c["AzureAIFoundry:ApiKey"] ?? throw new InvalidOperationException("AzureAIFoundry:ApiKey missing");
+        var named = c[$"AzureAIFoundry:ContextModels:{context}"] ?? c["AzureAIFoundry:DefaultModel"];
+        var model = named is null ? c["AzureAIFoundry:ModelId"] ?? "deepseek-r1" : c[$"AzureAIFoundry:Models:{named}:ModelId"] ?? named;
+        var host = new Uri(endpoint).GetLeftPart(UriPartial.Authority);
+        return (new AzureOpenAIClient(new Uri(host), new AzureKeyCredential(key)).GetChatClient(model).AsIChatClient(), model);
     }
 }

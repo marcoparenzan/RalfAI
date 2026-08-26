@@ -1,56 +1,16 @@
-using System.Text;
-using Spectre.Console;
+﻿using Spectre.Console;
 using Spectre.Console.Rendering;
 using RalfAI.Voice;
 
 namespace RalfAI;
 
-/// <summary>
-/// Collects multi-line input into a plain (unboxed) prompt line and submits it on Ctrl+Enter.
-///
-/// This solves the problem of pasting text that contains blank lines:
-/// every line (including empty ones) is accumulated, and only Ctrl+Enter triggers processing.
-///
-/// In an interactive console, input is collected live, key by key, with no persistent key-binding
-/// list — press F1 for a full-screen overlay with the command reference instead. When stdin is
-/// redirected (piped/scripted input), falls back to a plain line-by-line prompt with typed
-/// /-commands, since key-by-key reading (and therefore function keys) requires a real console.
-///
-/// Interactive key bindings (live prompt only — see F1 for the full reference):
-///   Ctrl+Enter        submit the current buffer
-///   Enter              insert a newline (multi-line compose / paste)
-///   Esc                clear the buffer and start over (while composing)
-///   F1                 show command reference (full-screen overlay)
-///   F2                 dictate a line via the microphone (requires AzureSpeech configuration)
-///   F3                 read the agent's last response aloud (requires AzureSpeech configuration)
-///   F5                 clear the screen
-///   F6                 switch to a different generation context
-///   F7                 switch to a different target folder
-///   F8                 toggle debug messages (tool calls, rate-limit notices)
-///   F10 / Ctrl+Q       quit RalfAI
-///   Ctrl+C             interrupt the current turn while the agent is working (twice = force quit) — handled in RalfAIApp, not here
-///   Esc / Ctrl+X       same interrupt as Ctrl+C, while the agent is working — handled in RalfAIApp, not here
-///
-/// Piped/scripted input (redirected stdin, see <see cref="CollectPlain"/>) has no function
-/// keys — it uses typed "/"-commands instead, with their own reference shown by "/help"
-/// (<see cref="ShowHelpOverlayPlain"/>), distinct from the interactive one above.
-/// </summary>
+/// <summary>Collects rich multi-line input and submits it on Ctrl+Enter.</summary>
 public sealed class InputCollector(SpeechService? speech = null)
 {
     private readonly List<string> _lines = [];
     private string? _hintOverride;
     private string? _status;
 
-    /// <summary>
-    /// Collects input until Ctrl+Enter and returns the assembled text.
-    /// Returns <c>null</c> when the user quits (F10/Ctrl+Q, or EOF/'exit' in piped mode).
-    /// Any other string (including the internal "/speak", "/clear" markers) is
-    /// returned as-is for the caller to handle.
-    /// </summary>
-    /// <param name="status">
-    /// Ready-to-render Spectre markup (e.g. current context/model/folder) shown above the
-    /// prompt line — lets the caller keep the user oriented without a persistent command list.
-    /// </param>
     public string? Collect(string? status = null)
     {
         _lines.Clear();
@@ -58,150 +18,110 @@ public sealed class InputCollector(SpeechService? speech = null)
         return Console.IsInputRedirected ? CollectPlain() : CollectLive();
     }
 
-    // ── Interactive mode: live plain prompt, no border ──────────────────────
-
     private string? CollectLive()
     {
-        var current = new StringBuilder();
+        var buffer = new PromptBuffer();
         string? result = null;
-        var exitLoop = false;
+        var exit = false;
 
-        // Use the terminal's own cursor instead of a fake glyph — avoids Unicode fallback
-        // artifacts and looks orphaned less on an otherwise-empty continuation line.
-        try { Console.CursorVisible = true; } catch (IOException) { }
-
-        while (!exitLoop)
+        try { Console.CursorVisible = false; } catch (IOException) { }
+        while (!exit)
         {
             var showHelp = false;
 
-            AnsiConsole.Live(RenderPrompt(current)).Start(ctx =>
+            void ProcessKey(ConsoleKeyInfo key, LiveDisplayContext ctx)
             {
-                var innerDone = false;
+                var ctrl = key.Modifiers.HasFlag(ConsoleModifiers.Control);
+                var shift = key.Modifiers.HasFlag(ConsoleModifiers.Shift);
 
-                while (!innerDone)
+                if (key.Key == ConsoleKey.Enter && ctrl)
                 {
-                    ctx.UpdateTarget(RenderPrompt(current));
-                    ctx.Refresh();
-
-                    var key = Console.ReadKey(intercept: true);
-                    var ctrl = (key.Modifiers & ConsoleModifiers.Control) != 0;
-
-                    if (key.Key == ConsoleKey.Enter && ctrl)
+                    if (buffer.IsEmpty)
+                        _hintOverride = "[yellow]Buffer is empty — type something first.[/]";
+                    else
                     {
-                        if (current.Length > 0)
-                        {
-                            _lines.Add(current.ToString());
-                            current.Clear();
-                        }
-
-                        if (_lines.Count > 0)
-                        {
-                            result = string.Join("\n", _lines).Trim();
-                            exitLoop = true;
-                            innerDone = true;
-                        }
-                        else
-                        {
-                            _hintOverride = "[yellow]Buffer is empty — type something first.[/]";
-                        }
-                        continue;
+                        result = buffer.Text.Trim();
+                        exit = true;
                     }
-
-                    if (key.Key == ConsoleKey.F10 || (key.Key == ConsoleKey.Q && ctrl))
-                    {
-                        result = null;
-                        exitLoop = true;
-                        innerDone = true;
-                        continue;
-                    }
-
-                    switch (key.Key)
-                    {
-                        case ConsoleKey.Enter:
-                            _lines.Add(current.ToString());
-                            current.Clear();
-                            break;
-
-                        case ConsoleKey.F1:
-                            showHelp = true;
-                            innerDone = true;
-                            break;
-
-                        case ConsoleKey.F2:
-                            DictateInto(ctx);
-                            break;
-
-                        case ConsoleKey.F3:
-                            result = "/speak";
-                            exitLoop = true;
-                            innerDone = true;
-                            break;
-
-                        case ConsoleKey.F5:
-                            result = "/clear";
-                            exitLoop = true;
-                            innerDone = true;
-                            break;
-
-                        case ConsoleKey.F6:
-                            result = "/switch-context";
-                            exitLoop = true;
-                            innerDone = true;
-                            break;
-
-                        case ConsoleKey.F7:
-                            result = "/switch-folder";
-                            exitLoop = true;
-                            innerDone = true;
-                            break;
-
-                        case ConsoleKey.F8:
-                            result = "/toggle-debug";
-                            exitLoop = true;
-                            innerDone = true;
-                            break;
-
-                        case ConsoleKey.Backspace:
-                            if (current.Length > 0)
-                                current.Remove(current.Length - 1, 1);
-                            else if (_lines.Count > 0)
-                            {
-                                current.Append(_lines[^1]);
-                                _lines.RemoveAt(_lines.Count - 1);
-                            }
-                            break;
-
-                        case ConsoleKey.Escape:
-                            _lines.Clear();
-                            current.Clear();
-                            break;
-
-                        default:
-                            if (!char.IsControl(key.KeyChar))
-                                current.Append(key.KeyChar);
-                            break;
-                    }
+                    return;
                 }
 
-                ctx.UpdateTarget(RenderPrompt(current));
-                ctx.Refresh();
+                if (key.Key == ConsoleKey.F10 || (ctrl && key.Key == ConsoleKey.Q))
+                {
+                    exit = true;
+                    return;
+                }
+
+                if ((ctrl && key.Key == ConsoleKey.V) || (shift && key.Key == ConsoleKey.Insert))
+                {
+                    var pasted = ClipboardReader.ReadText();
+                    if (pasted is null)
+                        _hintOverride = "[yellow]Clipboard unavailable; use the terminal paste command.[/]";
+                    else
+                        buffer.Insert(pasted);
+                    return;
+                }
+
+                switch (key.Key)
+                {
+                    case ConsoleKey.Enter: buffer.Insert('\n'); break;
+                    case ConsoleKey.Tab: buffer.Insert('\t'); break;
+                    case ConsoleKey.Backspace: buffer.Backspace(); break;
+                    case ConsoleKey.Delete: buffer.Delete(); break;
+                    case ConsoleKey.LeftArrow: buffer.MoveLeft(ctrl); break;
+                    case ConsoleKey.RightArrow: buffer.MoveRight(ctrl); break;
+                    case ConsoleKey.UpArrow: buffer.MoveVertical(-1); break;
+                    case ConsoleKey.DownArrow: buffer.MoveVertical(1); break;
+                    case ConsoleKey.Home: buffer.MoveHome(ctrl); break;
+                    case ConsoleKey.End: buffer.MoveEnd(ctrl); break;
+                    case ConsoleKey.Escape: buffer.Clear(); break;
+                    case ConsoleKey.F1: showHelp = true; break;
+                    case ConsoleKey.F2: DictateInto(ctx, buffer); break;
+                    case ConsoleKey.F3: result = "/speak"; exit = true; break;
+                    case ConsoleKey.F5: result = "/clear"; exit = true; break;
+                    case ConsoleKey.F6: result = "/switch-context"; exit = true; break;
+                    case ConsoleKey.F7: result = "/switch-folder"; exit = true; break;
+                    case ConsoleKey.F8: result = "/toggle-debug"; exit = true; break;
+                    default:
+                        // Tab is a control char (handled above) — anything else that's
+                        // still a control char here isn't printable text, skip it.
+                        if (!char.IsControl(key.KeyChar)) buffer.Insert(key.KeyChar);
+                        break;
+                }
+            }
+
+            AnsiConsole.Live(RenderPrompt(buffer)).Start(ctx =>
+            {
+                while (!exit && !showHelp)
+                {
+                    ctx.UpdateTarget(RenderPrompt(buffer));
+                    ctx.Refresh();
+
+                    // Process the key that woke us up, then drain any more that are
+                    // already queued (e.g. a raw terminal paste that isn't routed
+                    // through Ctrl+V/Shift+Insert's atomic clipboard read below —
+                    // that one bypasses this loop entirely) without re-rendering
+                    // between them. Re-rendering after every single keystroke is slow
+                    // enough that a fast burst can outrun it and risk losing keys
+                    // once the console's input queue fills up; draining first and
+                    // rendering once afterwards keeps every key and feels instant
+                    // instead of laggy, with no visible difference for normal typing
+                    // (a human keystroke never has another one already queued).
+                    do
+                    {
+                        ProcessKey(Console.ReadKey(intercept: true), ctx);
+                    }
+                    while (!exit && !showHelp && Console.KeyAvailable);
+                }
             });
 
             if (showHelp) ShowHelpOverlayInteractive();
         }
 
-        try { Console.CursorVisible = false; } catch (IOException) { }
-
         return result;
     }
 
-    // ── Voice dictation (F2) ─────────────────────────────────────────────────
-
-    /// <summary>
-    /// Listens on the microphone and appends the recognized text as a new line in the
-    /// buffer, as if the user had typed it. No-op with a hint if AzureSpeech isn't configured.
-    /// </summary>
-    private void DictateInto(LiveDisplayContext ctx)
+    private void DictateInto(LiveDisplayContext ctx, PromptBuffer buffer)
     {
         if (speech is null)
         {
@@ -211,123 +131,74 @@ public sealed class InputCollector(SpeechService? speech = null)
 
         ctx.UpdateTarget(new Markup("[cyan]🎤 In ascolto… parla pure — si ferma da solo alla pausa.[/]"));
         ctx.Refresh();
-
         var (spoken, error) = speech.RecognizeOnceAsync().GetAwaiter().GetResult();
-
-        if (spoken is not null)
-            _lines.Add(spoken);
-
-        _hintOverride = spoken is not null
-            ? null
-            : $"[red]{Markup.Escape(error ?? "Riconoscimento non riuscito.")}[/]";
+        if (spoken is not null) buffer.Insert(spoken);
+        else _hintOverride = $"[red]{Markup.Escape(error ?? "Riconoscimento non riuscito.")}[/]";
     }
 
-    private IRenderable RenderPrompt(StringBuilder current)
+    private IRenderable RenderPrompt(PromptBuffer buffer)
     {
-        var displayLines = new List<string>(_lines) { current.ToString() };
-        var hasContent = displayLines.Any(l => l.Length > 0);
+        IRenderable prompt;
+        if (buffer.IsEmpty)
+            prompt = new Markup("[green]❯[/] [grey]Type your message… (F1 for help)[/]");
+        else
+        {
+            var before = buffer.Text[..buffer.Cursor];
+            var after = buffer.Text[buffer.Cursor..];
+            var withCursor = Markup.Escape(before) + "[invert] [/][underline]​[/]" + Markup.Escape(after);
+            var lines = withCursor.Split('\n');
+            prompt = new Markup(string.Join("\n", lines.Select((line, index) =>
+                (index == 0 ? "[green]❯[/] " : "  ") + line)));
+        }
 
-        // No fake cursor glyph here — the real terminal cursor (shown during CollectLive) ends
-        // up in the right place naturally, since it's just wherever this text stopped printing.
-        IRenderable promptLine = hasContent
-            ? new Markup(string.Join("\n", displayLines.Select((l, i) =>
-                (i == 0 ? "[green]❯[/] " : "  ") + Markup.Escape(l))))
-            : new Markup("[green]❯[/] [grey]Type your message… (F1 for help)[/]");
-
-        // Only transient feedback (errors, "buffer empty", dictation status) gets a line below
-        // the prompt — no persistent key-binding list. Shown for exactly one render, then cleared.
         var hint = _hintOverride;
         _hintOverride = null;
-
         var rows = new List<IRenderable>();
         if (_status is not null) rows.Add(new Markup(_status));
-        rows.Add(promptLine);
+        rows.Add(prompt);
         if (hint is not null) rows.Add(new Markup(hint));
-
         return rows.Count == 1 ? rows[0] : new Rows(rows);
     }
-
-    // ── Fallback mode: plain line-by-line prompt (redirected/piped stdin) ───
-    //
-    // Function keys and Ctrl+Enter can't be read from redirected stdin, so this path keeps
-    // the original typed /-commands for scripted/piped usage.
 
     private string? CollectPlain()
     {
         while (true)
         {
-            // Prompt changes after the first line to show multi-line mode
-            if (_lines.Count == 0)
-                AnsiConsole.Markup("[bold green]you>[/] ");
-            else
-                AnsiConsole.Markup($"[dim]  ({_lines.Count} lines)[/] ");
-
+            AnsiConsole.Markup(_lines.Count == 0 ? "[bold green]you>[/] " : $"[dim]  ({_lines.Count} lines)[/] ");
             string? line;
-            try { line = Console.ReadLine(); }
-            catch { return null; }
+            try { line = Console.ReadLine(); } catch { return null; }
+            if (line is null) return null;
 
-            if (line is null) return null; // EOF / Ctrl+Z
-
-            var trimmed = line.Trim();
-
-            switch (trimmed.ToLowerInvariant())
+            switch (line.Trim().ToLowerInvariant())
             {
-                case "exit":
-                case "/exit":
-                    return null;
-
+                case "exit": case "/exit": return null;
                 case "/cancel":
                     _lines.Clear();
                     AnsiConsole.MarkupLine("[dim]  ↩ Buffer cleared.[/]");
                     continue;
-
                 case "/exe":
-                    if (_lines.Count == 0)
-                    {
-                        AnsiConsole.MarkupLine("[dim]  Buffer is empty — type something first.[/]");
-                        continue;
-                    }
-                    return string.Join("\n", _lines).Trim();
-
-                case "/help":
-                    ShowHelpOverlayPlain();
+                    if (_lines.Count > 0) return string.Join("\n", _lines).Trim();
+                    AnsiConsole.MarkupLine("[dim]  Buffer is empty — type something first.[/]");
                     continue;
-
-                case "/speak":
-                    return "/speak";
-
-                case "/clear":
-                    return "/clear";
-
-                case "/switch-context":
-                    return "/switch-context";
-
-                case "/switch-folder":
-                    return "/switch-folder";
-
-                case "/toggle-debug":
-                    return "/toggle-debug";
-
+                case "/help": ShowHelpOverlayPlain(); continue;
+                case "/speak": return "/speak";
+                case "/clear": return "/clear";
+                case "/switch-context": return "/switch-context";
+                case "/switch-folder": return "/switch-folder";
+                case "/toggle-debug": return "/toggle-debug";
                 case "/voice":
                     if (speech is null)
                     {
                         AnsiConsole.MarkupLine("[red]  Voice non configurata — imposta AzureSpeech in appsettings.json.[/]");
                         continue;
                     }
-
                     AnsiConsole.MarkupLine("[cyan]  🎤 In ascolto… parla pure.[/]");
                     var (spoken, error) = speech.RecognizeOnceAsync().GetAwaiter().GetResult();
-
                     if (spoken is null)
-                    {
                         AnsiConsole.MarkupLine($"[red]  {Markup.Escape(error ?? "Riconoscimento non riuscito.")}[/]");
-                        continue;
-                    }
-
-                    _lines.Add(spoken);
-                    AnsiConsole.MarkupLine($"[dim]  ({_lines.Count} lines) \"{Markup.Escape(spoken)}\"[/]");
+                    else
+                        _lines.Add(spoken);
                     continue;
-
                 default:
                     _lines.Add(line);
                     if (_lines.Count == 1)
@@ -337,64 +208,43 @@ public sealed class InputCollector(SpeechService? speech = null)
         }
     }
 
-    // ── F1 — full-screen overlay for the interactive (live) prompt ──────────
-
     private static void ShowHelpOverlayInteractive()
     {
-        var table = new Table()
-            .RoundedBorder()
-            .BorderColor(Color.Grey)
-            .AddColumn(new TableColumn("[bold]Key[/]").Centered())
-            .AddColumn("[bold]What it does[/]");
-
-        table.AddRow("[green]Ctrl+Enter[/]", "Send the current buffer to the agent");
-        table.AddRow("[yellow]Esc[/]",       "While composing: clear the buffer and start fresh");
-        table.AddRow("[cyan]F2[/]",          "Dictate a line via microphone (needs AzureSpeech config)");
-        table.AddRow("[cyan]F3[/]",          "Read the agent's last response aloud (needs AzureSpeech config)");
-        table.AddRow("[cyan]F5[/]",          "Clear the screen");
-        table.AddRow("[cyan]F6[/]",          "Switch to a different generation context");
-        table.AddRow("[cyan]F7[/]",          "Switch to a different target folder (file browser)");
-        table.AddRow("[cyan]F8[/]",          "Toggle debug messages (tool calls, rate-limit notices)");
-        table.AddRow("[grey]F1[/]",          "Show this table");
+        var table = new Table().RoundedBorder().BorderColor(Color.Grey)
+            .AddColumn(new TableColumn("[bold]Key[/]").Centered()).AddColumn("[bold]What it does[/]");
+        table.AddRow("[green]Ctrl+Enter[/]", "Send the current buffer");
+        table.AddRow("[green]Enter[/]", "Insert a newline");
+        table.AddRow("[green]← → ↑ ↓[/]", "Move the cursor; Ctrl+←/→ moves by word");
+        table.AddRow("[green]Home / End[/]", "Start/end of line; add Ctrl for the whole document");
+        table.AddRow("[green]Backspace / Del[/]", "Delete before/after the cursor");
+        table.AddRow("[green]Ctrl+V / Shift+Ins[/]", "Paste clipboard text atomically");
+        table.AddRow("[yellow]Esc[/]", "Clear the current draft");
+        table.AddRow("[cyan]F2 / F3[/]", "Dictate / read the last response aloud");
+        table.AddRow("[cyan]F5 / F6 / F7 / F8[/]", "Clear screen / context / folder / debug");
+        table.AddRow("[grey]F1[/]", "Show this table");
         table.AddRow("[red]F10 / Ctrl+Q[/]", "Quit RalfAI");
-        table.AddRow("[yellow]Ctrl+C[/]",    "While the agent is working: interrupt the current turn (twice = force quit)");
-        table.AddRow("[yellow]Esc / Ctrl+X[/]", "While the agent is working: same interrupt as Ctrl+C");
-
+        table.AddRow("[yellow]Ctrl+C / Esc / Ctrl+X[/]", "While working: interrupt the current turn");
         AnsiConsole.Clear();
         AnsiConsole.WriteLine();
         AnsiConsole.Write(Align.Center(table));
         AnsiConsole.WriteLine();
         AnsiConsole.Write(Align.Center(new Markup("[dim]Premi un tasto per tornare…[/]")));
-
-        // Safe here: this overlay only runs on the live (non-redirected) path.
         Console.ReadKey(intercept: true);
         AnsiConsole.Clear();
     }
 
-    // ── /help — printed reference for piped/scripted input (no function keys there) ──
-
     private static void ShowHelpOverlayPlain()
     {
-        var table = new Table()
-            .RoundedBorder()
-            .BorderColor(Color.Grey)
-            .AddColumn(new TableColumn("[bold]Command[/]").Centered())
-            .AddColumn("[bold]What it does[/]");
-
-        table.AddRow("[green]/exe[/]",            "Send the accumulated buffer to the agent");
-        table.AddRow("[yellow]/cancel[/]",        "Clear the buffer without sending");
-        table.AddRow("[cyan]/voice[/]",           "Dictate a line via microphone, appended to the buffer (needs AzureSpeech config)");
-        table.AddRow("[cyan]/speak[/]",           "Read the agent's last response aloud (needs AzureSpeech config)");
-        table.AddRow("[cyan]/clear[/]",           "Clear the screen");
-        table.AddRow("[cyan]/switch-context[/]",  "Switch to a different generation context");
-        table.AddRow("[cyan]/switch-folder[/]",   "Switch to a different target folder (file browser)");
-        table.AddRow("[cyan]/toggle-debug[/]",    "Toggle debug messages (tool calls, rate-limit notices)");
-        table.AddRow("[grey]/help[/]",            "Show this table");
-        table.AddRow("[red]exit / /exit[/]",      "Quit RalfAI (EOF/Ctrl+Z also works)");
-
-        // No Console.ReadKey here (unlike the interactive overlay): stdin is redirected on
-        // this path, so reading a key would throw — just print and let the next ReadLine()
-        // prompt continue the loop.
+        var table = new Table().RoundedBorder().BorderColor(Color.Grey)
+            .AddColumn(new TableColumn("[bold]Command[/]").Centered()).AddColumn("[bold]What it does[/]");
+        table.AddRow("[green]/exe[/]", "Send the accumulated buffer");
+        table.AddRow("[yellow]/cancel[/]", "Clear the buffer without sending");
+        table.AddRow("[cyan]/voice / /speak[/]", "Dictate / read the last response aloud");
+        table.AddRow("[cyan]/clear[/]", "Clear the screen");
+        table.AddRow("[cyan]/switch-context / /switch-folder[/]", "Switch context / folder");
+        table.AddRow("[cyan]/toggle-debug[/]", "Toggle debug messages");
+        table.AddRow("[grey]/help[/]", "Show this table");
+        table.AddRow("[red]exit / /exit[/]", "Quit RalfAI");
         AnsiConsole.WriteLine();
         AnsiConsole.Write(table);
         AnsiConsole.WriteLine();

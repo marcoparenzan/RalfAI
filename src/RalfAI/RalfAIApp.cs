@@ -42,6 +42,7 @@ public sealed class RalfAIApp
         _session.ToolCallStarted += OnToolCallStarted;
         _session.ToolCallCompleted += OnToolCallCompleted;
         _session.Notice += OnNotice;
+        _session.Progress += OnProgress;
     }
 
     private void DetachSessionEvents()
@@ -49,6 +50,7 @@ public sealed class RalfAIApp
         _session.ToolCallStarted -= OnToolCallStarted;
         _session.ToolCallCompleted -= OnToolCallCompleted;
         _session.Notice -= OnNotice;
+        _session.Progress -= OnProgress;
     }
 
     // ── Main loop ────────────────────────────────────────────────────────────
@@ -170,7 +172,7 @@ public sealed class RalfAIApp
                 continue;
             }
 
-            ShowAgentResponse(turnResult.Thinking, turnResult.FinalText!);
+            ShowAgentResponse(turnResult.Thinking, turnResult.FinalText!, turnResult.Usage, turnResult.Duration, _session.GetCostSummary());
         }
 
         AnsiConsole.Write(new Rule().RuleStyle("grey dim"));
@@ -185,7 +187,7 @@ public sealed class RalfAIApp
         var folderName = Path.GetFileName(trimmed);
         if (string.IsNullOrEmpty(folderName)) folderName = trimmed;
 
-        return $"[dim]{Markup.Escape(_session.Context.Name)} · {Markup.Escape(_session.ModelId)} · {Markup.Escape(folderName)}[/]";
+        return $"[dim]RalfAI v{Markup.Escape(AppVersion.Current)} · {Markup.Escape(_session.Context.Name)} · {Markup.Escape(_session.ModelId)} · {Markup.Escape(folderName)}[/]";
     }
 
     // ── AgentSession event handlers ──────────────────────────────────────────
@@ -197,12 +199,15 @@ public sealed class RalfAIApp
         // [Description] instead of the raw Plugin.Function name.
         _liveStatus?.Status($"[yellow]{Markup.Escape(call.Description)}…[/]");
 
-        if (!_debug) return;
-
-        // Write a permanent line above the spinner.
-        AnsiConsole.MarkupLine(
-            $"  [bold yellow]⏺[/] [yellow]{Markup.Escape(call.Description)}[/] " +
-            $"[dim]({Markup.Escape(call.Name)})[/][grey]({Markup.Escape(call.ArgsPreview)})[/]");
+        // Also leave a permanent line above the spinner — always, not just with --debug — so
+        // the screen scrolls through what the agent did instead of only ever showing the
+        // latest status overwriting the last one. --debug adds the raw tool name/args on top;
+        // the tool's own result preview (OnToolCallCompleted) stays debug-only, that's the
+        // genuinely verbose part.
+        AnsiConsole.MarkupLine(_debug
+            ? $"  [bold yellow]⏺[/] [yellow]{Markup.Escape(call.Description)}[/] " +
+              $"[dim]({Markup.Escape(call.Name)})[/][grey]({Markup.Escape(call.ArgsPreview)})[/]"
+            : $"  [bold yellow]⏺[/] [yellow]{Markup.Escape(call.Description)}…[/]");
     }
 
     private void OnToolCallCompleted(ToolCallResult call)
@@ -214,6 +219,18 @@ public sealed class RalfAIApp
             : call.Result.Replace("\n", " ");
 
         AnsiConsole.MarkupLine($"    [dim]⎿  {Markup.Escape(preview)}[/]");
+    }
+
+    private void OnProgress(TurnProgress progress)
+    {
+        _liveStatus?.Status($"[cyan]{Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
+
+        // Same reasoning as OnToolCallStarted: always leave a permanent, scrolling trace of
+        // each phase instead of only the spinner's single line overwriting itself; --debug
+        // additionally shows the internal phase code.
+        AnsiConsole.MarkupLine(_debug
+            ? $"  [dim cyan]◌ {Markup.Escape(progress.Phase)} · {Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]"
+            : $"  [dim cyan]◌ {Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
     }
 
     private void OnNotice(AgentNotice notice)
@@ -259,7 +276,7 @@ public sealed class RalfAIApp
         }
     }
 
-    private static void ShowAgentResponse(string? thinking, string text)
+    private static void ShowAgentResponse(string? thinking, string text, TurnUsage? usage, TimeSpan? duration, CostSummary? project)
     {
         AnsiConsole.WriteLine();
 
@@ -274,6 +291,29 @@ public sealed class RalfAIApp
 
         // Console can't render Markdown, so strip it before escaping Spectre markup characters.
         AnsiConsole.MarkupLine(Markup.Escape(MarkdownText.StripFormatting(text)));
+
+        if (duration is not null || usage?.IsReported == true)
+        {
+            var parts = new List<string>();
+            if (duration is not null) parts.Add($"{duration.Value.TotalSeconds:F1}s");
+            if (usage?.InputTokens is not null) parts.Add($"input {usage.InputTokens:N0} tok");
+            if (usage?.OutputTokens is not null) parts.Add($"output {usage.OutputTokens:N0} tok");
+            if (usage?.TotalTokens is not null) parts.Add($"total {usage.TotalTokens:N0} tok");
+            parts.Add(usage?.EstimatedCostUsd is not null ? $"estimated ${usage.EstimatedCostUsd:F6}" : "cost unavailable (configure Pricing)");
+
+            // Cumulative spend for this project (.ralfai/cost-history.jsonl), not per-turn —
+            // answers "how much have I spent here so far", separate from "how much did this
+            // one request cost" above.
+            if (project is not null)
+            {
+                var turnWord = project.Turns == 1 ? "turn" : "turns";
+                parts.Add(project.TurnsWithCost > 0
+                    ? $"project total ${project.TotalCostUsd:F6} over {project.Turns:N0} {turnWord}"
+                    : $"project total unavailable over {project.Turns:N0} {turnWord}");
+            }
+
+            AnsiConsole.MarkupLine($"[dim]{Markup.Escape(string.Join(" · ", parts))}[/]");
+        }
 
         AnsiConsole.Write(new Rule().RuleStyle("cyan dim"));
         AnsiConsole.WriteLine();

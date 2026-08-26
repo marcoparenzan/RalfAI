@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "mktJ0AKbz5g=",
+  "dgSpecHash": "5tddD+Y0Idc=",
   "success": true,
-  "projectFilePath": "D:\\Dev\\2026\\repos\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj",
+  "projectFilePath": "D:\\Dev\\MarcoParenzan\\RalfAI\\src\\RalfAI.Abstractions\\RalfAI.Abstractions.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.ai\\10.8.3\\microsoft.extensions.ai.10.8.3.nupkg.sha512",
     "C:\\Users\\marco\\.nuget\\packages\\microsoft.extensions.ai.abstractions\\10.8.3\\microsoft.extensions.ai.abstractions.10.8.3.nupkg.sha512",
