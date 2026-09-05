@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>RalfAI.Providers</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Marco Parenzan</Authors>
+    <Description>Provider-agnostic Microsoft.Extensions.AI IChatClient factory (OpenAI, Anthropic, Azure AI Foundry), extracted from RalfAI so any project reading the same config shape can get a chat client without depending on RalfAI's CLI/agent machinery.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only what's needed to build a raw IChatClient - no Microsoft.Agents.AI (agent/tool-calling
+         framework), that stays a RalfAI.Core-only concern. -->
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.8.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.16.0" />
+    <PackageReference Include="Microsoft.Agents.AI.Anthropic" Version="1.16.0-preview.260730.1" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+  </ItemGroup>
+
+</Project>

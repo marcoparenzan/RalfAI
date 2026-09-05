@@ -51,3 +51,5 @@ D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.HtmlApps\obj\Debug\net10.0\RalfA
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.HtmlApps\obj\Debug\net10.0\RalfAI.Contexts.HtmlApps.sourcelink.json
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.HtmlApps\obj\Debug\net10.0\RalfAI.C.6CC3700C.Up2Date
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.HtmlApps\obj\Debug\net10.0\ref\RalfAI.Contexts.HtmlApps.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.HtmlApps\bin\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.HtmlApps\bin\Debug\net10.0\RalfAI.Providers.pdb

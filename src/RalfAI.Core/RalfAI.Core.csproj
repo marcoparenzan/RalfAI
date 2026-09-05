@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RalfAI.Abstractions\RalfAI.Abstractions.csproj" />
+    <ProjectReference Include="..\RalfAI.Providers\RalfAI.Providers.csproj" />
   </ItemGroup>
 
 </Project>

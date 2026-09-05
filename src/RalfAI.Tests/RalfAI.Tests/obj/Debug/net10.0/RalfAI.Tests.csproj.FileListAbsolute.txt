@@ -496,3 +496,5 @@ D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Tests\RalfAI.Tests\obj\Debug\net10.0\Ralf
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Tests\RalfAI.Tests\obj\Debug\net10.0\RalfAI.T.886C3B92.Up2Date
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Tests\RalfAI.Tests\obj\Debug\net10.0\RalfAI.Tests.genruntimeconfig.cache
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Tests\RalfAI.Tests\obj\Debug\net10.0\ref\RalfAI.Tests.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Tests\RalfAI.Tests\bin\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Tests\RalfAI.Tests\bin\Debug\net10.0\RalfAI.Providers.pdb

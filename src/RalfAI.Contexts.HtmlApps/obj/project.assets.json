@@ -630,6 +630,7 @@
           "Microsoft.Agents.AI.OpenAI": "1.16.0",
           "Microsoft.CognitiveServices.Speech": "1.51.1",
           "RalfAI.Abstractions": "1.0.0",
+          "RalfAI.Providers": "1.0.0",
           "SixLabors.ImageSharp": "3.1.11"
         },
         "compile": {
@@ -637,6 +638,22 @@
         },
         "runtime": {
           "bin/placeholder/RalfAI.Core.dll": {}
+        }
+      },
+      "RalfAI.Providers/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Azure.AI.OpenAI": "2.1.0",
+          "Microsoft.Agents.AI.Anthropic": "1.16.0-preview.260730.1",
+          "Microsoft.Agents.AI.OpenAI": "1.16.0",
+          "Microsoft.Extensions.AI": "10.8.3"
+        },
+        "compile": {
+          "bin/placeholder/RalfAI.Providers.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/RalfAI.Providers.dll": {}
         }
       }
     }
@@ -1357,6 +1374,11 @@
       "type": "project",
       "path": "../RalfAI.Core/RalfAI.Core.csproj",
       "msbuildProject": "../RalfAI.Core/RalfAI.Core.csproj"
+    },
+    "RalfAI.Providers/1.0.0": {
+      "type": "project",
+      "path": "../RalfAI.Providers/RalfAI.Providers.csproj",
+      "msbuildProject": "../RalfAI.Providers/RalfAI.Providers.csproj"
     }
   },
   "projectFileDependencyGroups": {

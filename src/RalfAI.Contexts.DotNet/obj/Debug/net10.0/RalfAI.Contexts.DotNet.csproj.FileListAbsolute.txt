@@ -51,3 +51,5 @@ D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.DotNet\obj\Debug\net10.0\RalfAI.
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.DotNet\obj\Debug\net10.0\RalfAI.Contexts.DotNet.sourcelink.json
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.DotNet\obj\Debug\net10.0\RalfAI.C.C91D3321.Up2Date
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.DotNet\obj\Debug\net10.0\ref\RalfAI.Contexts.DotNet.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.DotNet\bin\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.DotNet\bin\Debug\net10.0\RalfAI.Providers.pdb

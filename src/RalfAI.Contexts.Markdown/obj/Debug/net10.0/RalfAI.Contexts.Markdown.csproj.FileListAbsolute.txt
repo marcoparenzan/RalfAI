@@ -51,3 +51,5 @@ D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.Markdown\obj\Debug\net10.0\RalfA
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.Markdown\obj\Debug\net10.0\RalfAI.Contexts.Markdown.sourcelink.json
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.Markdown\obj\Debug\net10.0\RalfAI.C.05DC118C.Up2Date
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.Markdown\obj\Debug\net10.0\ref\RalfAI.Contexts.Markdown.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.Markdown\bin\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Contexts.Markdown\bin\Debug\net10.0\RalfAI.Providers.pdb

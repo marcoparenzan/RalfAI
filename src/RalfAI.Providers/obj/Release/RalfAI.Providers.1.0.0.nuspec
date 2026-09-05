@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>RalfAI.Providers</id>
+    <version>1.0.0</version>
+    <authors>Marco Parenzan</authors>
+    <description>Provider-agnostic Microsoft.Extensions.AI IChatClient factory (OpenAI, Anthropic, Azure AI Foundry), extracted from RalfAI so any project reading the same config shape can get a chat client without depending on RalfAI's CLI/agent machinery.</description>
+    <repository type="git" commit="5be42968e9719ea9e216c9638aa8bcea15c897ed" />
+    <dependencies>
+      <group targetFramework="net10.0">
+        <dependency id="Azure.AI.OpenAI" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Agents.AI.Anthropic" version="1.16.0-preview.260730.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Agents.AI.OpenAI" version="1.16.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.AI" version="10.8.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Configuration.Abstractions" version="10.0.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\bin\Release\net10.0\RalfAI.Providers.dll" target="lib\net10.0\RalfAI.Providers.dll" />
+  </files>
+</package>

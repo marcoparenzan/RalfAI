@@ -328,3 +328,5 @@ D:\Dev\MarcoParenzan\RalfAI\src\RalfAI\obj\Debug\net10.0\RalfAI.sourcelink.json
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI\obj\Debug\net10.0\RalfAI.csproj.Up2Date
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI\obj\Debug\net10.0\RalfAI.genruntimeconfig.cache
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI\obj\Debug\net10.0\ref\ralf.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI\bin\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI\bin\Debug\net10.0\RalfAI.Providers.pdb

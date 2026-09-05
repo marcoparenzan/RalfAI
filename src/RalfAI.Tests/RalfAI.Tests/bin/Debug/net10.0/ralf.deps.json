@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "ralf/1.3.0": {
+      "ralf/1.4.0": {
         "dependencies": {
           "RalfAI.Abstractions": "1.0.0",
           "RalfAI.Contexts.DotNet": "1.0.0",
@@ -628,6 +628,7 @@
           "Microsoft.Agents.AI.OpenAI": "1.16.0",
           "Microsoft.CognitiveServices.Speech": "1.51.1",
           "RalfAI.Abstractions": "1.0.0",
+          "RalfAI.Providers": "1.0.0",
           "SixLabors.ImageSharp": "3.1.11"
         },
         "runtime": {
@@ -636,11 +637,25 @@
             "fileVersion": "1.0.0.0"
           }
         }
+      },
+      "RalfAI.Providers/1.0.0": {
+        "dependencies": {
+          "Azure.AI.OpenAI": "2.1.0",
+          "Microsoft.Agents.AI.Anthropic": "1.16.0-preview.260730.1",
+          "Microsoft.Agents.AI.OpenAI": "1.16.0",
+          "Microsoft.Extensions.AI": "10.8.3"
+        },
+        "runtime": {
+          "RalfAI.Providers.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
   "libraries": {
-    "ralf/1.3.0": {
+    "ralf/1.4.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -834,6 +849,11 @@
       "sha512": ""
     },
     "RalfAI.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "RalfAI.Providers/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

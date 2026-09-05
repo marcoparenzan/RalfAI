@@ -1,0 +1,13 @@
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\bin\Debug\net10.0\RalfAI.Providers.deps.json
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\bin\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\bin\Debug\net10.0\RalfAI.Providers.pdb
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.csproj.AssemblyReference.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.GeneratedMSBuildEditorConfig.editorconfig
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.AssemblyInfoInputs.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.AssemblyInfo.cs
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.csproj.CoreCompileInputs.cache
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.sourcelink.json
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\refint\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\RalfAI.Providers.pdb
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Providers\obj\Debug\net10.0\ref\RalfAI.Providers.dll

@@ -1,12 +1,9 @@
-﻿using Anthropic;
-using Azure;
-using Azure.AI.OpenAI;
-using Microsoft.Agents.AI;
+﻿using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
-using OpenAI;
 using RalfAI.Contexts;
 using RalfAI.Plugins;
+using RalfAI.Providers;
 using RalfAI.Voice;
 
 namespace RalfAI;
@@ -61,7 +58,7 @@ public sealed class AgentEngine
         var speech = SpeechService.FromConfig(config);
         var imageGen = ImageGeneration.ImageGenerationService.FromConfig(config);
         var provider = (config["AIProvider"] ?? "foundry").Trim().ToLowerInvariant();
-        var (chatClient, modelId) = BuildChatClient(config, contextKey);
+        var (chatClient, modelId) = ChatClientFactory.Create(config, contextKey);
         var image = new ImagePlugin(targetFolder);
         var tools = new List<AITool>(context.GetTools(targetFolder))
         {
@@ -170,19 +167,4 @@ public sealed class AgentEngine
     private static string FriendlyToolName(string name) { var i = name.IndexOf('_'); return i > 0 ? name[..i] + "." + name[(i + 1)..] : name; }
     private static string UniversalPrompt(bool speech, bool imageGen) => "\n\n## Engine tools\nAI.Ask and JPG/PNG manipulation are available."
         + (imageGen ? " Image.GenerateAI is available." : "") + (speech ? " Speech.Speak and Speech.Listen are available." : "");
-
-    private static (IChatClient, string) BuildChatClient(IConfiguration config, string contextKey) =>
-        (config["AIProvider"] ?? "foundry").Trim().ToLowerInvariant() switch
-        { "openai" => BuildOpenAI(config), "anthropic" => BuildAnthropic(config), _ => BuildFoundry(config, contextKey) };
-    private static (IChatClient, string) BuildOpenAI(IConfiguration c) { var key = c["OpenAI:ApiKey"] ?? throw new InvalidOperationException("OpenAI:ApiKey missing"); var model = c["OpenAI:ModelId"] ?? "gpt-5.1"; return (new OpenAIClient(key).GetChatClient(model).AsIChatClient(), model); }
-    private static (IChatClient, string) BuildAnthropic(IConfiguration c) { var key = c["Anthropic:ApiKey"] ?? throw new InvalidOperationException("Anthropic:ApiKey missing"); var model = c["Anthropic:ModelId"] ?? "claude-sonnet-4-5"; return (new AnthropicClient { ApiKey = key }.AsIChatClient(model), model); }
-    private static (IChatClient, string) BuildFoundry(IConfiguration c, string context)
-    {
-        var endpoint = c["AzureAIFoundry:Endpoint"] ?? throw new InvalidOperationException("AzureAIFoundry:Endpoint missing");
-        var key = c["AzureAIFoundry:ApiKey"] ?? throw new InvalidOperationException("AzureAIFoundry:ApiKey missing");
-        var named = c[$"AzureAIFoundry:ContextModels:{context}"] ?? c["AzureAIFoundry:DefaultModel"];
-        var model = named is null ? c["AzureAIFoundry:ModelId"] ?? "deepseek-r1" : c[$"AzureAIFoundry:Models:{named}:ModelId"] ?? named;
-        var host = new Uri(endpoint).GetLeftPart(UriPartial.Authority);
-        return (new AzureOpenAIClient(new Uri(host), new AzureKeyCredential(key)).GetChatClient(model).AsIChatClient(), model);
-    }
 }

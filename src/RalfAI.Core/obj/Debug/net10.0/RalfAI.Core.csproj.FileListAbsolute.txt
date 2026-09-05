@@ -45,3 +45,5 @@ D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Core\bin\Debug\net10.0\RalfAI.Abstraction
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Core\bin\Debug\net10.0\RalfAI.Abstractions.pdb
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Core\obj\Debug\net10.0\RalfAI.C.DE964921.Up2Date
 D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Core\obj\Debug\net10.0\ref\RalfAI.Core.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Core\bin\Debug\net10.0\RalfAI.Providers.dll
+D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Core\bin\Debug\net10.0\RalfAI.Providers.pdb
