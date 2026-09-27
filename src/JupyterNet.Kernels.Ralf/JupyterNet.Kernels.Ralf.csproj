@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>JupyterNet.Kernels.Ralf</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Marco Parenzan</Authors>
+    <Description>A JupyterNet kernel plugin that embeds RalfAI's AgentEngine as a notebook cell language, with tools to inspect, run and edit the notebook's other cells.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The plugin contract, resolved from D:\Dev\NuGetLocalFeed (already a source in the
+         machine's NuGet.Config) — JupyterNet.Host loads this project's published output as a
+         plugin, matching its own copy of this package by identity so `is IKernelPlugin` works;
+         see JupyterNet's KernelPluginLoader for why. -->
+    <PackageReference Include="JupyterNet.Kernels.Abstractions" Version="0.1.0" />
+    <PackageReference Include="Markdig" Version="0.37.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RalfAI.Core\RalfAI.Core.csproj" />
+    <ProjectReference Include="..\RalfAI.Abstractions\RalfAI.Abstractions.csproj" />
+    <ProjectReference Include="..\RalfAI.Providers\RalfAI.Providers.csproj" />
+  </ItemGroup>
+
+</Project>
