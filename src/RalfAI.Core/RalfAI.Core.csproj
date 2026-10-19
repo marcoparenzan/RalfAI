@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <PackageId>RalfAI.Core</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.4</Version>
     <Authors>Marco Parenzan</Authors>
     <Description>RalfAI's Agent Framework core (AgentEngine, IAgentContext plumbing, tool-call/progress events, cost history) extracted so other hosts can embed the same agent engine RalfAI's own CLI/Studio use.</Description>
   </PropertyGroup>
@@ -19,7 +19,6 @@
     <PackageReference Include="Microsoft.Agents.AI" Version="1.16.0" />
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.16.0" />
     <PackageReference Include="Microsoft.Agents.AI.Anthropic" Version="1.16.0-preview.260730.1" />
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.51.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />

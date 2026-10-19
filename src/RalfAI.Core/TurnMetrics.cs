@@ -16,6 +16,15 @@ public static class TurnMetrics
         var output = ReadLong(usage, "OutputTokenCount", "OutputTokens", "CompletionTokens", "CompletionTokenCount");
         var total = ReadLong(usage, "TotalTokenCount", "TotalTokens") ??
                     (input is not null && output is not null ? input + output : null);
+        return Build(input, output, total, configuration, provider, modelId);
+    }
+
+    /// <summary>Usage summed across a streamed turn (see <see cref="StreamingTurn"/>).</summary>
+    public static TurnUsage? FromDetails(Microsoft.Extensions.AI.UsageDetails? details, IConfiguration configuration, string provider, string modelId)
+        => details is null ? null : Build(details.InputTokenCount, details.OutputTokenCount, details.TotalTokenCount, configuration, provider, modelId);
+
+    private static TurnUsage? Build(long? input, long? output, long? total, IConfiguration configuration, string provider, string modelId)
+    {
         if (input is null && output is null && total is null) return null;
 
         var section = configuration.GetSection($"Pricing:{provider}:{modelId}");

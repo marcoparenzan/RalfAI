@@ -21,6 +21,13 @@ public sealed class RalfAIApp
     // Set just before each LLM call so tool-call event handlers can update the spinner.
     private StatusContext? _liveStatus;
 
+    // Streaming state for the current turn: which kind of text is being printed, the partial
+    // line not yet terminated by a newline, and whether each section already reached the screen.
+    private StreamKind? _streamKind;
+    private readonly System.Text.StringBuilder _streamLine = new();
+    private bool _streamedThinking;
+    private bool _streamedAnswer;
+
     private RalfAIApp(IConfiguration config, string contextKey, bool debug, AgentEngine session)
     {
         _config = config;
@@ -43,6 +50,8 @@ public sealed class RalfAIApp
         _session.ToolCallCompleted += OnToolCallCompleted;
         _session.Notice += OnNotice;
         _session.Progress += OnProgress;
+        _session.Streamed += OnStreamed;
+        _session.RateChanged += OnRateChanged;
     }
 
     private void DetachSessionEvents()
@@ -51,6 +60,8 @@ public sealed class RalfAIApp
         _session.ToolCallCompleted -= OnToolCallCompleted;
         _session.Notice -= OnNotice;
         _session.Progress -= OnProgress;
+        _session.Streamed -= OnStreamed;
+        _session.RateChanged -= OnRateChanged;
     }
 
     // ── Main loop ────────────────────────────────────────────────────────────
@@ -132,6 +143,7 @@ public sealed class RalfAIApp
 
             // ── LLM processing turn ──────────────────────────────────────────
             AgentTurnResult? turnResult = null;
+            ResetStreamState();
 
             // Start the escape listener again while the LLM is working.
             using var escSrc2  = new CancellationTokenSource();
@@ -152,6 +164,7 @@ public sealed class RalfAIApp
                         finally
                         {
                             _liveStatus = null;
+                            FlushStreamLine();
                         }
                     });
             }
@@ -172,7 +185,8 @@ public sealed class RalfAIApp
                 continue;
             }
 
-            ShowAgentResponse(turnResult.Thinking, turnResult.FinalText!, turnResult.Usage, turnResult.Duration, _session.GetCostSummary());
+            ShowAgentResponse(turnResult.Thinking, turnResult.FinalText!, turnResult.Usage, turnResult.Duration, _session.GetCostSummary(),
+                _streamedThinking, _streamedAnswer, turnResult.TokensPerSecond, _session.SessionTokensPerSecond);
         }
 
         AnsiConsole.Write(new Rule().RuleStyle("grey dim"));
@@ -235,6 +249,84 @@ public sealed class RalfAIApp
             : $"  [dim]· {Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
     }
 
+    // ── Streaming output ─────────────────────────────────────────────────────
+
+    private void ResetStreamState()
+    {
+        _streamKind = null;
+        _streamLine.Clear();
+        _streamedThinking = false;
+        _streamedAnswer = false;
+    }
+
+    private void OnStreamed(StreamChunk chunk)
+    {
+        if (_streamKind != chunk.Kind)
+        {
+            FlushStreamLine();
+            BeginStreamSection(chunk.Kind);
+            _streamKind = chunk.Kind;
+        }
+
+        _streamLine.Append(chunk.Text);
+        var buffered = _streamLine.ToString();
+        int newline;
+        while ((newline = buffered.IndexOf('\n')) >= 0)
+        {
+            WriteStreamLine(buffered[..newline]);
+            buffered = buffered[(newline + 1)..];
+        }
+        _streamLine.Clear().Append(buffered);
+    }
+
+    private void BeginStreamSection(StreamKind kind)
+    {
+        if (kind == StreamKind.Reasoning)
+        {
+            AnsiConsole.Write(new Rule("[grey]✻ Thinking[/]").RuleStyle("grey dim").LeftJustified());
+            _streamedThinking = true;
+        }
+        else if (!_streamedAnswer)
+        {
+            if (_streamedThinking) AnsiConsole.WriteLine();
+            AnsiConsole.Write(new Rule("[cyan]agent[/]").RuleStyle("cyan dim"));
+            _streamedAnswer = true;
+        }
+    }
+
+    private void FlushStreamLine()
+    {
+        if (_streamLine.Length == 0) return;
+        WriteStreamLine(_streamLine.ToString());
+        _streamLine.Clear();
+    }
+
+    private void WriteStreamLine(string line)
+    {
+        // Console can't render Markdown: drop code-fence lines and strip inline syntax per line.
+        if (line.TrimStart().StartsWith("```", StringComparison.Ordinal)) return;
+        var text = Markup.Escape(MarkdownText.StripLine(line));
+        AnsiConsole.MarkupLine(_streamKind == StreamKind.Reasoning ? $"[grey italic]{text}[/]" : text);
+    }
+
+    private void OnRateChanged(TokenRate rate)
+    {
+        var tilde = rate.Estimated ? "~" : "";
+        var parts = new List<string>
+        {
+            $"{tilde}{rate.InstantTokensPerSecond:F0} tok/s",
+            $"avg {rate.TurnAverageTokensPerSecond:F0}"
+        };
+        if (rate.SessionAverageTokensPerSecond > 0) parts.Add($"session {rate.SessionAverageTokensPerSecond:F0}");
+        parts.Add($"{tilde}{rate.TurnOutputTokens:N0} out tok");
+
+        // Show the tail of the line still being written, so mid-line progress is visible too.
+        var tail = _streamLine.ToString().Replace('\n', ' ');
+        if (tail.Length > 50) tail = "…" + tail[^50..];
+        var partial = tail.Length > 0 ? $" · [dim]{Markup.Escape(tail)}[/]" : "";
+        _liveStatus?.Status($"[grey]generating · {Markup.Escape(string.Join(" · ", parts))}[/]{partial}");
+    }
+
     private void OnNotice(AgentNotice notice)
     {
         // Errors always surface; info/warning pacing notices are debug noise.
@@ -278,21 +370,26 @@ public sealed class RalfAIApp
         }
     }
 
-    private static void ShowAgentResponse(string? thinking, string text, TurnUsage? usage, TimeSpan? duration, CostSummary? project)
+    private static void ShowAgentResponse(string? thinking, string text, TurnUsage? usage, TimeSpan? duration, CostSummary? project,
+        bool thinkingShown, bool answerShown, double? tokensPerSecond, double sessionTokensPerSecond)
     {
-        AnsiConsole.WriteLine();
+        // Sections already printed while streaming are not repeated here.
+        if (!answerShown) AnsiConsole.WriteLine();
 
-        if (!string.IsNullOrWhiteSpace(thinking))
+        if (!thinkingShown && !string.IsNullOrWhiteSpace(thinking))
         {
             AnsiConsole.Write(new Rule("[grey]✻ Thinking[/]").RuleStyle("grey dim").LeftJustified());
             AnsiConsole.MarkupLine($"[grey italic]{Markup.Escape(MarkdownText.StripFormatting(thinking))}[/]");
             AnsiConsole.WriteLine();
         }
 
-        AnsiConsole.Write(new Rule("[cyan]agent[/]").RuleStyle("cyan dim"));
+        if (!answerShown)
+        {
+            AnsiConsole.Write(new Rule("[cyan]agent[/]").RuleStyle("cyan dim"));
 
-        // Console can't render Markdown, so strip it before escaping Spectre markup characters.
-        AnsiConsole.MarkupLine(Markup.Escape(MarkdownText.StripFormatting(text)));
+            // Console can't render Markdown, so strip it before escaping Spectre markup characters.
+            AnsiConsole.MarkupLine(Markup.Escape(MarkdownText.StripFormatting(text)));
+        }
 
         if (duration is not null || usage?.IsReported == true)
         {
@@ -301,6 +398,8 @@ public sealed class RalfAIApp
             if (usage?.InputTokens is not null) parts.Add($"input {usage.InputTokens:N0} tok");
             if (usage?.OutputTokens is not null) parts.Add($"output {usage.OutputTokens:N0} tok");
             if (usage?.TotalTokens is not null) parts.Add($"total {usage.TotalTokens:N0} tok");
+            if (tokensPerSecond is > 0)
+                parts.Add($"{tokensPerSecond:F0} tok/s" + (sessionTokensPerSecond > 0 ? $" (session avg {sessionTokensPerSecond:F0})" : ""));
             parts.Add(usage?.EstimatedCostUsd is not null ? $"estimated ${usage.EstimatedCostUsd:F6}" : "cost unavailable (configure Pricing)");
 
             // Cumulative spend for this project (.ralfai/cost-history.jsonl), not per-turn —

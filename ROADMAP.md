@@ -156,6 +156,12 @@ poco visibile a seconda del tema del terminale; sostituito con un blocco a color
   esporta un built-in come punto di partenza.
 - Rimosso il file manager a doppio pannello (`NortonCommander`, `F9`/`/files`).
 
+### Streaming di risposta e ragionamento, velocità in token/s
+`AgentEngine.SendAsync` usa `RunStreamingAsync` ed emette `Streamed` (frammenti di ragionamento e di
+risposta) e `RateChanged` (token/s istantanei, medi del turno e della sessione); la console stampa a
+righe e mostra la velocità sullo spinner. Il provider Foundry usa l'API Responses (`AzureAIFoundry:Api`).
+Dettagli in [USAGE.md](USAGE.md#streaming-ragionamento-e-velocità).
+
 ## 📋 Pianificato
 
 ### Interfaccia grafica (Desktop/Web)

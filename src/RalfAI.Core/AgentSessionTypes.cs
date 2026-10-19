@@ -6,7 +6,8 @@ public sealed record AgentTurnResult(
     string? FinalText,
     string? Error,
     TurnUsage? Usage = null,
-    TimeSpan? Duration = null);
+    TimeSpan? Duration = null,
+    double? TokensPerSecond = null);
 
 /// <summary>Token usage reported by the provider and an optional client-side cost estimate.</summary>
 public sealed record TurnUsage(long? InputTokens, long? OutputTokens, long? TotalTokens, decimal? EstimatedCostUsd)
@@ -25,3 +26,18 @@ public readonly record struct ToolCallStart(string Name, string Description, str
 
 /// <summary>Raised right after a tool/plugin function returns.</summary>
 public readonly record struct ToolCallResult(string Name, string ArgsForLog, string Result);
+
+/// <summary>What a streamed fragment belongs to.</summary>
+public enum StreamKind { Reasoning, Answer }
+
+/// <summary>A fragment of model output as it arrives. Reasoning is whatever the provider chooses to expose
+/// (a reasoning summary, or inline &lt;think&gt; text) - never hidden chain-of-thought.</summary>
+public readonly record struct StreamChunk(StreamKind Kind, string Text);
+
+/// <summary>Live generation speed. Tokens are estimated from streamed text until the provider reports usage.</summary>
+public readonly record struct TokenRate(
+    long TurnOutputTokens,
+    double InstantTokensPerSecond,
+    double TurnAverageTokensPerSecond,
+    double SessionAverageTokensPerSecond,
+    bool Estimated);

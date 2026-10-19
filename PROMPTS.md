@@ -124,3 +124,7 @@ Diagnosticherò il circuito interattivo Blazor Hybrid e l'interoperabilità Mona
 ## 28. "Puoi implementare un file manager stile Norton Commander con viewer di file?"
 
 Realizzerò un file manager CLI a doppio pannello in stile Norton Commander (Tab per cambiare pannello, F3 view, F4 edit esterno, F5 copy, F6 move/rename, F7 mkdir, F8 delete), con un viewer di file scorrevole e paginato condiviso anche dal file browser esistente, raggiungibile con F9/`/files`; aggiungerò test per la logica di elenco/formattazione directory.
+
+## 29. "A livello di prompt/console non mi piace. non mi piace l'editor per scrivere, non capisco cosa stia facendo, non capisco perchè ci sia questo 'attacco' hacker...insomma, voglio tranqillità"
+
+Chiarirò cosa intende con "attacco hacker" (il log di progresso/tool-call, colorato e con simboli, che scorre veloce) e cosa vuole dall'editor prima di riscrivere alla cieca. Risposta: manterrò il log scorrevole (non torno alla singola riga che si sovrascrive, esplicitamente richiesto in precedenza) ma lo renderò sobrio — testo grigio/dim, un semplice "·" al posto dei simboli ⏺/◌ — e renderò il cursore finto dell'editor inequivocabile con un blocco colorato esplicito invece dell'inversione ambientale, poco visibile a seconda del tema del terminale.

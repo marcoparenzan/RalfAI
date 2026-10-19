@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>ralf</AssemblyName><RootNamespace>RalfAI</RootNamespace><NoWarn>$(NoWarn);SKEXP0070;SKEXP0001</NoWarn>
-    <PackAsTool>true</PackAsTool><ToolCommandName>ralf</ToolCommandName><PackageId>RalfAI</PackageId><Version>1.5.0</Version>
+    <PackAsTool>true</PackAsTool><ToolCommandName>ralf</ToolCommandName><PackageId>RalfAI</PackageId><Version>1.6.0</Version>
     <Description>RalfAI — an autonomous coding agent CLI for .NET, Markdown, and HTML/CSS/JS projects.</Description>
   </PropertyGroup>
   <ItemGroup><PackageReference Include="Spectre.Console" Version="0.57.1" /></ItemGroup>

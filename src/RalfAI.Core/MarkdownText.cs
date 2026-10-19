@@ -39,10 +39,13 @@ public static partial class MarkdownText
     [GeneratedRegex(@"!?\[([^\]]*)\]\([^)]*\)")]
     private static partial Regex LinkRegex();
 
-    public static string StripFormatting(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
+    public static string StripFormatting(string text) => string.IsNullOrEmpty(text) ? text : Strip(text).Trim();
 
+    /// <summary>Same as <see cref="StripFormatting"/> for one streamed line: keeps leading indentation (code).</summary>
+    public static string StripLine(string line) => string.IsNullOrEmpty(line) ? line : Strip(line).TrimEnd();
+
+    private static string Strip(string text)
+    {
         var result = text;
         result = CodeFenceRegex().Replace(result, "");
         result = LinkRegex().Replace(result, "$1");
@@ -55,6 +58,6 @@ public static partial class MarkdownText
         result = BlockquoteRegex().Replace(result, "");
         result = ListMarkerRegex().Replace(result, "");
 
-        return result.Trim();
+        return result;
     }
 }

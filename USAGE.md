@@ -25,6 +25,23 @@ Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usa
 chain-of-thought privato: sono mostrate solo operazioni osservabili ed eventuale reasoning
 esplicitamente restituito dal provider.
 
+### Streaming, ragionamento e velocità
+
+Risposta e ragionamento arrivano a righe mentre il modello li produce, senza aspettare la fine:
+
+- **Ragionamento**: sezione `✻ Thinking` in grigio corsivo. È il riassunto del ragionamento che il
+  provider sceglie di esporre (API Responses di Foundry/OpenAI) oppure il testo tra `<think>…</think>`
+  dei modelli che lo emettono inline. Non è la catena di pensiero nascosta del modello. Si disattiva
+  con `"Reasoning": { "Summary": "off" }`; se il modello non lo supporta, RalfAI lo disabilita da solo
+  per la sessione e riprova.
+- **Risposta**: sezione `agent`; i testi prima e dopo una chiamata a tool restano separati da una riga vuota.
+- **Velocità**: sulla riga dello spinner, mentre genera: `~42 tok/s · avg 38 · session 35 · ~1.240 out tok`
+  seguita dalla coda della riga in scrittura. `tok/s` è la velocità istantanea (ultimi 2 secondi),
+  `avg` la media del turno, `session` la media dei turni conclusi. Il `~` indica un valore stimato dal
+  testo ricevuto (≈4 caratteri per token) finché il provider non comunica l'uso reale.
+- A fine turno la riga finale riporta anche `N tok/s (session avg M)`; i token di ragionamento nascosti
+  contano nel totale reale ma non scorrono a schermo, quindi la velocità istantanea è un minimo.
+
 Dopo ogni risposta compaiono durata, token e costo stimato. Lo storico JSON Lines è:
 
 ```text
