@@ -13,12 +13,12 @@ public sealed class DotNetPlugin(string rootFolder)
     [Description(
         "Run 'dotnet new' to scaffold a project or file template. " +
         "Returns the full command output. " +
-        "Use '--framework net10.0' for new projects.")]
+        "Use the '--framework' given in the system prompt (e.g. net10.0 or net11.0) for new projects.")]
     public Task<string> RunDotnetNew(
         [Description("Template name: 'console', 'classlib', 'xunit', 'webapi', 'sln', etc.")] string template,
         [Description("Project or solution name (optional)")] string? name = null,
         [Description("Subdirectory relative to project root to run in (optional)")] string? outputDir = null,
-        [Description("Extra arguments, e.g. '--framework net10.0 --no-restore'")] string? additionalArgs = null)
+        [Description("Extra arguments, e.g. '--framework net11.0 --no-restore'")] string? additionalArgs = null)
     {
         var args = new StringBuilder($"new {template}");
         if (!string.IsNullOrWhiteSpace(name)) args.Append($" --name {name}");

@@ -16,7 +16,8 @@ public static class ContextRegistry
     private static readonly Dictionary<string, Func<IAgentContext>> BuiltIn =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["dotnet"]   = () => new DotNetContext(),
+            ["dotnet"]   = () => new DotNetContext(10),
+            ["dotnet11"] = () => new DotNetContext(11),
             ["markdown"] = () => new MarkdownContext(),
             ["html"]     = () => new HtmlAppContext(),
         };

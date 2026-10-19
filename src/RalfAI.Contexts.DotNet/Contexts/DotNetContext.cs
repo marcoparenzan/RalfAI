@@ -4,14 +4,20 @@ using RalfAI.Plugins;
 namespace RalfAI.Contexts;
 
 /// <summary>
-/// Context for building .NET 10 applications.
+/// Context for building .NET applications targeting a given major version (10 or 11).
 /// Exposes FileSystem, DotNet CLI, and Web (URL fetch) plugins.
 /// </summary>
-public sealed class DotNetContext : IAgentContext
+public sealed class DotNetContext(int major = 10) : IAgentContext
 {
-    public string Name => ".NET 10";
+    private string Version => major.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private string Framework => $"net{Version}.0";
 
-    public string Description => "Builds, tests, and iterates on a .NET 10 project (console, library, web API…) using the dotnet CLI.";
+    // C# language version that ships with each supported .NET major.
+    private int CSharp => major switch { 11 => 15, 10 => 14, _ => 13 };
+
+    public string Name => $".NET {Version}";
+
+    public string Description => $"Builds, tests, and iterates on a .NET {Version} project (console, library, web API…) using the dotnet CLI.";
 
     public IEnumerable<AITool> GetTools(string targetFolder)
     {
@@ -34,8 +40,8 @@ public sealed class DotNetContext : IAgentContext
     }
 
     public string BuildSystemPrompt(string targetFolder) => $"""
-        You are RalfAI, an autonomous .NET 10 developer. Your job is to build complete,
-        working .NET 10 applications in the target folder.
+        You are RalfAI, an autonomous .NET {Version} developer. Your job is to build complete,
+        working .NET {Version} applications in the target folder.
 
         ## Target Folder
         {targetFolder}
@@ -85,7 +91,7 @@ public sealed class DotNetContext : IAgentContext
            If the user provides a URL, call Web.FetchUrl to read the linked specification
            or documentation before planning.
         3. **Plan** — briefly state what you will build (2–3 sentences).
-        4. **Scaffold** — use DotNet.RunDotnetNew with `--framework net10.0`, output into `src/`.
+        4. **Scaffold** — use DotNet.RunDotnetNew with `--framework {Framework}`, output into `src/`.
         5. **Implement** — write all source files with WriteFile, one by one.
         6. **Build** — call DotNet.RunBuild with `projectPath` pointing into `src/` (e.g.
            `src` or `src/MyApp.sln`). If it fails, read the errors, fix the responsible
@@ -95,9 +101,9 @@ public sealed class DotNetContext : IAgentContext
         8. **Report** — summarise what was built, which tests exist, and how to run the app.
 
         ## Code Standards
-        - Target framework: net10.0
+        - Target framework: {Framework}
         - Enable nullable reference types and implicit usings in every .csproj
-        - Use C# 13 idioms (primary constructors, collection expressions, etc.)
+        - Use C# {CSharp} idioms (primary constructors, collection expressions, etc.)
         - Include xUnit tests for all non-trivial logic
         - Use `Microsoft.Extensions.*` for DI, configuration, and logging
         - Keep projects small and well-structured; avoid premature abstraction

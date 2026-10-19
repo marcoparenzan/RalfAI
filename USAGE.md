@@ -18,6 +18,13 @@ La testata del prompt riporta sempre `RalfAI v<version>`, context, modello e car
 - `Ctrl+V` o `Shift+Insert`: incolla atomico, senza consumare eventi tastiera;
 - `Enter`: nuova riga; `Ctrl+Enter`: invio; `Esc`: pulizia bozza.
 
+### Context .NET 10 e .NET 11
+
+`--context dotnet` genera progetti `net10.0` (C# 14); `--context dotnet11` genera progetti `net11.0`
+(C# 15, serve l'SDK 11 installato per compilarli). Sono lo stesso context con la versione come parametro:
+stessi tool, stesso flusso (scaffold in `src/`, build, test), cambiano framework e prompt.
+Per cambiare al volo usa `F6`; la scelta è ricordata per cartella in `.ralfai/config.yaml`.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.
@@ -96,7 +103,7 @@ Markdig. Monaco è caricato da CDN e richiede connettività al primo avvio.
 
 ## Profili esterni
 
-Oltre ai context incorporati (`dotnet`, `markdown`, `html`) si possono definire profili come file
+Oltre ai context incorporati (`dotnet`, `dotnet11`, `markdown`, `html`) si possono definire profili come file
 Markdown con frontmatter, senza ricompilare. Si cercano in `~/.ralfai/profiles/*.md` e in
 `<cartella target>/.ralfai/profiles/*.md` (il progetto vince sull'utente, entrambi vincono sui
 built-in con lo stesso nome). Il nome del file è la chiave da usare con `--context` e in `F6`.
