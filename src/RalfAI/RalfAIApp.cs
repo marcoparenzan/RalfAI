@@ -27,6 +27,7 @@ public sealed class RalfAIApp
     private readonly System.Text.StringBuilder _streamLine = new();
     private bool _streamedThinking;
     private bool _streamedAnswer;
+    private bool _warnedLongOutput;
 
     private RalfAIApp(IConfiguration config, string contextKey, bool debug, AgentEngine session)
     {
@@ -257,6 +258,7 @@ public sealed class RalfAIApp
         _streamLine.Clear();
         _streamedThinking = false;
         _streamedAnswer = false;
+        _warnedLongOutput = false;
     }
 
     private void OnStreamed(StreamChunk chunk)
@@ -275,6 +277,17 @@ public sealed class RalfAIApp
         {
             WriteStreamLine(buffered[..newline]);
             buffered = buffered[(newline + 1)..];
+        }
+
+        // Text without line breaks (reasoning summaries) would never produce a complete line and
+        // nothing would scroll: wrap softly at the last space before the console width.
+        var width = Math.Max(20, ConsoleWidth() - 4);
+        while (buffered.Length > width)
+        {
+            var cut = buffered.LastIndexOf(' ', width);
+            if (cut <= 0) cut = width;
+            WriteStreamLine(buffered[..cut]);
+            buffered = buffered[cut..].TrimStart();
         }
         _streamLine.Clear().Append(buffered);
     }
@@ -309,8 +322,17 @@ public sealed class RalfAIApp
         AnsiConsole.MarkupLine(_streamKind == StreamKind.Reasoning ? $"[grey italic]{text}[/]" : text);
     }
 
+    // A turn this long is usually a model stuck repeating itself, not real work.
+    private const long LongOutputWarningTokens = 20_000;
+
     private void OnRateChanged(TokenRate rate)
     {
+        if (!_warnedLongOutput && rate.TurnOutputTokens > LongOutputWarningTokens)
+        {
+            _warnedLongOutput = true;
+            AnsiConsole.MarkupLine($"  [yellow]⚠ {rate.TurnOutputTokens:N0} output tokens in this turn and still going - press Esc to interrupt.[/]");
+        }
+
         var tilde = rate.Estimated ? "~" : "";
         var parts = new List<string>
         {
@@ -321,11 +343,20 @@ public sealed class RalfAIApp
         parts.Add($"{tilde}{rate.TurnOutputTokens:N0} out tok");
 
         // Show the tail of the line still being written, so mid-line progress is visible too.
-        var tail = _streamLine.ToString().Replace('\n', ' ');
-        if (tail.Length > 50) tail = "…" + tail[^50..];
-        var partial = tail.Length > 0 ? $" · [dim]{Markup.Escape(tail)}[/]" : "";
-        _liveStatus?.Status($"[grey]generating · {Markup.Escape(string.Join(" · ", parts))}[/]{partial}");
+        // The whole status must fit on one line: a wrapped status breaks the spinner redraw.
+        var head = "generating · " + string.Join(" · ", parts);
+        var room = ConsoleWidth() - 4 /* spinner */ - head.Length - 3 /* " · " */ - 1;
+        var partial = "";
+        if (room >= 12)
+        {
+            var tail = MarkdownText.StripLine(_streamLine.ToString()).Trim();
+            if (tail.Length > room) tail = "…" + tail[^(room - 1)..];
+            if (tail.Length > 0) partial = $" · [dim]{Markup.Escape(tail)}[/]";
+        }
+        _liveStatus?.Status($"[grey]{Markup.Escape(head)}[/]{partial}");
     }
+
+    private static int ConsoleWidth() => Math.Max(40, AnsiConsole.Profile.Width);
 
     private void OnNotice(AgentNotice notice)
     {

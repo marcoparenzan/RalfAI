@@ -82,6 +82,7 @@ internal sealed class StreamingTurn
     private long _total;
     private bool _usageSeen;
     private string? _lastMessageId;
+    private bool _boldOpen;
 
     public string RawText => _raw.ToString();
     public string ReasoningSummary => _summary.ToString().Trim();
@@ -114,9 +115,10 @@ internal sealed class StreamingTurn
         switch (content)
         {
             case TextReasoningContent { Text.Length: > 0 } reasoning:
-                _summary.Append(reasoning.Text);
-                Count(reasoning.Text.Length);
-                emit(new StreamChunk(StreamKind.Reasoning, reasoning.Text));
+                var reasoningText = SeparateReasoningHeading(reasoning.Text);
+                _summary.Append(reasoningText);
+                Count(reasoningText.Length);
+                emit(new StreamChunk(StreamKind.Reasoning, reasoningText));
                 break;
 
             case TextContent { Text.Length: > 0 } text:
@@ -136,6 +138,21 @@ internal sealed class StreamingTurn
                 _charsSinceUsage = 0;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Reasoning summaries arrive as "**Heading**" followed by prose, with consecutive summary
+    /// parts glued together. A chunk that opens a new bold heading (while none is open) starts a
+    /// new paragraph; the closing "**" of a heading split across chunks does not.
+    /// </summary>
+    private string SeparateReasoningHeading(string text)
+    {
+        var startsHeading = !_boldOpen && text.StartsWith("**", StringComparison.Ordinal);
+        for (var i = text.IndexOf("**", StringComparison.Ordinal); i >= 0; i = text.IndexOf("**", i + 2, StringComparison.Ordinal))
+            _boldOpen = !_boldOpen;
+
+        var needsBreak = startsHeading && _summary.Length > 0 && _summary[^1] != '\n';
+        return needsBreak ? "\n\n" + text : text;
     }
 
     public void Flush(Action<StreamChunk> emit)

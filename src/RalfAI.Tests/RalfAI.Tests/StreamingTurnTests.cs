@@ -65,3 +65,28 @@ public sealed class StreamingTurnTests
         Assert.Equal(StreamKind.Answer, chunks[1].Kind);
     }
 }
+
+public sealed class ReasoningSummaryFormattingTests
+{
+    [Fact]
+    public void GluedHeadingsStartNewParagraphs()
+    {
+        var turn = new StreamingTurn();
+        var chunks = new List<StreamChunk>();
+        foreach (var piece in new[] { "**Making a call**", "Using a tool", "**Ending the process**", "No further action" })
+            turn.Add(new Microsoft.Extensions.AI.TextReasoningContent(piece), chunks.Add);
+
+        Assert.Equal("**Making a call**Using a tool\n\n**Ending the process**No further action", turn.ReasoningSummary);
+    }
+
+    [Fact]
+    public void ClosingMarkerOfAHeadingSplitAcrossChunksIsNotABreak()
+    {
+        var turn = new StreamingTurn();
+        var chunks = new List<StreamChunk>();
+        foreach (var piece in new[] { "**Making", " a call", "**", "text" })
+            turn.Add(new Microsoft.Extensions.AI.TextReasoningContent(piece), chunks.Add);
+
+        Assert.Equal("**Making a call**text", turn.ReasoningSummary);
+    }
+}
