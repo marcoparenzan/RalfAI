@@ -18,26 +18,6 @@ La testata del prompt riporta sempre `RalfAI v<version>`, context, modello e car
 - `Ctrl+V` o `Shift+Insert`: incolla atomico, senza consumare eventi tastiera;
 - `Enter`: nuova riga; `Ctrl+Enter`: invio; `Esc`: pulizia bozza.
 
-### File manager
-
-`F9` (o `/files` con stdin rediretto) apre un file manager a doppio pannello in stile Norton
-Commander sulla cartella del progetto:
-
-- `Tab`: cambia pannello attivo; frecce/`PgUp`/`PgDn`/`Home`/`End`: naviga; `Enter`: apri
-  cartella; `Backspace`: sali di un livello;
-- `F3`: viewer di file scorrevole (verticale e orizzontale, con numeri di riga; niente dump
-  d'un colpo solo, gestisce anche file grandi finché restano testo);
-- `F4`: apre il file selezionato nell'editor esterno configurato (stessa chiave `Editor`
-  dell'editor del prompt);
-- `F5`: copia nella cartella dell'altro pannello (percorso di destinazione modificabile);
-- `F6`: sposta/rinomina — stesso percorso della cartella corrente rinomina, un percorso diverso
-  sposta;
-- `F7`: nuova cartella nel pannello attivo; `F8`/`Del`: elimina (chiede conferma);
-- `F1`: tabella comandi; `F10`/`Esc`: chiude e torna al prompt.
-
-Il file browser a schermo intero mostrato all'avvio senza cartella (o cambiando cartella target)
-resta un secondo strumento più semplice, a singolo pannello, con lo stesso viewer (`F3`).
-
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.
@@ -96,3 +76,44 @@ Markdig. Monaco è caricato da CDN e richiede connettività al primo avvio.
 .\ops\install-tool.ps1        # globale
 .\ops\install-tool.ps1 -Local # manifest locale sotto src
 ```
+
+## Profili esterni
+
+Oltre ai context incorporati (`dotnet`, `markdown`, `html`) si possono definire profili come file
+Markdown con frontmatter, senza ricompilare. Si cercano in `~/.ralfai/profiles/*.md` e in
+`<cartella target>/.ralfai/profiles/*.md` (il progetto vince sull'utente, entrambi vincono sui
+built-in con lo stesso nome). Il nome del file è la chiave da usare con `--context` e in `F6`.
+
+```markdown
+---
+name: Note di riunione
+description: Scrive verbali in Markdown
+tools: [FileSystem, Web_FetchUrl]   # gruppi (FileSystem, Web, DotNet, StaticServer) o singoli tool
+---
+Sei un assistente che lavora in {{targetFolder}}. ...
+```
+
+- `{{targetFolder}}` nel corpo viene sostituito col percorso assoluto della cartella target.
+- I tool restano codice: il profilo sceglie per nome, non ne definisce di nuovi.
+- Un profilo non valido viene saltato con un avviso su stderr, senza bloccare l'avvio.
+- `ralf --export-profile dotnet` stampa un built-in come profilo, come punto di partenza.
+
+## Editor: menzioni `@` e cronologia
+
+- **`@`**: digita `@` seguito da parte di un nome (`@inpcol`) e compare un elenco dei file della
+  cartella target (match sul nome, poi sul percorso, poi per caratteri in ordine; sono escluse
+  `bin`, `obj`, `node_modules` e le cartelle che iniziano con `.`). `↑`/`↓` scelgono, `Tab` o
+  `Enter` inseriscono `@percorso/relativo`, `Esc` chiude l'elenco. Il testo arriva all'agente così
+  com'è: il percorso gli dice quale file leggere.
+- **`↑` / `↓`** su un prompt vuoto richiamano i prompt precedenti; `↓` torna alla bozza. La
+  cronologia è per cartella, in `.ralfai/history.jsonl` (ultimi 200, esclusi i comandi `/…`).
+- **`/`** apre il menu dei comandi (`/switch-context`, `/switch-folder`, `/toggle-debug`,
+  `/speak`, `/clear`) filtrato mentre digiti: `↑`/`↓` scelgono, `Tab` completa, `Enter` completa e,
+  se il comando è già scritto per intero, lo esegue. Sono gli stessi comandi dei tasti `F5`–`F8`.
+- **Scorciatoie readline**: `Ctrl+A`/`Ctrl+E` inizio/fine riga, `Ctrl+U`/`Ctrl+K` cancellano fino
+  a inizio/fine riga, `Ctrl+W` cancella la parola precedente.
+- **`Ctrl+Z`** annulla l'ultima modifica (la digitazione continua si annulla a blocchi, parola per
+  parola; richiamo dalla cronologia e completamenti `@`/`/` si annullano in un colpo solo).
+- **Paste lungo**: con `Ctrl+V` un incolla di 6+ righe o 600+ caratteri appare come
+  `[Pasted #1: 42 lines]` nel prompt e viene espanso nel testo completo all'invio (e nella
+  cronologia). Non vale per l'incolla "grezzo" del terminale, che arriva tasto per tasto.

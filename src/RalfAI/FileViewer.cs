@@ -5,7 +5,7 @@ namespace RalfAI;
 
 /// <summary>
 /// Full-screen, scrollable read-only text viewer — F3 in both <see cref="FileBrowser"/> and
-/// <see cref="NortonCommander"/>. Unlike a one-shot dump, it pages through the file (vertically
+/// <see cref="FileBrowser"/>. Unlike a one-shot dump, it pages through the file (vertically
 /// and horizontally) instead of printing everything and losing anything past the top of the
 /// terminal, and it never chokes rendering a huge line since only the visible slice is drawn.
 /// </summary>

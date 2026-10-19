@@ -5,7 +5,7 @@ public readonly record struct DirectoryEntry(string Name, bool IsDirectory, long
 
 /// <summary>
 /// Directory listing and formatting shared by every console file-browsing UI
-/// (<see cref="FileBrowser"/>, <see cref="NortonCommander"/>) so they list/sort/format
+/// (<see cref="FileBrowser"/>) so they list/sort/format
 /// identically instead of drifting apart.
 /// </summary>
 public static class DirectoryListing

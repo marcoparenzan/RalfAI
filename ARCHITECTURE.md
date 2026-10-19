@@ -18,7 +18,7 @@ Monaco comunica con Razor via JS interop. Markdig genera la preview Markdown.
 
 `DirectoryListing` (elenco/formattazione directory) e `FileViewer` (viewer di file scorrevole,
 paginato, con numeri di riga) sono condivisi tra `FileBrowser` (picker a singolo pannello per la
-cartella target) e `NortonCommander` (`F9`/`/files`, file manager a doppio pannello con
-copia/sposta/rinomina/mkdir/delete/apertura esterna) — nessuna dipendenza da `IConfiguration`:
+cartella target; il file manager a doppio pannello `NortonCommander` è stato rimosso in favore
+delle menzioni `@` nel prompt) — nessuna dipendenza da `IConfiguration`:
 il comando dell'editor esterno (chiave `Editor`) viene risolto dai chiamanti e passato come
 stringa.

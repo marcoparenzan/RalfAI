@@ -9,8 +9,25 @@ if (args.Contains("--version", StringComparer.Ordinal) || args.Contains("-v", St
 
 if (args.Contains("--list-contexts", StringComparer.Ordinal))
 {
-    foreach (var (key, ctx) in ContextRegistry.All())
+    ContextRegistry.ProfileError = msg => Console.Error.WriteLine($"ralf: skipped profile {msg}");
+    foreach (var (key, ctx) in ContextRegistry.All(Directory.GetCurrentDirectory()))
         Console.WriteLine($"{key,-10} {ctx.Name} — {ctx.Description}");
+    return 0;
+}
+
+// --export-profile <name>: print a built-in context as a profile file, as a starting point
+// for ~/.ralfai/profiles/<name>.md or <target>/.ralfai/profiles/<name>.md.
+var exportIndex = Array.IndexOf(args, "--export-profile");
+if (exportIndex >= 0)
+{
+    var exportName = exportIndex + 1 < args.Length ? args[exportIndex + 1] : "";
+    var builtIn = ContextRegistry.CreateBuiltIn(exportName);
+    if (builtIn is null)
+    {
+        Console.Error.WriteLine($"Unknown built-in context '{exportName}'. Try: dotnet, markdown, html.");
+        return 1;
+    }
+    Console.WriteLine(RalfAI.Profiles.ProfileLoader.Export(builtIn));
     return 0;
 }
 
@@ -66,7 +83,8 @@ var contextKey = contextFlagValue
     ?? FolderConfigStore.LoadContext(targetFolder)
     ?? configuration["AgentContext"]
     ?? ContextRegistry.DefaultName;
-IAgentContext context = ContextRegistry.Create(contextKey);
+ContextRegistry.ProfileError = msg => Console.Error.WriteLine($"ralf: skipped profile {msg}");
+IAgentContext context = ContextRegistry.Create(contextKey, targetFolder);
 FolderConfigStore.SaveContext(targetFolder, contextKey);
 
 // --debug flag wins, then the target folder's remembered setting, then off by default.

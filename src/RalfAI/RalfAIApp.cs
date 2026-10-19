@@ -71,7 +71,7 @@ public sealed class RalfAIApp
             }
         };
 
-        var input = new InputCollector(_session.Speech);
+        var input = new InputCollector(_session.Speech, () => _session.TargetFolder);
 
         while (!appToken.IsCancellationRequested)
         {
@@ -127,13 +127,6 @@ public sealed class RalfAIApp
             if (text.Equals("/toggle-debug", StringComparison.OrdinalIgnoreCase))
             {
                 ToggleDebug();
-                continue;
-            }
-
-            if (text.Equals("/files", StringComparison.OrdinalIgnoreCase))
-            {
-                var editorCommand = _config["Editor"] ?? FileBrowser.DefaultEditor;
-                NortonCommander.Open(_session.TargetFolder, editorCommand);
                 continue;
             }
 
@@ -204,17 +197,18 @@ public sealed class RalfAIApp
         // Update the spinner status to the current tool — kept even with debug off, it's
         // transient progress feedback rather than debug noise. Shows the human-readable
         // [Description] instead of the raw Plugin.Function name.
-        _liveStatus?.Status($"[yellow]{Markup.Escape(call.Description)}…[/]");
+        _liveStatus?.Status($"[grey]{Markup.Escape(call.Description)}…[/]");
 
         // Also leave a permanent line above the spinner — always, not just with --debug — so
         // the screen scrolls through what the agent did instead of only ever showing the
-        // latest status overwriting the last one. --debug adds the raw tool name/args on top;
-        // the tool's own result preview (OnToolCallCompleted) stays debug-only, that's the
-        // genuinely verbose part.
+        // latest status overwriting the last one. Plain dim text and a small "·" marker
+        // rather than bright colors/symbols — a scrolling status log, not a "hacking" effect.
+        // --debug adds the raw tool name/args on top; the tool's own result preview
+        // (OnToolCallCompleted) stays debug-only, that's the genuinely verbose part.
         AnsiConsole.MarkupLine(_debug
-            ? $"  [bold yellow]⏺[/] [yellow]{Markup.Escape(call.Description)}[/] " +
-              $"[dim]({Markup.Escape(call.Name)})[/][grey]({Markup.Escape(call.ArgsPreview)})[/]"
-            : $"  [bold yellow]⏺[/] [yellow]{Markup.Escape(call.Description)}…[/]");
+            ? $"  [dim]·[/] [grey]{Markup.Escape(call.Description)}[/] " +
+              $"[dim]({Markup.Escape(call.Name)})[/][dim]({Markup.Escape(call.ArgsPreview)})[/]"
+            : $"  [dim]·[/] [grey]{Markup.Escape(call.Description)}…[/]");
     }
 
     private void OnToolCallCompleted(ToolCallResult call)
@@ -225,19 +219,20 @@ public sealed class RalfAIApp
             ? call.Result[..120].Replace("\n", " ") + "…"
             : call.Result.Replace("\n", " ");
 
-        AnsiConsole.MarkupLine($"    [dim]⎿  {Markup.Escape(preview)}[/]");
+        AnsiConsole.MarkupLine($"      [dim]{Markup.Escape(preview)}[/]");
     }
 
     private void OnProgress(TurnProgress progress)
     {
-        _liveStatus?.Status($"[cyan]{Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
+        _liveStatus?.Status($"[grey]{Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
 
         // Same reasoning as OnToolCallStarted: always leave a permanent, scrolling trace of
-        // each phase instead of only the spinner's single line overwriting itself; --debug
+        // each phase instead of only the spinner's single line overwriting itself — plain dim
+        // text with a small "·" marker, not a bright-colored symbol stream; --debug
         // additionally shows the internal phase code.
         AnsiConsole.MarkupLine(_debug
-            ? $"  [dim cyan]◌ {Markup.Escape(progress.Phase)} · {Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]"
-            : $"  [dim cyan]◌ {Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
+            ? $"  [dim]· {Markup.Escape(progress.Phase)} · {Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]"
+            : $"  [dim]· {Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
     }
 
     private void OnNotice(AgentNotice notice)
@@ -328,7 +323,7 @@ public sealed class RalfAIApp
 
     private async Task SwitchContext()
     {
-        var options = ContextRegistry.All().ToList();
+        var options = ContextRegistry.All(_session.TargetFolder).ToList();
         var selected = Math.Max(0, options.FindIndex(o => o.Key == _contextKey));
         (string Key, IAgentContext Context)? choice = null;
 
@@ -433,7 +428,7 @@ public sealed class RalfAIApp
         // The destination folder may remember its own context (.ralfai/config.yaml);
         // fall back to whatever context is currently active if it doesn't.
         var newContextKey = FolderConfigStore.LoadContext(newFolder) ?? _contextKey;
-        var context = ContextRegistry.Create(newContextKey);
+        var context = ContextRegistry.Create(newContextKey, newFolder);
         FolderConfigStore.SaveContext(newFolder, newContextKey);
 
         DetachSessionEvents();

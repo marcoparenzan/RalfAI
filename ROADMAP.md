@@ -123,7 +123,9 @@ una sezione mai esistita in `ARCHITECTURE.md`), un link relativo a un file sorge
 di una cartella di troppo, e la voce "Context non più hardcoded" che citava una classe
 (`AgentContextFactory`) non più presente nel codice (oggi `ContextRegistry`).
 
-### File manager a doppio pannello stile Norton Commander (`F9`/`/files`)
+### File manager a doppio pannello stile Norton Commander (`F9`/`/files`) — poi rimosso
+_Rimosso: sostituito dalle menzioni `@` nel prompt (vedi sotto). `DirectoryListing` e `FileViewer` restano, usati da `FileBrowser`._
+
 Nuovo `NortonCommander`: due pannelli directory affiancati, `Tab` per cambiare quello attivo,
 barra F-key classica (F3 view, F4 edit esterno, F5 copy, F6 move/rename, F7 mkdir, F8 delete,
 F10/Esc quit) — copia e sposta usano di default la cartella dell'altro pannello come
@@ -133,6 +135,26 @@ esistente, che lo riusa anch'esso per `F3` — `FileBrowser` resta il picker sem
 pannello per la cartella target (avvio senza argomenti, cambio cartella). Estratto anche
 `DirectoryListing` (elenco/formattazione directory) per non duplicare quella logica fra i due.
 Dettagli in [ARCHITECTURE.md](ARCHITECTURE.md) e [USAGE.md](USAGE.md#file-manager).
+
+### Console più sobria: log di progresso senza estetica "hacker", cursore finto inequivocabile
+Il log di progresso/tool-call scorrevole (introdotto per sostituire la singola riga che si
+sovrascriveva) usava colori accesi (`yellow`/`cyan` in grassetto) e simboli (`⏺`/`◌`) che, in
+uso, davano l'impressione di un terminale "sotto attacco". Sostituiti con testo `dim`/`grey` e un
+semplice marcatore "·" — il comportamento (scorre, non si sovrascrive) resta invariato, cambia
+solo lo stile. Il cursore finto dell'editor del prompt (un carattere invertito) poteva risultare
+poco visibile a seconda del tema del terminale; sostituito con un blocco a colori espliciti
+(`black on green`), sempre visibile indipendentemente dal tema. Dettagli in
+[USAGE.md](USAGE.md#editor) e [USAGE.md](USAGE.md#progresso-e-costi).
+
+### Editor del prompt più vicino a Claude Code, profili esterni
+- **Menzioni `@file`** con popup fuzzy sui file della cartella target, **menu `/`** dei comandi,
+  **cronologia** `↑`/`↓` per cartella (`.ralfai/history.jsonl`), scorciatoie readline
+  (`Ctrl+A/E/U/K/W`), **`Ctrl+Z`** e paste lungo compattato (`[Pasted #1: 42 lines]`). Dettagli in
+  [USAGE.md](USAGE.md).
+- **Profili esterni**: i context si possono definire come file Markdown con frontmatter in
+  `~/.ralfai/profiles` e `<target>/.ralfai/profiles`, senza ricompilare; `--export-profile`
+  esporta un built-in come punto di partenza.
+- Rimosso il file manager a doppio pannello (`NortonCommander`, `F9`/`/files`).
 
 ## 📋 Pianificato
 
