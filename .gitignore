@@ -1,0 +1,2 @@
+# Built NuGet packages (ops/install-tool.ps1 regenerates them)
+src/nupkg/
