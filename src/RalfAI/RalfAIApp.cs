@@ -146,6 +146,15 @@ public sealed class RalfAIApp
             AgentTurnResult? turnResult = null;
             ResetStreamState();
 
+            // Image files mentioned with @ (or pasted from the clipboard) travel with the message.
+            var (images, imageWarnings) = ImageAttachments.Resolve(text, _session.TargetFolder);
+            foreach (var warning in imageWarnings)
+                AnsiConsole.MarkupLine($"  [yellow]⚠ {Markup.Escape(warning)}[/]");
+            foreach (var image in images)
+                AnsiConsole.MarkupLine(
+                    $"  [dim]📎 {Markup.Escape(image.FileName)} · {image.Width}×{image.Height} · {image.SizeBytes / 1024:N0} KB" +
+                    (image.Resized ? " (scaled down)" : "") + "[/]");
+
             // Start the escape listener again while the LLM is working.
             using var escSrc2  = new CancellationTokenSource();
             var escListener2   = ListenForEscapeAsync(turnCts, escSrc2.Token);
@@ -160,7 +169,7 @@ public sealed class RalfAIApp
                         _liveStatus = ctx;
                         try
                         {
-                            turnResult = await _session.SendAsync(text, turnCts.Token);
+                            turnResult = await _session.SendAsync(text, images, turnCts.Token);
                         }
                         finally
                         {

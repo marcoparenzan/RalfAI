@@ -87,7 +87,7 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
             _slash = false;
             start = mention.Start;
             found = _files.Search(mention.Query, MaxSuggestions)
-                .Select(path => new Suggestion("@" + path + " ", path))
+                .Select(path => new Suggestion(FormatMention(path) + " ", path))
                 .ToList();
         }
         else
@@ -107,6 +107,32 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
         _suggestions = found;
         _replaceStart = start;
         _suggestion = Math.Max(0, previous is null ? 0 : found.FindIndex(x => x.Insert == previous));
+    }
+
+    /// <summary>"@path", quoted when the path contains spaces.</summary>
+    private static string FormatMention(string path)
+        => path.Any(char.IsWhiteSpace) ? $"@\"{path}\"" : "@" + path;
+
+    /// <summary>
+    /// If the clipboard holds an image (or copied image files), inserts one @mention per image;
+    /// they are attached to the message when it is sent. Returns false when there is none.
+    /// </summary>
+    private bool PasteImages(PromptBuffer buffer)
+    {
+        var folder = targetFolder?.Invoke();
+        if (folder is null) return false;
+
+        var images = ClipboardReader.TryReadImages(folder);
+        if (images.Count == 0) return false;
+
+        foreach (var image in images)
+        {
+            var relative = Path.GetRelativePath(folder, image);
+            var shown = relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? image : relative;
+            buffer.Insert(FormatMention(shown.Replace('\\', '/')) + " ");
+        }
+        _hintOverride = $"[dim]📎 {images.Count} image{(images.Count == 1 ? "" : "s")} from the clipboard will be attached.[/]";
+        return true;
     }
 
     private string CollapsePaste(string pasted)
@@ -184,6 +210,8 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
                 if ((ctrl && key.Key == ConsoleKey.V) || (shift && key.Key == ConsoleKey.Insert))
                 {
                     var pasted = ClipboardReader.ReadText();
+                    if (string.IsNullOrWhiteSpace(pasted) && PasteImages(buffer)) return;
+
                     if (pasted is null)
                         _hintOverride = "[yellow]Clipboard unavailable; use the terminal paste command.[/]";
                     else
@@ -410,6 +438,7 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
         table.AddRow("[green]↑ / ↓[/]", "On an empty prompt: recall previous prompts (↓ goes back to the draft)");
         table.AddRow("[green]/[/]", "Command menu: type / then ↑/↓, Tab to complete, Enter to run");
         table.AddRow("[green]Ctrl+A/E · U/K · W[/]", "Line start/end · delete to line start/end · delete previous word");
+        table.AddRow("[green]Images[/]", "Ctrl+V with an image on the clipboard, or @picture.png, attaches it to the message");
         table.AddRow("[green]Ctrl+Z[/]", "Undo the last edit (typing is undone a word at a time)");
         table.AddRow("[green]Ctrl+V[/]", "Paste; long pastes collapse to [[Pasted #n: N lines]] and are sent in full");
         table.AddRow("[yellow]Esc[/]", "Clear the current draft");

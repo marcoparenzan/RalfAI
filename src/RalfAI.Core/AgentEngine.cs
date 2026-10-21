@@ -131,11 +131,19 @@ public sealed class AgentEngine
         return engine;
     }
 
-    public async Task<AgentTurnResult> SendAsync(string userText, CancellationToken ct = default)
+    public Task<AgentTurnResult> SendAsync(string userText, CancellationToken ct = default)
+        => SendAsync(userText, [], ct);
+
+    /// <summary>Sends a user message with images attached (sent to the model as image content).</summary>
+    public async Task<AgentTurnResult> SendAsync(string userText, IReadOnlyList<ImageAttachment> images, CancellationToken ct = default)
     {
         var timer = System.Diagnostics.Stopwatch.StartNew();
         Progress?.Invoke(new("prepare", $"Preparing request for {_provider}/{ModelId}", timer.Elapsed));
-        _logger.LogUser(userText); _messages.Add(new("user", userText));
+        var attachedNote = images.Count == 0 ? "" : "\n\n" + string.Join("\n", images.Select(i => $"[image attached: {i.FileName}]"));
+        _logger.LogUser(userText + attachedNote); _messages.Add(new("user", userText + attachedNote));
+        var userMessage = images.Count == 0
+            ? new ChatMessage(ChatRole.User, userText)
+            : new ChatMessage(ChatRole.User, [new TextContent(userText), .. images.Select(i => (AIContent)new DataContent(i.Content.ToMemory(), i.MediaType))]);
         for (var attempt = 0; attempt <= 3; attempt++)
         {
             try
@@ -156,8 +164,8 @@ public sealed class AgentEngine
                     : null;
                 var resumed = _pendingResumeMessages.Count > 0;
                 var stream = resumed
-                    ? _agent.RunStreamingAsync(new List<ChatMessage>(_pendingResumeMessages) { new(ChatRole.User, userText) }, _agentSession, options, ct)
-                    : _agent.RunStreamingAsync(userText, _agentSession, options, ct);
+                    ? _agent.RunStreamingAsync(new List<ChatMessage>(_pendingResumeMessages) { userMessage }, _agentSession, options, ct)
+                    : _agent.RunStreamingAsync(userMessage, _agentSession, options, ct);
 
                 var lastRate = TimeSpan.Zero;
                 await foreach (var update in stream.WithCancellation(ct))

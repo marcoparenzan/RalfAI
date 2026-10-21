@@ -161,3 +161,12 @@ Sei un assistente che lavora in {{targetFolder}}. ...
 - **Paste lungo**: con `Ctrl+V` un incolla di 6+ righe o 600+ caratteri appare come
   `[Pasted #1: 42 lines]` nel prompt e viene espanso nel testo completo all'invio (e nella
   cronologia). Non vale per l'incolla "grezzo" del terminale, che arriva tasto per tasto.
+- **Immagini**: un'immagine citata con `@` (`@screenshot.png`, anche con virgolette per i nomi con
+  spazi: `@"mia foto.png"`) viene allegata al messaggio e vista dal modello. `Ctrl+V` con un'immagine
+  nella clipboard (screenshot, "copia immagine" dal browser) la salva in `.ralfai/attachments/` e
+  inserisce la menzione; se hai copiato dei file immagine da Esplora risorse, inserisce i loro percorsi.
+  Se la clipboard contiene anche del testo, `Ctrl+V` incolla il testo. Formati: PNG, JPEG, GIF, WebP;
+  fino a 8 immagini e 20 MB ciascuna; PNG e JPEG oltre i 2048 px vengono ridotti prima dell'invio. Prima
+  della risposta compare una riga `📎 nome · larghezza×altezza · KB`. Serve un modello con visione;
+  l'immagine resta nella conversazione della sessione, quindi pesa sui token dei turni successivi.
+  Su Linux la lettura dalla clipboard richiede `wl-paste` o `xclip`; su macOS usa `@file`.
