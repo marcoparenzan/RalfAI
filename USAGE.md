@@ -25,6 +25,26 @@ La testata del prompt riporta sempre `RalfAI v<version>`, context, modello e car
 stessi tool, stesso flusso (scaffold in `src/`, build, test), cambiano framework e prompt.
 Per cambiare al volo usa `F6`; la scelta è ricordata per cartella in `.ralfai/config.yaml`.
 
+### Velocità
+
+Un turno con molti tool è lento soprattutto per il numero di giri col modello: ogni giro rimanda tutta la
+conversazione (in una sessione lunga anche 40.000+ token) e il modello ragiona prima di rispondere.
+I limiti `RateLimits` **non** sono il collo di bottiglia: il limitatore distanzia solo l'inizio di ogni
+turno (circa 2,5 s a 30 richieste/min) e non interviene tra le chiamate ai tool dello stesso turno;
+alzarli non accelera nulla, serve solo se compaiono errori 429 (attesa di 60 s).
+
+Leve che contano, in ordine di effetto:
+
+- **Chiamate in parallelo**: il prompt di sistema chiede al modello di emettere insieme i tool
+  indipendenti (più `WriteFile`, più `ReadFile`) invece di uno per giro.
+- **`Reasoning:Effort`** (`none`, `low`, `medium`, `high`, `xhigh`; vuoto = default del provider):
+  `"Reasoning": { "Effort": "low" }` riduce i tempi di ragionamento a ogni giro.
+- **`History:ResumeMaxTokens`** (default 30000): all'avvio si rimanda al modello solo la parte più
+  recente del log di sessione, non tutta la storia. `0` = tutto.
+
+In una prova (stesso compito, un campione ciascuno): 99 s e 133k token in ingresso senza queste
+misure, 76 s e 48k con le chiamate in parallelo, 54 s e 33k aggiungendo `Effort: low`.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

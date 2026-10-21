@@ -42,6 +42,7 @@ public sealed class AgentEngine
     private long _sessionOutputTokens;
     private double _sessionGeneratingSeconds;
     private bool _requestReasoningSummary;
+    private readonly ReasoningEffort? _reasoningEffort;
 
     /// <summary>Average output tokens/second over the completed turns of this session (0 until one completes).</summary>
     public double SessionTokensPerSecond => _sessionGeneratingSeconds > 0 ? _sessionOutputTokens / _sessionGeneratingSeconds : 0;
@@ -56,6 +57,8 @@ public sealed class AgentEngine
         _costHistory = new CostHistoryStore(targetFolder);
         // Ask the provider to expose a reasoning summary; Reasoning:Summary = "off" disables it.
         _requestReasoningSummary = !string.Equals(configuration["Reasoning:Summary"], "off", StringComparison.OrdinalIgnoreCase);
+        // Optional: Reasoning:Effort = none | low | medium | high | xhigh (unset = provider default).
+        _reasoningEffort = Enum.TryParse<ReasoningEffort>(configuration["Reasoning:Effort"], ignoreCase: true, out var effort) ? effort : null;
     }
 
     public static async Task<AgentEngine> CreateAsync(IConfiguration config, string targetFolder, string contextKey,
@@ -115,8 +118,12 @@ public sealed class AgentEngine
             }).Build();
         var session = await agent.CreateSessionAsync().ConfigureAwait(false);
         var history = logger.LoadExistingHistory();
+        // Everything ever logged would be re-sent with every model call; keep only the most recent
+        // part (History:ResumeMaxTokens, default 30000 estimated tokens) as model context.
+        var resumeBudget = int.TryParse(config["History:ResumeMaxTokens"], out var rb) ? rb : 30_000;
+        var resumeForModel = TrimToBudget(history, resumeBudget);
         var engine = new AgentEngine(agent, session, modelId, context, targetFolder, logger, limiter, speech, config, provider,
-            history.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList(),
+            resumeForModel.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList(),
             history.Select(x => new AgentMessage(x.Role, x.Content)).ToList());
         started = x => engine.ToolCallStarted?.Invoke(x);
         completed = x => engine.ToolCallCompleted?.Invoke(x);
@@ -137,8 +144,15 @@ public sealed class AgentEngine
                 await _rateLimiter.ThrottleAsync(_messages.Sum(m => m.Content.Length / 4 + 5), ct);
                 Progress?.Invoke(new("model", "Waiting for model response", timer.Elapsed));
                 var turn = new StreamingTurn();
-                var options = _requestReasoningSummary
-                    ? new ChatClientAgentRunOptions(new ChatOptions { Reasoning = new ReasoningOptions { Output = ReasoningOutput.Summary } })
+                var options = _requestReasoningSummary || _reasoningEffort is not null
+                    ? new ChatClientAgentRunOptions(new ChatOptions
+                    {
+                        Reasoning = new ReasoningOptions
+                        {
+                            Effort = _reasoningEffort,
+                            Output = _requestReasoningSummary ? ReasoningOutput.Summary : null
+                        }
+                    })
                     : null;
                 var resumed = _pendingResumeMessages.Count > 0;
                 var stream = resumed
@@ -196,6 +210,24 @@ public sealed class AgentEngine
         return new(null, null, "Rate limit retry budget exceeded (HTTP 429).", Duration: timer.Elapsed);
     }
 
+    /// <summary>Newest-first selection of messages that fits an estimated token budget (~4 chars/token), in original order.</summary>
+    private static List<(string Role, string Content)> TrimToBudget(List<(string Role, string Content)> history, int budgetTokens)
+    {
+        if (budgetTokens <= 0) return history;
+        var kept = new List<(string, string)>();
+        long used = 0;
+        for (var i = history.Count - 1; i >= 0; i--)
+        {
+            used += history[i].Content.Length / 4 + 5;
+            if (used > budgetTokens && kept.Count > 0) break;
+            kept.Add(history[i]);
+        }
+        kept.Reverse();
+        // A resumed conversation should open on a user turn.
+        while (kept.Count > 0 && kept[0].Item1 != "user") kept.RemoveAt(0);
+        return kept;
+    }
+
     private static (string? Thinking, string Final) ExtractThinking(string raw)
     {
         var open = raw.IndexOf("<think>", StringComparison.OrdinalIgnoreCase);
@@ -215,5 +247,8 @@ public sealed class AgentEngine
         || ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase) || (ex.InnerException is not null && Is429(ex.InnerException));
     private static string FriendlyToolName(string name) { var i = name.IndexOf('_'); return i > 0 ? name[..i] + "." + name[(i + 1)..] : name; }
     private static string UniversalPrompt(bool speech, bool imageGen) => "\n\n## Engine tools\nAI.Ask and JPG/PNG manipulation are available."
-        + (imageGen ? " Image.GenerateAI is available." : "") + (speech ? " Speech.Speak and Speech.Listen are available." : "");
+        + (imageGen ? " Image.GenerateAI is available." : "") + (speech ? " Speech.Speak and Speech.Listen are available." : "")
+        + "\n\n## Efficiency\nEvery model round-trip is slow and re-sends the whole conversation. When several tool calls do not depend on each other "
+        + "(writing multiple files, reading several files, listing folders), issue them together in the same response instead of one per turn, "
+        + "and skip re-reading files you just wrote.";
 }
