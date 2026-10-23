@@ -38,6 +38,7 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
     // Commands the live prompt understands (the same strings the F-keys submit).
     private static readonly (string Command, string Description)[] SlashCommands =
     [
+        ("/undo", "revert the changes of the last turn"),
         ("/switch-context", "change context / profile"),
         ("/switch-folder", "change target folder"),
         ("/toggle-debug", "toggle debug messages"),
@@ -402,6 +403,7 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
                 case "/switch-context": return "/switch-context";
                 case "/switch-folder": return "/switch-folder";
                 case "/toggle-debug": return "/toggle-debug";
+                case "/undo": return "/undo";
                 case "/voice":
                     if (speech is null)
                     {
@@ -439,6 +441,7 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
         table.AddRow("[green]/[/]", "Command menu: type / then ↑/↓, Tab to complete, Enter to run");
         table.AddRow("[green]Ctrl+A/E · U/K · W[/]", "Line start/end · delete to line start/end · delete previous word");
         table.AddRow("[green]Images[/]", "Ctrl+V with an image on the clipboard, or @picture.png, attaches it to the message");
+        table.AddRow("[cyan]/undo[/]", "Revert the files the last turn changed (type / for the command menu)");
         table.AddRow("[green]Ctrl+Z[/]", "Undo the last edit (typing is undone a word at a time)");
         table.AddRow("[green]Ctrl+V[/]", "Paste; long pastes collapse to [[Pasted #n: N lines]] and are sent in full");
         table.AddRow("[yellow]Esc[/]", "Clear the current draft");
@@ -466,6 +469,7 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
         table.AddRow("[cyan]/clear[/]", "Clear the screen");
         table.AddRow("[cyan]/switch-context / /switch-folder[/]", "Switch context / folder");
         table.AddRow("[cyan]/toggle-debug[/]", "Toggle debug messages");
+        table.AddRow("[cyan]/undo[/]", "Revert the files the last turn changed");
         table.AddRow("[grey]/help[/]", "Show this table");
         table.AddRow("[red]exit / /exit[/]", "Quit RalfAI");
         AnsiConsole.WriteLine();

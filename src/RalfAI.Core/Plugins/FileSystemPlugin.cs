@@ -51,6 +51,7 @@ public sealed class FileSystemPlugin(string rootFolder)
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
         // New files are written without a BOM; an existing file keeps the one it had.
         var keepBom = File.Exists(fullPath) && HasBom(fullPath);
+        FileChangeNotifier.BeforeChange(Root, fullPath);
         File.WriteAllText(fullPath, content, keepBom ? new UTF8Encoding(true) : Utf8NoBom);
         return Task.FromResult($"OK — written {relativePath} ({content.Length} chars)");
     }
@@ -88,6 +89,7 @@ public sealed class FileSystemPlugin(string rootFolder)
             return Task.FromResult($"ERROR: oldText appears {count} times in {relativePath}. Include more surrounding lines to make it unique, or set replaceAll.");
 
         var updated = text.Replace(find, replacement, StringComparison.Ordinal);
+        FileChangeNotifier.BeforeChange(Root, fullPath);
         File.WriteAllText(fullPath, updated, hasBom ? new UTF8Encoding(true) : Utf8NoBom);
 
         var removed = find.Count(c => c == '\n') + 1;
@@ -136,6 +138,7 @@ public sealed class FileSystemPlugin(string rootFolder)
             catch (RegexMatchTimeoutException) { continue; }
 
             if (count == 0 || updated == text) continue;
+            FileChangeNotifier.BeforeChange(Root, file);
             File.WriteAllText(file, updated, hasBom ? new UTF8Encoding(true) : Utf8NoBom);
             changes.Add((rel, count));
             total += count;
@@ -156,6 +159,7 @@ public sealed class FileSystemPlugin(string rootFolder)
         var fullPath = ResolveSafe(relativePath);
         if (!File.Exists(fullPath))
             return Task.FromResult($"File not found — nothing deleted: {relativePath}");
+        FileChangeNotifier.BeforeChange(Root, fullPath);
         File.Delete(fullPath);
         return Task.FromResult($"OK — deleted {relativePath}");
     }
@@ -306,6 +310,12 @@ public sealed class FileSystemPlugin(string rootFolder)
             throw new UnauthorizedAccessException($"Path traversal blocked: {relativePath}");
         return full;
     }
+
+    /// <summary>Every file under <paramref name="root"/> that listings and searches would see (no build/VCS folders).</summary>
+    internal static IEnumerable<string> WalkFiles(string root) => Walk(root, includeDirectories: false);
+
+    /// <summary>Every folder under <paramref name="root"/> that listings would see.</summary>
+    internal static IEnumerable<string> WalkDirectories(string root) => Walk(root, includeDirectories: true).Where(Directory.Exists);
 
     /// <summary>Depth-first, name-ordered walk that skips build/VCS folders (and Cargo's <c>target</c>).</summary>
     private static IEnumerable<string> Walk(string directory, bool includeDirectories)

@@ -136,6 +136,12 @@ public sealed class RalfAIApp
                 continue;
             }
 
+            if (text.Equals("/undo", StringComparison.OrdinalIgnoreCase))
+            {
+                UndoLastTurn();
+                continue;
+            }
+
             if (text.Equals("/toggle-debug", StringComparison.OrdinalIgnoreCase))
             {
                 ToggleDebug();
@@ -181,6 +187,7 @@ public sealed class RalfAIApp
             catch (OperationCanceledException)
             {
                 AnsiConsole.MarkupLine("  [yellow]↩ Processing cancelled.[/]");
+                ShowTurnChanges(_session.LastTurnChanges);
             }
 
             // Stop escape listener.
@@ -192,16 +199,81 @@ public sealed class RalfAIApp
             if (turnResult.Error is not null)
             {
                 AnsiConsole.MarkupLine($"\n  [red]⛔ Error: {Markup.Escape(turnResult.Error)}[/]");
+                ShowTurnChanges(turnResult.Changes);
                 continue;
             }
 
             ShowAgentResponse(turnResult.Thinking, turnResult.FinalText!, turnResult.Usage, turnResult.Duration, _session.GetCostSummary(),
                 _streamedThinking, _streamedAnswer, turnResult.TokensPerSecond, _session.SessionTokensPerSecond);
+            ShowTurnChanges(turnResult.Changes);
         }
 
         AnsiConsole.Write(new Rule().RuleStyle("grey dim"));
         AnsiConsole.MarkupLine(
             $"  [dim]Session saved → {_session.LogPath}[/]");
+    }
+
+    private const int MaxChangeLines = 12;
+
+    /// <summary>One line per file the last turn changed, with a pointer to /undo when something can be reverted.</summary>
+    private static void ShowTurnChanges(TurnChanges? changes)
+    {
+        if (changes is null || changes.Files.Count == 0) return;
+
+        var revertible = changes.RestorableCount > 0;
+        AnsiConsole.MarkupLine($"  [dim]✎ {changes.Files.Count} file{(changes.Files.Count == 1 ? "" : "s")} changed" +
+                               (revertible ? " · /undo to revert" : "") + "[/]");
+        foreach (var file in changes.Files.Take(MaxChangeLines))
+            AnsiConsole.MarkupLine($"    [dim]{DescribeChange(file)}[/]");
+        if (changes.Files.Count > MaxChangeLines)
+            AnsiConsole.MarkupLine($"    [dim]… and {changes.Files.Count - MaxChangeLines} more[/]");
+    }
+
+    private static string DescribeChange(FileChange file)
+    {
+        var path = Markup.Escape(file.Path);
+        var note = file.Restorable ? "" : " - changed by a command, cannot be reverted";
+        return file.Kind switch
+        {
+            FileChangeKind.Created => $"+ {path}  [[new{(file.Added > 0 ? $", {file.Added} lines" : "")}]]",
+            FileChangeKind.Deleted => $"- {path}  [[deleted]]{note}",
+            _ => file.Restorable ? $"~ {path}  +{file.Added} -{file.Removed}" : $"~ {path}{note}",
+        };
+    }
+
+    /// <summary>/undo: show what would be reverted, ask, and revert the last turn that changed files.</summary>
+    private void UndoLastTurn()
+    {
+        var preview = _session.PreviewUndo();
+        if (preview is null)
+        {
+            AnsiConsole.MarkupLine("  [dim]Nothing to undo.[/]");
+            return;
+        }
+
+        AnsiConsole.MarkupLine($"  [bold]Undo:[/] [dim]{Markup.Escape(preview.Label.ReplaceLineEndings(" "))}[/]");
+        foreach (var file in preview.Files.Take(MaxChangeLines * 2))
+            AnsiConsole.MarkupLine($"    [dim]{DescribeChange(file)}[/]");
+        if (preview.RestorableCount == 0)
+        {
+            AnsiConsole.MarkupLine("  [yellow]Nothing in that turn can be reverted.[/]");
+            return;
+        }
+
+        // Piped input (scripts, tests) has no keyboard to ask; the explicit /undo is the confirmation.
+        if (!Console.IsInputRedirected && !AnsiConsole.Confirm("  Revert these changes?", defaultValue: false))
+        {
+            AnsiConsole.MarkupLine("  [dim]Undo cancelled.[/]");
+            return;
+        }
+
+        var report = _session.Undo();
+        foreach (var path in report.Restored) AnsiConsole.MarkupLine($"  [green]↩ restored[/] [dim]{Markup.Escape(path)}[/]");
+        foreach (var path in report.Removed) AnsiConsole.MarkupLine($"  [green]↩ removed[/] [dim]{Markup.Escape(path)}[/]");
+        foreach (var note in report.Skipped) AnsiConsole.MarkupLine($"  [yellow]⚠ skipped[/] [dim]{Markup.Escape(note)}[/]");
+        var left = _session.UndoableTurns;
+        AnsiConsole.MarkupLine($"  [dim]{report.Restored.Count + report.Removed.Count} change(s) reverted" +
+                               (left > 0 ? $" · {left} earlier turn{(left == 1 ? "" : "s")} can still be undone" : "") + "[/]");
     }
 
     /// <summary>Context · model · folder shown above the prompt, so switching (F6/F7) stays visible.</summary>

@@ -50,6 +50,7 @@ public sealed class ImageGenerationPlugin(ImageGenerationService imageGen, strin
         IImageEncoder encoder = extension.Equals(".png", StringComparison.OrdinalIgnoreCase)
             ? new PngEncoder()
             : new JpegEncoder();
+        FileChangeNotifier.BeforeChange(rootFolder, fullPath);
         await image.SaveAsync(fullPath, encoder);
 
         return $"OK — generated and written {outputPath} ({image.Width}x{image.Height} px, model: {imageGen.ModelId})";
@@ -57,9 +58,6 @@ public sealed class ImageGenerationPlugin(ImageGenerationService imageGen, strin
 
     private string ResolveSafe(string relativePath)
     {
-        var full = Path.GetFullPath(Path.Combine(rootFolder, relativePath));
-        if (!full.StartsWith(rootFolder, StringComparison.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException($"Path traversal blocked: {relativePath}");
-        return full;
+        return SafePath.Resolve(rootFolder, relativePath);
     }
 }

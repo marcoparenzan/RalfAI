@@ -176,6 +176,11 @@ Dettagli in [USAGE.md](USAGE.md#strumenti-per-i-file).
 `Limits:MaxToolCalls` (morbido), `MaxOutputTokens` e `MaxReasoningChars` (duri), configurabili e disattivabili.
 Dettagli in [USAGE.md](USAGE.md#limiti-per-turno).
 
+### Annullare i turni (`/undo`) e riepilogo delle modifiche
+Registro per turno in `.ralfai/undo` (copia prima di ogni modifica dei tool, confronto prima/dopo per i comandi esterni),
+riepilogo dei file cambiati con righe aggiunte/tolte, `/undo` con conferma che non sovrascrive modifiche successive.
+Dettagli in [USAGE.md](USAGE.md#annullare-le-modifiche-undo).
+
 ## 📋 Pianificato
 
 ### Interfaccia grafica (Desktop/Web)

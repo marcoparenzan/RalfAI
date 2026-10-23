@@ -7,7 +7,8 @@ public sealed record AgentTurnResult(
     string? Error,
     TurnUsage? Usage = null,
     TimeSpan? Duration = null,
-    double? TokensPerSecond = null);
+    double? TokensPerSecond = null,
+    TurnChanges? Changes = null);
 
 /// <summary>Token usage reported by the provider and an optional client-side cost estimate.</summary>
 public sealed record TurnUsage(long? InputTokens, long? OutputTokens, long? TotalTokens, decimal? EstimatedCostUsd)

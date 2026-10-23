@@ -16,6 +16,7 @@ public sealed class AgentEngine
     private readonly List<AgentMessage> _messages;
     private readonly ConversationLogger _logger;
     private readonly TurnLimits _limits;
+    private readonly UndoJournal _undo;
     private readonly RateLimiter _rateLimiter;
     private readonly IConfiguration _configuration;
     private readonly string _provider;
@@ -50,13 +51,14 @@ public sealed class AgentEngine
 
     private AgentEngine(AIAgent agent, AgentSession session, string modelId, IAgentContext context, string targetFolder,
         ConversationLogger logger, RateLimiter limiter, SpeechService? speech, IConfiguration configuration,
-        string provider, List<ChatMessage> pending, List<AgentMessage> messages, TurnLimits limits)
+        string provider, List<ChatMessage> pending, List<AgentMessage> messages, TurnLimits limits, UndoJournal undo)
     {
         _agent = agent; _agentSession = session; ModelId = modelId; Context = context; TargetFolder = targetFolder;
         _logger = logger; _rateLimiter = limiter; Speech = speech; _configuration = configuration; _provider = provider;
         _pendingResumeMessages = pending; _messages = messages; ResumedMessageCount = messages.Count;
         _costHistory = new CostHistoryStore(targetFolder);
         _limits = limits;
+        _undo = undo;
         // Ask the provider to expose a reasoning summary; Reasoning:Summary = "off" disables it.
         _requestReasoningSummary = !string.Equals(configuration["Reasoning:Summary"], "off", StringComparison.OrdinalIgnoreCase);
         // Optional: Reasoning:Effort = none | low | medium | high | xhigh (unset = provider default).
@@ -135,7 +137,8 @@ public sealed class AgentEngine
         var resumeForModel = TrimToBudget(history, resumeBudget);
         var engine = new AgentEngine(agent, session, modelId, context, targetFolder, logger, limiter, speech, config, provider,
             resumeForModel.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList(),
-            history.Select(x => new AgentMessage(x.Role, x.Content)).ToList(), limits);
+            history.Select(x => new AgentMessage(x.Role, x.Content)).ToList(), limits,
+            new UndoJournal(targetFolder, int.TryParse(config["Undo:Keep"], out var keep) && keep >= 0 ? keep : 10));
         started = x => engine.ToolCallStarted?.Invoke(x);
         completed = x => engine.ToolCallCompleted?.Invoke(x);
         noticeHandler = x => engine.Notice?.Invoke(x);
@@ -145,8 +148,29 @@ public sealed class AgentEngine
     public Task<AgentTurnResult> SendAsync(string userText, CancellationToken ct = default)
         => SendAsync(userText, [], ct);
 
+    /// <summary>What the last turn changed on disk (null if nothing, or if it was a no-op). Set even when the turn failed or was cancelled.</summary>
+    public TurnChanges? LastTurnChanges { get; private set; }
+
+    /// <summary>How many past turns can still be reverted with <see cref="Undo"/>.</summary>
+    public int UndoableTurns => _undo.Count;
+
+    /// <summary>The changes <see cref="Undo"/> would revert, or null when there is nothing to undo.</summary>
+    public TurnChanges? PreviewUndo() => _undo.Preview();
+
+    /// <summary>Reverts the most recent turn that changed files.</summary>
+    public UndoReport Undo() => _undo.Undo();
+
     /// <summary>Sends a user message with images attached (sent to the model as image content).</summary>
     public async Task<AgentTurnResult> SendAsync(string userText, IReadOnlyList<ImageAttachment> images, CancellationToken ct = default)
+    {
+        _undo.BeginTurn(userText);
+        AgentTurnResult result;
+        try { result = await SendCoreAsync(userText, images, ct); }
+        finally { LastTurnChanges = _undo.EndTurn(); }
+        return result with { Changes = LastTurnChanges };
+    }
+
+    private async Task<AgentTurnResult> SendCoreAsync(string userText, IReadOnlyList<ImageAttachment> images, CancellationToken ct)
     {
         var timer = System.Diagnostics.Stopwatch.StartNew();
         Progress?.Invoke(new("prepare", $"Preparing request for {_provider}/{ModelId}", timer.Elapsed));

@@ -104,6 +104,32 @@ finisce in `cost-history.jsonl`, perché il provider non ha ancora comunicato l'
 con il suggerimento di premere `Esc`. Gli avvisi di tipo *warning* (limiti di token al minuto, tetto sui tool) ora si vedono
 sempre, non solo con `--debug`.
 
+### Annullare le modifiche (`/undo`)
+
+A fine turno, se l'agente ha cambiato dei file, compare un riepilogo:
+
+```text
+✎ 5 file changed · /undo to revert
+    - old.txt  [deleted]
+    ~ README.md  +1 -0
+    + src/App/Program.cs  [new, 12 lines]
+```
+
+`/undo` (anche dal menu `/`) mostra cosa verrebbe annullato, chiede conferma e riporta tutto com'era prima di quel turno:
+i file modificati o cancellati tornano al contenuto di partenza, quelli nuovi vengono rimossi (insieme alle cartelle rimaste
+vuote). Si può ripetere per tornare indietro di più turni.
+
+- **Come funziona**: prima di ogni modifica fatta con i tool (`WriteFile`, `EditFile`, `ReplaceInFiles`, `DeleteFile`, gli
+  strumenti per le immagini) il file viene copiato in `.ralfai/undo/<turno>/`. Le modifiche dei comandi esterni
+  (`dotnet new`, `cargo new`…) si riconoscono confrontando l'elenco dei file prima e dopo il turno. Non serve git.
+- **Cosa non si può annullare**: un file che esisteva già e che un *comando* ha modificato o cancellato (per esempio
+  `dotnet add package` su un `.csproj`): il suo contenuto precedente non è stato salvato, quindi è solo segnalato come
+  "cannot be reverted". Cartelle di build (`bin`, `obj`), `.git` e `.ralfai` non sono controllate.
+- **Sicurezza**: se hai modificato a mano un file *dopo* il turno, `/undo` non lo sovrascrive e lo elenca tra i saltati.
+  Funziona anche per un turno annullato con `Esc` o finito in errore.
+- **Configurazione**: `"Undo": { "Keep": 10 }` sono i turni conservati (`0` disattiva tutto). Le copie stanno nella cartella
+  del progetto, come il log di sessione: se il progetto contiene segreti, anche le copie li contengono.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

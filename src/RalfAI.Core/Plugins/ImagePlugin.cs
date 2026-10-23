@@ -128,6 +128,7 @@ public sealed class ImagePlugin(string rootFolder)
             mutate(image);
 
             Directory.CreateDirectory(Path.GetDirectoryName(fullOutputPath)!);
+            FileChangeNotifier.BeforeChange(rootFolder, fullOutputPath);
             await image.SaveAsync(fullOutputPath, GetEncoder(outputExtension));
 
             return $"OK — written {outputPath} ({image.Width}x{image.Height} px)";
@@ -181,9 +182,6 @@ public sealed class ImagePlugin(string rootFolder)
 
     private string ResolveSafe(string relativePath)
     {
-        var full = Path.GetFullPath(Path.Combine(rootFolder, relativePath));
-        if (!full.StartsWith(rootFolder, StringComparison.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException($"Path traversal blocked: {relativePath}");
-        return full;
+        return SafePath.Resolve(rootFolder, relativePath);
     }
 }
