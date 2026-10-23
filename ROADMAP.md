@@ -193,22 +193,28 @@ formati misti), titolo breve e testo completo per le richieste lunghe, data e or
 di `dotnet`, `dotnet11`, `rust`, `markdown` e `html`: un giro in meno col modello a ogni turno e nessun file di log
 riscritto male. Configurabile con `PromptLog:File`. Dettagli in [USAGE.md](USAGE.md#registro-delle-richieste-promptsmd).
 
+### Test del motore con un client finto (2026-10-23)
+`AgentEngine.CreateAsync` ha un overload che accetta un `IChatClient`. `ScriptedChatClient` + `EngineHarness` permettono di
+provare il ciclo del turno senza rete: streaming di risposta e ragionamento, tag `<think>` spezzati, uso dei token, richiesta
+del riassunto di ragionamento e ripiego se il modello lo rifiuta, tool e risultati, riepilogo e `/undo`, tetti per turno
+(morbido e duro), `PROMPTS.md`, allegati, annullamento con `Esc`, ripresa della sessione con storia limitata. 19 test nuovi
+(115 in tutto); verificato con due mutazioni del motore che i test giusti falliscono. Dettagli in
+[ARCHITECTURE.md](ARCHITECTURE.md#test-del-motore).
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità
 L'ordine è un giudizio (piccoli lavori che sbloccano o proteggono quelli successivi, poi i rischi, poi le prestazioni,
 infine ciò che è grande). Quando un punto è fatto passa sotto "✅ Fatto" con la data.
 
-1. **Test del motore con un client finto** - streaming, tetti per turno, `/undo`, allegati e ripresa della sessione oggi
-   sono verificati solo a mano col modello vero.
-2. **Permessi sui comandi** - `DotNet.RunCommand`, `Rust.RunCargo` e simili eseguono qualunque cosa senza chiedere:
+1. **Permessi sui comandi** - `DotNet.RunCommand`, `Rust.RunCargo` e simili eseguono qualunque cosa senza chiedere:
    modalità chiedi / consenti / blocca, elenco di comandi ammessi, risposta "sempre" per la sessione.
-3. **Chiave API in chiaro** (vedi sotto).
-4. **Compattare i risultati vecchi dei tool** nel contesto di una sessione lunga (oggi si limita solo la storia ripresa).
-5. **Log di sessione in JSONL con riassunto** invece di un unico `session.md` riletto per intero a ogni apertura.
-6. **Variante solo ASCII** per i terminali che non disegnano frecce ed emoji.
-7. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
-8. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità e allegati; manca la parte grafica.
+2. **Chiave API in chiaro** (vedi sotto).
+3. **Compattare i risultati vecchi dei tool** nel contesto di una sessione lunga (oggi si limita solo la storia ripresa).
+4. **Log di sessione in JSONL con riassunto** invece di un unico `session.md` riletto per intero a ogni apertura.
+5. **Variante solo ASCII** per i terminali che non disegnano frecce ed emoji.
+6. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
+7. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità e allegati; manca la parte grafica.
 
 ### Interfaccia grafica (Desktop/Web)
 Nessuna UI grafica esiste oggi: solo la console (`RalfAI`, Spectre.Console) è implementata. Un

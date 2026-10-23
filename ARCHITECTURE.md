@@ -4,7 +4,7 @@
 - `src/RalfAI.Core`: Agent Framework, provider, strumenti, metriche e storico costi.
 - `src/RalfAI.Studio`: host WinForms + BlazorWebView (Blazor Hybrid), file tree, Monaco e preview.
 - `src/RalfAI.Contexts.*`: contesti DotNet, Markdown e HTML.
-- `src/RalfAI.Tests`: test xUnit di buffer, metriche e persistenza costi.
+- `src/RalfAI.Tests`: test xUnit di editor, metriche, strumenti sui file, `/undo`, limiti e del ciclo del turno (vedi sotto).
 - `ops/install-tool.ps1`: packaging e install/update globale o locale.
 
 `AgentEngine` espone eventi `Progress`, `ToolCallStarted`, `ToolCallCompleted` e `Notice`: i
@@ -22,3 +22,12 @@ cartella target; il file manager a doppio pannello `NortonCommander` è stato ri
 delle menzioni `@` nel prompt) — nessuna dipendenza da `IConfiguration`:
 il comando dell'editor esterno (chiave `Editor`) viene risolto dai chiamanti e passato come
 stringa.
+
+## Test del motore
+
+`AgentEngine.CreateAsync(config, cartella, chiave, context, chatClient)` accetta un `IChatClient` al posto del provider
+configurato. I test (`AgentEngineTests`) usano `ScriptedChatClient`, un client finto che risponde da un copione: per ogni
+chiamata si decide quali aggiornamenti tornano (testo, ragionamento, chiamate a tool, uso dei token) e si può ispezionare
+cosa il motore ha inviato. Così streaming, tetti per turno, `/undo`, `PROMPTS.md`, allegati, annullamento e ripresa della
+sessione si verificano in pochi secondi, senza rete né costi. `EngineHarness` crea l'engine su una cartella temporanea
+senza pausa tra i turni (`RequestsPerMinute: 0`).

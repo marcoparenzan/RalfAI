@@ -65,8 +65,17 @@ public sealed class AgentEngine
         _reasoningEffort = Enum.TryParse<ReasoningEffort>(configuration["Reasoning:Effort"], ignoreCase: true, out var effort) ? effort : null;
     }
 
-    public static async Task<AgentEngine> CreateAsync(IConfiguration config, string targetFolder, string contextKey,
+    public static Task<AgentEngine> CreateAsync(IConfiguration config, string targetFolder, string contextKey,
         IAgentContext context, CancellationToken ct = default)
+        => CreateCoreAsync(config, targetFolder, contextKey, context, chatClientOverride: null);
+
+    /// <summary>Creates an engine around a given chat client instead of the configured provider - for tests and embedding.</summary>
+    public static Task<AgentEngine> CreateAsync(IConfiguration config, string targetFolder, string contextKey,
+        IAgentContext context, IChatClient chatClient, string modelId = "test-model")
+        => CreateCoreAsync(config, targetFolder, contextKey, context, (chatClient, modelId));
+
+    private static async Task<AgentEngine> CreateCoreAsync(IConfiguration config, string targetFolder, string contextKey,
+        IAgentContext context, (IChatClient Client, string ModelId)? chatClientOverride)
     {
         var logger = new ConversationLogger(targetFolder);
         var rpm = int.TryParse(config["AzureAIFoundry:RateLimits:RequestsPerMinute"], out var r) ? r : 20;
@@ -78,7 +87,7 @@ public sealed class AgentEngine
         var speech = SpeechService.FromConfig(config);
         var imageGen = ImageGeneration.ImageGenerationService.FromConfig(config);
         var provider = (config["AIProvider"] ?? "foundry").Trim().ToLowerInvariant();
-        var (chatClient, modelId) = ChatClientFactory.Create(config, contextKey);
+        var (chatClient, modelId) = chatClientOverride ?? ChatClientFactory.Create(config, contextKey);
         var image = new ImagePlugin(targetFolder);
         var tools = new List<AITool>(context.GetTools(targetFolder))
         {
