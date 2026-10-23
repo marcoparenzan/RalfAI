@@ -48,8 +48,8 @@ public sealed class TerminalGlyphsTests
     [Fact]
     public void WhatTheConsoleCanShowIsKeptSoItalianAccentsSurviveOnAnOemCodePage()
     {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        var oem850 = Encoding.GetEncoding(850);
+        // Deliberately not registering the code pages here: the writer must do it itself (a real console starts with nothing registered).
+        var oem850 = CodePagesEncodingProvider.Instance.GetEncoding(850)!;
 
         // è, à, ù and the middle dot exist in code page 850; the arrow and the check mark do not.
         Assert.Equal("è à ù · -> v", Through(oem850, "è à ù · → ✓"));

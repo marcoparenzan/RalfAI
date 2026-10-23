@@ -101,6 +101,8 @@ public sealed class GlyphFallbackWriter : TextWriter
         _replaceSymbols = replaceSymbols;
         _target = target;
         // Same encoding, but throwing instead of silently writing '?', to find out what it cannot show.
+        // .NET knows only Unicode/ASCII/Latin-1 by itself: the OEM code pages (850, 437…) come from this provider.
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         _strict = Encoding.GetEncoding(target.CodePage, EncoderFallback.ExceptionFallback, DecoderFallback.ReplacementFallback);
     }
 
