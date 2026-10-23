@@ -88,7 +88,9 @@ public sealed class AgentEngine
     private static async Task<AgentEngine> CreateCoreAsync(IConfiguration config, string targetFolder, string contextKey,
         IAgentContext context, (IChatClient Client, string ModelId)? chatClientOverride)
     {
-        var logger = new ConversationLogger(targetFolder);
+        var toolChars = int.TryParse(config["Log:ToolOutputChars"], out var tc) && tc >= 0 ? tc : 2000;
+        var maxLogMb = double.TryParse(config["Log:MaxMegabytes"], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var mb) && mb >= 0 ? mb : 5;
+        var logger = new ConversationLogger(targetFolder, toolChars, (long)(maxLogMb * 1024 * 1024));
         var rpm = int.TryParse(config["AzureAIFoundry:RateLimits:RequestsPerMinute"], out var r) ? r : 20;
         var tpm = int.TryParse(config["AzureAIFoundry:RateLimits:TokensPerMinute"], out var t) ? t : 20000;
         var safety = double.TryParse(config["AzureAIFoundry:RateLimits:SafetyFactor"], System.Globalization.NumberStyles.Float,
@@ -172,8 +174,11 @@ public sealed class AgentEngine
         // part (History:ResumeMaxTokens, default 30000 estimated tokens) as model context.
         var resumeBudget = int.TryParse(config["History:ResumeMaxTokens"], out var rb) ? rb : 30_000;
         var resumeForModel = TrimToBudget(history, resumeBudget);
+        var resumeMessages = resumeForModel.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList();
+        if (EarlierRequestsNote(history.Take(history.Count - resumeForModel.Count).Where(h => h.Role == "user").Select(h => h.Content)) is { } note)
+            resumeMessages.Insert(0, new ChatMessage(ChatRole.User, note));
         var engine = new AgentEngine(agent, session, modelId, context, targetFolder, logger, limiter, speech, config, provider,
-            resumeForModel.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList(),
+            resumeMessages,
             history.Select(x => new AgentMessage(x.Role, x.Content)).ToList(), limits,
             new UndoJournal(targetFolder, int.TryParse(config["Undo:Keep"], out var keep) && keep >= 0 ? keep : 10), permissions);
         permissionHandler = () => engine.Permission;
@@ -312,6 +317,23 @@ public sealed class AgentEngine
             catch (Exception ex) { timer.Stop(); return new(null, null, ex.Message, Duration: timer.Elapsed); }
         }
         return new(null, null, "Rate limit retry budget exceeded (HTTP 429).", Duration: timer.Elapsed);
+    }
+
+    /// <summary>
+    /// What a resumed session tells the model about the requests that no longer fit its context: just the requests, one line
+    /// each (the newest <paramref name="max"/>), so it knows the project has a history without paying for it. Null when none.
+    /// </summary>
+    internal static string? EarlierRequestsNote(IEnumerable<string> olderUserRequests, int max = 25)
+    {
+        var requests = olderUserRequests.Select(r => r.Replace("\r\n", "\n").Split('\n')[0].Trim()).Where(r => r.Length > 0).ToList();
+        if (requests.Count == 0) return null;
+
+        var shown = requests.Skip(Math.Max(0, requests.Count - max)).Select(r => r.Length > 100 ? r[..100].TrimEnd() + "…" : r);
+        var omitted = requests.Count - Math.Min(requests.Count, max);
+        return "[Note from RalfAI] This project has an earlier history that is no longer in your context. The user's older requests, oldest first" +
+               (omitted > 0 ? $" (the {requests.Count - omitted} most recent of {requests.Count})" : "") + ": " +
+               string.Join(" | ", shown.Select((r, i) => $"{omitted + i + 1}. {r}")) +
+               ". Their details are gone; check the files (and PROMPTS.md, if present) rather than guessing what was done.";
     }
 
     /// <summary>Newest-first selection of messages that fits an estimated token budget (~4 chars/token), in original order.</summary>

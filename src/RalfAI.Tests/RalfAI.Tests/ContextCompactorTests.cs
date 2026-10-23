@@ -176,7 +176,7 @@ public sealed class EngineCompactionTests
     public async Task TheSessionLogStillHasTheFullToolOutput()
     {
         var client = Of(call => call.Index < 2 ? [ToolCalls(("FileSystem_ReadFile", Read($"f{call.Index}.txt")))] : [Text("ok")]);
-        using var h = await EngineHarness.CreateAsync(client, new() { ["Context:RecentToolChars"] = "100", ["Context:CompactMinChars"] = "10" });
+        using var h = await EngineHarness.CreateAsync(client, new() { ["Context:RecentToolChars"] = "100", ["Context:CompactMinChars"] = "10", ["Log:ToolOutputChars"] = "0" });
         File.WriteAllText(h.PathOf("f0.txt"), "ZERO\n" + new string('z', 2_000));
         File.WriteAllText(h.PathOf("f1.txt"), "ONE\n" + new string('o', 2_000));
 

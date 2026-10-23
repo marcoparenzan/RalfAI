@@ -212,6 +212,22 @@ Con `--debug` compare un avviso quando la compattazione aumenta.
 token in ingresso circa 256.000 senza compattazione, 178.000 con finestra 30.000, 155.000 con 20.000 (predefinito), 92.000 con 15.000, stessi file e risposte
 corrette, tempi simili. Con 60.000 non si guadagnava nulla. Sessioni molto più lunghe risparmiano di più.
 
+### Log di sessione
+
+In `.ralfai/` di ogni progetto restano due file con compiti diversi:
+
+- **`session.md`** - il resoconto leggibile: richieste, chiamate ai tool, risposte e ragionamento. Argomenti e output dei tool sono accorciati a
+  `Log:ToolOutputChars` caratteri (2.000; `0` = per intero), così un file letto non resta lì per sempre. Oltre `Log:MaxMegabytes` (5; `0` = mai) viene
+  rinominato `session.<data-ora>.md` e ne inizia uno nuovo.
+- **`session.jsonl`** - ciò che serve per riprendere: un oggetto JSON per messaggio dell'utente o dell'agente, e nient'altro. È piccolo, si legge in
+  un attimo e non dipende dal parsing del Markdown; una riga rovinata da un'interruzione non fa perdere il resto. Un progetto che ha solo il vecchio
+  `session.md` viene convertito alla prima apertura (prima dell'eventuale rotazione, quindi la conversazione non si perde).
+
+Alla ripresa il modello riceve solo la parte più recente (`History:ResumeMaxTokens`, 30.000 token stimati). Se una parte più vecchia è stata lasciata fuori, in
+testa trova una **nota** con le richieste precedenti dell'utente, una riga ciascuna (le ultime 25, in ordine), e l'invito a controllare i file e `PROMPTS.md`
+invece di indovinare. Costa poche centinaia di token e non richiede nessuna chiamata al modello. Su un progetto reale da 3 MB: migrazione in 0,1 s la
+prima volta, 1 ms dopo; la storia di ripresa pesa 113 KB.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

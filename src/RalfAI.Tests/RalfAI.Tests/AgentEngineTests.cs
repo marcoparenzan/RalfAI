@@ -293,7 +293,9 @@ public sealed class AgentEngineTests
         using var second = await EngineHarness.CreateAsync(client, new() { ["History:ResumeMaxTokens"] = "2500" }, folder: first.Folder);
         await second.Engine.SendAsync("ultima");
 
-        var sentUserTexts = client.Calls[0].Messages.Where(m => m.Role == ChatRole.User).Select(m => m.Text).ToList();
+        // The older requests are only listed in a short note; they are not re-sent as messages.
+        var sentUserTexts = client.Calls[0].Messages.Where(m => m.Role == ChatRole.User).Select(m => m.Text)
+            .Where(t => !t.StartsWith("[Note from RalfAI]")).ToList();
         Assert.Contains("ultima", sentUserTexts);
         Assert.DoesNotContain(sentUserTexts, t => t.Contains("domanda numero 0"));
         Assert.Contains(sentUserTexts, t => t.Contains("domanda numero 4"));
