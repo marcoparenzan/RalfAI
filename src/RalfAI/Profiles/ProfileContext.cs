@@ -33,17 +33,7 @@ public static class ToolCatalog
     private static readonly Dictionary<string, Func<string, IEnumerable<AITool>>> Groups =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["FileSystem"] = folder =>
-            {
-                var fs = new FileSystemPlugin(folder);
-                return
-                [
-                    AIFunctionFactory.Create(fs.WriteFile,  name: "FileSystem_WriteFile"),
-                    AIFunctionFactory.Create(fs.ReadFile,   name: "FileSystem_ReadFile"),
-                    AIFunctionFactory.Create(fs.ListFiles,  name: "FileSystem_ListFiles"),
-                    AIFunctionFactory.Create(fs.DeleteFile, name: "FileSystem_DeleteFile"),
-                ];
-            },
+            ["FileSystem"] = folder => new FileSystemPlugin(folder).CreateTools(),
             ["Web"] = _ =>
             {
                 var web = new WebPlugin();

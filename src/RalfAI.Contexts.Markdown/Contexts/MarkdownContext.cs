@@ -21,10 +21,7 @@ public sealed class MarkdownContext : IAgentContext
 
         return
         [
-            AIFunctionFactory.Create(fs.WriteFile,  name: "FileSystem_WriteFile"),
-            AIFunctionFactory.Create(fs.ReadFile,   name: "FileSystem_ReadFile"),
-            AIFunctionFactory.Create(fs.ListFiles,  name: "FileSystem_ListFiles"),
-            AIFunctionFactory.Create(fs.DeleteFile, name: "FileSystem_DeleteFile"),
+            .. fs.CreateTools(),
             AIFunctionFactory.Create(web.FetchUrl,  name: "Web_FetchUrl"),
         ];
     }

@@ -27,10 +27,7 @@ public sealed class DotNetContext(int major = 10) : IAgentContext
 
         return
         [
-            AIFunctionFactory.Create(fs.WriteFile,      name: "FileSystem_WriteFile"),
-            AIFunctionFactory.Create(fs.ReadFile,       name: "FileSystem_ReadFile"),
-            AIFunctionFactory.Create(fs.ListFiles,      name: "FileSystem_ListFiles"),
-            AIFunctionFactory.Create(fs.DeleteFile,     name: "FileSystem_DeleteFile"),
+            .. fs.CreateTools(),
             AIFunctionFactory.Create(dotnet.RunDotnetNew, name: "DotNet_RunDotnetNew"),
             AIFunctionFactory.Create(dotnet.RunBuild,     name: "DotNet_RunBuild"),
             AIFunctionFactory.Create(dotnet.RunTest,      name: "DotNet_RunTest"),

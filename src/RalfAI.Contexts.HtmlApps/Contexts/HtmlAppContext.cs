@@ -23,10 +23,7 @@ public sealed class HtmlAppContext : IAgentContext
 
         return
         [
-            AIFunctionFactory.Create(fs.WriteFile,     name: "FileSystem_WriteFile"),
-            AIFunctionFactory.Create(fs.ReadFile,      name: "FileSystem_ReadFile"),
-            AIFunctionFactory.Create(fs.ListFiles,     name: "FileSystem_ListFiles"),
-            AIFunctionFactory.Create(fs.DeleteFile,    name: "FileSystem_DeleteFile"),
+            .. fs.CreateTools(),
             AIFunctionFactory.Create(web.FetchUrl,     name: "Web_FetchUrl"),
             AIFunctionFactory.Create(server.Start,     name: "StaticServer_Start"),
             AIFunctionFactory.Create(server.Stop,      name: "StaticServer_Stop"),

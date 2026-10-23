@@ -63,6 +63,26 @@ strumenti Rust che servono**, in locale:
 
 Per un profilo personalizzato in `.ralfai/profiles` basta `tools: [FileSystem, Web, Rust]`.
 
+### Strumenti per i file
+
+Tutti i context danno all'agente lo stesso set `FileSystem.*`, pensato per tenere basso il contesto:
+
+| Strumento | A cosa serve |
+|---|---|
+| `EditFile` | cambia un pezzo di un file sostituendo un testo esatto e unico (`replaceAll` per tutte le occorrenze); mantiene fine riga e BOM |
+| `ReplaceInFiles` | stessa modifica in molti file (rinomine, costanti), testo o regex, limitabile con un glob |
+| `ReadFile` | legge un file; con `startLine`/`endLine` solo l'intervallo che serve; oltre ~100.000 caratteri taglia e lo dice |
+| `SearchFiles` | cerca testo o regex nei file e restituisce `percorso:riga: testo` |
+| `FindFiles` | trova file per nome con un glob (`**/*.cs`, `*.md`) |
+| `ListFiles` | elenca la cartella, senza `bin`, `obj`, `.git`, `node_modules`, `.ralfai` (né `target` accanto a un `Cargo.toml`), fino a 500 voci |
+| `WriteFile`, `DeleteFile` | crea o riscrive per intero; elimina. I file nuovi non hanno BOM; uno esistente tiene il suo |
+
+Il prompt di sistema chiede di preferire `EditFile`/`ReplaceInFiles` alla riscrittura e di cercare con
+`SearchFiles`/`FindFiles` invece di leggere tutto. Su un compito di prova (rinominare un metodo, cambiare una
+costante e una riga in 10 file) le chiamate sono scese da circa 20 a 9 e i token in ingresso da circa 174.000 a
+45.000, a parità di tempo e di risultato. Inoltre il controllo dei percorsi ora blocca anche le cartelle
+"sorelle" con lo stesso prefisso (`D:\prog` non ammette più `D:\prog-altro`).
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

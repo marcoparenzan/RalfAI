@@ -258,5 +258,8 @@ public sealed class AgentEngine
         + (imageGen ? " Image.GenerateAI is available." : "") + (speech ? " Speech.Speak and Speech.Listen are available." : "")
         + "\n\n## Efficiency\nEvery model round-trip is slow and re-sends the whole conversation. When several tool calls do not depend on each other "
         + "(writing multiple files, reading several files, listing folders), issue them together in the same response instead of one per turn, "
-        + "and skip re-reading files you just wrote.";
+        + "and skip re-reading files you just wrote."
+        + "\n\n## Editing and exploring files\nChange part of an existing file with FileSystem.EditFile (exact oldText, unique, then newText); use WriteFile only for new files "
+        + "or a full rewrite. For the same change in many files (renames, constants) use FileSystem.ReplaceInFiles once instead of editing file by file. To find something use FileSystem.SearchFiles (text/regex) or FileSystem.FindFiles (names) instead of listing or reading everything, "
+        + "and read just the part you need with FileSystem.ReadFile startLine/endLine.";
 }

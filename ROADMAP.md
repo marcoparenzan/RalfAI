@@ -167,6 +167,11 @@ Dettagli in [USAGE.md](USAGE.md#streaming-ragionamento-e-velocità).
 oppure scarica `rustup-init` verificandone lo SHA-256 e installa in `~/.ralfai/rust` senza toccare profilo e
 `PATH`; componenti e target extra via `rustup` su richiesta. Dettagli in [USAGE.md](USAGE.md#context-rust).
 
+### Strumenti per i file più fini (`EditFile`, `ReplaceInFiles`, `SearchFiles`, `FindFiles`)
+Modifica per sostituzione invece di riscrittura, ricerca e lettura a intervalli, elenchi senza cartelle di build
+e con un tetto; corretto anche un controllo dei percorsi che ammetteva cartelle con lo stesso prefisso.
+Dettagli in [USAGE.md](USAGE.md#strumenti-per-i-file).
+
 ## 📋 Pianificato
 
 ### Interfaccia grafica (Desktop/Web)
