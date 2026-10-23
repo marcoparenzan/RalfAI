@@ -147,6 +147,48 @@ caratteri). La numerazione prosegue dal numero più alto già nel file, qualunqu
 al modello, che infatti non è più incaricato di scriverlo, e non compare tra le modifiche annullabili con `/undo`.
 Con `"PromptLog": { "File": "" }` si disattiva; un altro nome di file si indica nella stessa chiave.
 
+### Permessi sui comandi
+
+I tool sui file lavorano solo dentro la cartella del progetto e si possono annullare con `/undo`. I tool che lanciano
+processi (`DotNet.*`, `Rust.*`) possono invece eseguire qualunque cosa, quindi passano da una politica:
+
+- **Senza chiedere** (il flusso normale): `dotnet build/test/restore/new/add/format/publish/pack…`, `cargo build/check/test/new/add/fmt/clippy/doc…`,
+  `rustup show` e le sole richieste di elenco.
+- **Chiedono prima**: ciò che esegue il codice del progetto o altro codice (`dotnet run`, `dotnet exec`, `cargo run`), ciò che scarica o
+  installa software (`dotnet tool`, `dotnet new install`, `cargo install`, `rustup target add`, `rustup toolchain install`, l'installazione
+  di Rust), ciò che parla con un registro di pacchetti (`publish`, `login`) e tutto ciò che non è in elenco.
+
+Quando serve un permesso compare, sopra lo spinner:
+
+```text
+⚠ Permission needed - this runs the project's code
+    dotnet run --project src/App
+    [y] allow once   [a] always allow dotnet run* this session   [n] deny (Esc too)
+```
+
+`y` lo consente una volta, `a` per il resto della sessione (la regola è `dotnet run*`), `n` o `Esc` lo rifiuta; un comando rifiutato
+non viene richiesto di nuovo nella stessa sessione e il modello riceve il motivo, così può scegliere un'altra strada o dirti di
+eseguirlo tu. Mentre la domanda è sul schermo `Esc` non interrompe il turno: i tasti rispondono alla domanda.
+
+Configurazione (`Permissions` nel config):
+
+```json
+"Permissions": {
+  "Mode": "ask",
+  "Allow": [ "dotnet run*", "cargo run*" ],
+  "Deny":  [ "dotnet nuget push*", "cargo publish*" ]
+}
+```
+
+- `Mode`: `ask` (predefinito), `allow` (mai domande, come prima di questa funzione; vale ancora l'elenco `Deny`), `deny` (niente domande, ciò che
+  non è consentito è rifiutato).
+- Le regole sono glob sulla riga di comando in minuscolo, con `*`. Ordine: `Deny`, poi `Allow`, poi i "sempre" della sessione, poi l'elenco
+  predefinito di ciò che chiede, poi quello di ciò che passa, infine la modalità.
+- **Senza nessuno a cui chiedere** (input da pipe, script, Jupyter, Studio): un comando che richiede il permesso viene rifiutato e il modello
+  riceve il messaggio. Per questi casi aggiungi i comandi a `Allow` o imposta `"Mode": "allow"`.
+- Limite onesto: `build` e `test` eseguono comunque codice del progetto (target MSBuild, test), e un agente può scrivere un `.csproj` con
+  un'azione `Exec`. La politica evita i casi evidenti, non è un sandbox.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

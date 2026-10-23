@@ -17,6 +17,7 @@ public sealed class AgentEngine
     private readonly ConversationLogger _logger;
     private readonly TurnLimits _limits;
     private readonly UndoJournal _undo;
+    private readonly PermissionPolicy _permissions;
     private readonly RateLimiter _rateLimiter;
     private readonly IConfiguration _configuration;
     private readonly string _provider;
@@ -36,6 +37,15 @@ public sealed class AgentEngine
     public event Action<ToolCallResult>? ToolCallCompleted;
     public event Action<AgentNotice>? Notice;
     public event Action<TurnProgress>? Progress;
+
+    /// <summary>
+    /// Asked before a command that is not allowed outright runs (see <see cref="PermissionPolicy"/>). When nothing is set the
+    /// command is refused, so a frontend without a way to ask never runs more than the allowed list.
+    /// </summary>
+    public PermissionHandler? Permission { get; set; }
+
+    /// <summary>The rules for process tools; read-only view for frontends that want to show them.</summary>
+    public PermissionPolicy Permissions => _permissions;
     /// <summary>Raised for each fragment of the answer or the provider-exposed reasoning as it streams in.</summary>
     public event Action<StreamChunk>? Streamed;
     /// <summary>Raised a few times per second while generating, and once more when the turn ends.</summary>
@@ -51,7 +61,7 @@ public sealed class AgentEngine
 
     private AgentEngine(AIAgent agent, AgentSession session, string modelId, IAgentContext context, string targetFolder,
         ConversationLogger logger, RateLimiter limiter, SpeechService? speech, IConfiguration configuration,
-        string provider, List<ChatMessage> pending, List<AgentMessage> messages, TurnLimits limits, UndoJournal undo)
+        string provider, List<ChatMessage> pending, List<AgentMessage> messages, TurnLimits limits, UndoJournal undo, PermissionPolicy permissions)
     {
         _agent = agent; _agentSession = session; ModelId = modelId; Context = context; TargetFolder = targetFolder;
         _logger = logger; _rateLimiter = limiter; Speech = speech; _configuration = configuration; _provider = provider;
@@ -59,6 +69,7 @@ public sealed class AgentEngine
         _costHistory = new CostHistoryStore(targetFolder);
         _limits = limits;
         _undo = undo;
+        _permissions = permissions;
         // Ask the provider to expose a reasoning summary; Reasoning:Summary = "off" disables it.
         _requestReasoningSummary = !string.Equals(configuration["Reasoning:Summary"], "off", StringComparison.OrdinalIgnoreCase);
         // Optional: Reasoning:Effort = none | low | medium | high | xhigh (unset = provider default).
@@ -113,6 +124,8 @@ public sealed class AgentEngine
         }
 
         var limits = TurnLimits.FromConfig(config);
+        var permissions = PermissionPolicy.FromConfig(config);
+        Func<PermissionHandler?> permissionHandler = () => null;
         Action<ToolCallStart>? started = null;
         Action<ToolCallResult>? completed = null;
         var agent = chatClient.AsAIAgent(context.BuildSystemPrompt(targetFolder) + UniversalPrompt(speech is not null, imageGen is not null), "RalfAI", tools: tools)
@@ -130,6 +143,18 @@ public sealed class AgentEngine
                 }
                 var description = string.IsNullOrWhiteSpace(fctx.Function.Description) ? name : fctx.Function.Description;
                 var args = string.Join(", ", fctx.Arguments.Where(x => x.Value is not null).Select(x => $"{x.Key}={x.Value}"));
+
+                // Commands that can run arbitrary code or install software need a yes first.
+                if (PermissionPolicy.Describe(fctx.Function.Name, fctx.Arguments) is { } command)
+                {
+                    var refusal = await CheckPermissionAsync(permissions, permissionHandler(), fctx.Function.Name, command, token);
+                    if (refusal is not null)
+                    {
+                        logger.LogTool(name, args, "NOT RUN: " + refusal);
+                        return refusal;
+                    }
+                }
+
                 var preview = args.Length > 120 ? args[..120] + "…" : args;
                 started?.Invoke(new ToolCallStart(name, description, preview, args));
                 var result = await next(fctx, token);
@@ -147,7 +172,8 @@ public sealed class AgentEngine
         var engine = new AgentEngine(agent, session, modelId, context, targetFolder, logger, limiter, speech, config, provider,
             resumeForModel.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList(),
             history.Select(x => new AgentMessage(x.Role, x.Content)).ToList(), limits,
-            new UndoJournal(targetFolder, int.TryParse(config["Undo:Keep"], out var keep) && keep >= 0 ? keep : 10));
+            new UndoJournal(targetFolder, int.TryParse(config["Undo:Keep"], out var keep) && keep >= 0 ? keep : 10), permissions);
+        permissionHandler = () => engine.Permission;
         started = x => engine.ToolCallStarted?.Invoke(x);
         completed = x => engine.ToolCallCompleted?.Invoke(x);
         noticeHandler = x => engine.Notice?.Invoke(x);
@@ -302,6 +328,33 @@ public sealed class AgentEngine
         if (close < 0) return (raw[(open + 7)..].Trim(), "");
         var thought = raw[(open + 7)..close].Trim();
         return (string.IsNullOrWhiteSpace(thought) ? null : thought, (raw[..open] + raw[(close + 8)..]).Trim());
+    }
+
+    /// <summary>Returns null when the command may run, otherwise the message to give the model instead of running it.</summary>
+    private static async Task<string?> CheckPermissionAsync(PermissionPolicy policy, PermissionHandler? handler, string toolName, string command, CancellationToken ct)
+    {
+        string Refusal(string reason) => $"Permission denied: `{command}` was not run ({reason}). Do not try it again; use another approach, or ask the user to run it themselves.";
+
+        switch (policy.Evaluate(command))
+        {
+            case PermissionDecision.Allow: return null;
+            case PermissionDecision.Deny: return Refusal("blocked by the permission rules or already refused by the user");
+        }
+
+        if (handler is null)
+            return Refusal("it needs the user's approval and this session cannot ask; allow it in Permissions:Allow, or set Permissions:Mode to allow");
+
+        var request = new PermissionRequest(toolName, command, PermissionPolicy.PatternFor(command), PermissionPolicy.WhyAsk(command));
+        switch (await handler(request, ct))
+        {
+            case PermissionAnswer.AllowOnce: return null;
+            case PermissionAnswer.AllowAlways:
+                policy.GrantSession(request.AlwaysPattern);
+                return null;
+            default:
+                policy.Refuse(command);
+                return Refusal("the user said no");
+        }
     }
 
     private static TurnStoppedException? FindStop(Exception? ex)

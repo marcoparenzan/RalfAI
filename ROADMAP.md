@@ -201,20 +201,25 @@ del riassunto di ragionamento e ripiego se il modello lo rifiuta, tool e risulta
 (115 in tutto); verificato con due mutazioni del motore che i test giusti falliscono. Dettagli in
 [ARCHITECTURE.md](ARCHITECTURE.md#test-del-motore).
 
+### Permessi sui comandi (2026-10-23)
+`PermissionPolicy` decide se un tool che lancia processi (`DotNet.*`, `Rust.*`) può partire: il flusso normale (build, test, scaffold,
+formattazione) passa senza chiedere; `run`, installazioni, registri di pacchetti e comandi non in elenco chiedono `y` / `a` / `n` sopra lo
+spinner. Modalità `ask` / `allow` / `deny`, elenchi `Allow` e `Deny` a glob nel config, risposta "sempre" per la sessione, comando rifiutato non
+richiesto di nuovo, nessun gestore (pipe, Studio, Jupyter) = rifiutato con un messaggio chiaro al modello. 42 test, di cui 10 sul motore.
+Dettagli in [USAGE.md](USAGE.md#permessi-sui-comandi). Studio e Jupyter non possono ancora porre la domanda (vedi gli ultimi passi).
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità
 L'ordine è un giudizio (piccoli lavori che sbloccano o proteggono quelli successivi, poi i rischi, poi le prestazioni,
 infine ciò che è grande). Quando un punto è fatto passa sotto "✅ Fatto" con la data.
 
-1. **Permessi sui comandi** - `DotNet.RunCommand`, `Rust.RunCargo` e simili eseguono qualunque cosa senza chiedere:
-   modalità chiedi / consenti / blocca, elenco di comandi ammessi, risposta "sempre" per la sessione.
-2. **Chiave API in chiaro** (vedi sotto).
-3. **Compattare i risultati vecchi dei tool** nel contesto di una sessione lunga (oggi si limita solo la storia ripresa).
-4. **Log di sessione in JSONL con riassunto** invece di un unico `session.md` riletto per intero a ogni apertura.
-5. **Variante solo ASCII** per i terminali che non disegnano frecce ed emoji.
-6. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
-7. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità e allegati; manca la parte grafica.
+1. **Chiave API in chiaro** (vedi sotto).
+2. **Compattare i risultati vecchi dei tool** nel contesto di una sessione lunga (oggi si limita solo la storia ripresa).
+3. **Log di sessione in JSONL con riassunto** invece di un unico `session.md` riletto per intero a ogni apertura.
+4. **Variante solo ASCII** per i terminali che non disegnano frecce ed emoji.
+5. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
+6. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
 
 ### Interfaccia grafica (Desktop/Web)
 Nessuna UI grafica esiste oggi: solo la console (`RalfAI`, Spectre.Console) è implementata. Un

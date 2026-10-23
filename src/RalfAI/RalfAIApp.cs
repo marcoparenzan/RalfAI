@@ -53,6 +53,8 @@ public sealed class RalfAIApp
         _session.Progress += OnProgress;
         _session.Streamed += OnStreamed;
         _session.RateChanged += OnRateChanged;
+        // With piped input there is nobody to ask: leave the handler unset so the model is told the session cannot ask.
+        _session.Permission = Console.IsInputRedirected ? null : AskPermissionAsync;
     }
 
     private void DetachSessionEvents()
@@ -63,6 +65,7 @@ public sealed class RalfAIApp
         _session.Progress -= OnProgress;
         _session.Streamed -= OnStreamed;
         _session.RateChanged -= OnRateChanged;
+        _session.Permission = null;
     }
 
     // ── Main loop ────────────────────────────────────────────────────────────
@@ -211,6 +214,61 @@ public sealed class RalfAIApp
         AnsiConsole.Write(new Rule().RuleStyle("grey dim"));
         AnsiConsole.MarkupLine(
             $"  [dim]Session saved → {_session.LogPath}[/]");
+    }
+
+    private static volatile bool s_askingPermission;
+
+    /// <summary>
+    /// The agent wants to run a command that is not allowed outright. Shows it and waits for y / a / n (Esc = no) without
+    /// stopping the spinner. With piped input there is nobody to ask, so the answer is no.
+    /// </summary>
+    private async Task<PermissionAnswer> AskPermissionAsync(PermissionRequest request, CancellationToken ct)
+    {
+        if (Console.IsInputRedirected) return PermissionAnswer.Deny;
+
+        s_askingPermission = true;
+        try
+        {
+            _liveStatus?.Status("[yellow]waiting for your permission…[/]");
+            AnsiConsole.MarkupLine($"  [yellow]⚠ Permission needed[/] [dim]- this {Markup.Escape(request.Why)}[/]");
+            AnsiConsole.MarkupLine($"    [bold]{Markup.Escape(request.Command)}[/]");
+            AnsiConsole.MarkupLine($"    [dim][[y]] allow once   [[a]] always allow {Markup.Escape(request.AlwaysPattern)} this session   [[n]] deny (Esc too)[/]");
+
+            // Keys typed while the agent was working must not answer a question they were never about.
+            while (Console.KeyAvailable) Console.ReadKey(intercept: true);
+
+            var answer = await Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    if (Console.KeyAvailable)
+                    {
+                        var key = Console.ReadKey(intercept: true);
+                        if (key.Key == ConsoleKey.Escape) return PermissionAnswer.Deny;
+                        switch (char.ToLowerInvariant(key.KeyChar))
+                        {
+                            case 'y': return PermissionAnswer.AllowOnce;
+                            case 'a': return PermissionAnswer.AllowAlways;
+                            case 'n': return PermissionAnswer.Deny;
+                        }
+                    }
+                    Thread.Sleep(30);
+                }
+                return PermissionAnswer.Deny;
+            }, CancellationToken.None);
+
+            AnsiConsole.MarkupLine(answer switch
+            {
+                PermissionAnswer.AllowOnce => "    [green]allowed[/]",
+                PermissionAnswer.AllowAlways => $"    [green]always allowed[/] [dim]({Markup.Escape(request.AlwaysPattern)})[/]",
+                _ => "    [red]denied[/]",
+            });
+            return answer;
+        }
+        finally
+        {
+            s_askingPermission = false;
+        }
     }
 
     private const int MaxChangeLines = 12;
@@ -678,7 +736,8 @@ public sealed class RalfAIApp
         {
             while (!listenerToken.IsCancellationRequested && !turnCts.IsCancellationRequested)
             {
-                if (Console.KeyAvailable)
+                // While a permission question is on screen the keys belong to it, not to this listener.
+                if (Console.KeyAvailable && !s_askingPermission)
                 {
                     var key = Console.ReadKey(intercept: true);
                     var isEsc    = key.Key == ConsoleKey.Escape;
