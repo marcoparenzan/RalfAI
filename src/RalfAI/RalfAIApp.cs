@@ -351,7 +351,7 @@ public sealed class RalfAIApp
         // Update the spinner status to the current tool — kept even with debug off, it's
         // transient progress feedback rather than debug noise. Shows the human-readable
         // [Description] instead of the raw Plugin.Function name.
-        _liveStatus?.Status($"[grey]{Markup.Escape(call.Description)}…[/]");
+        _liveStatus?.Status($"[grey]{Markup.Escape(FitStatus(call.Description + "…"))}[/]");
 
         // Also leave a permanent line above the spinner — always, not just with --debug — so
         // the screen scrolls through what the agent did instead of only ever showing the
@@ -378,7 +378,7 @@ public sealed class RalfAIApp
 
     private void OnProgress(TurnProgress progress)
     {
-        _liveStatus?.Status($"[grey]{Markup.Escape(progress.Message)} · {progress.Elapsed.TotalSeconds:F1}s[/]");
+        _liveStatus?.Status($"[grey]{Markup.Escape(FitStatus($"{progress.Message} · {progress.Elapsed.TotalSeconds:F1}s"))}[/]");
 
         // Same reasoning as OnToolCallStarted: always leave a permanent, scrolling trace of
         // each phase instead of only the spinner's single line overwriting itself — plain dim
@@ -496,6 +496,17 @@ public sealed class RalfAIApp
     }
 
     private static int ConsoleWidth() => Math.Max(40, AnsiConsole.Profile.Width);
+
+    /// <summary>
+    /// The spinner status redraws by returning to its first line, so a status longer than the console wraps and every redraw
+    /// leaves another copy behind (a tool description is a whole sentence). Cut it to one line.
+    /// </summary>
+    private static string FitStatus(string text)
+    {
+        var room = ConsoleWidth() - 4 /* spinner */ - 1;
+        var oneLine = text.ReplaceLineEndings(" ");
+        return oneLine.Length <= room ? oneLine : oneLine[..(room - 1)] + "…";
+    }
 
     private void OnNotice(AgentNotice notice)
     {
