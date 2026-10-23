@@ -369,8 +369,8 @@ public sealed class RalfAIApp
 
     private void OnNotice(AgentNotice notice)
     {
-        // Errors always surface; info/warning pacing notices are debug noise.
-        if (!_debug && notice.Level != NoticeLevel.Error) return;
+        // Warnings and errors always surface; info pacing notices are debug noise.
+        if (!_debug && notice.Level == NoticeLevel.Info) return;
 
         var color = notice.Level switch
         {

@@ -83,6 +83,27 @@ costante e una riga in 10 file) le chiamate sono scese da circa 20 a 9 e i token
 45.000, a parità di tempo e di risultato. Inoltre il controllo dei percorsi ora blocca anche le cartelle
 "sorelle" con lo stesso prefisso (`D:\prog` non ammette più `D:\prog-altro`).
 
+### Limiti per turno
+
+Per fermare un modello che va in ciclo ci sono tre tetti per ogni turno, sotto `Limits` nel config (`0` = spento):
+
+```json
+"Limits": { "MaxToolCalls": 150, "MaxOutputTokens": 50000, "MaxReasoningChars": 30000 }
+```
+
+- **`MaxToolCalls`** (150) - *morbido*: oltre la soglia i tool non vengono più eseguiti e rispondono al modello
+  "limite raggiunto, riassumi e fermati". Il turno finisce con un resoconto e puoi scrivere "continua". Compare un avviso
+  giallo. Se il modello ignora l'istruzione per altre 10 chiamate, il turno viene interrotto.
+- **`MaxOutputTokens`** (50000) - *duro*: se l'output di un turno (stimato mentre scorre, poi con i numeri reali del
+  provider) supera il limite, il turno si interrompe con un errore che spiega il perché.
+- **`MaxReasoningChars`** (30000) - *duro*: caratteri di ragionamento mostrati in un turno. Un turno sano ne ha poche migliaia;
+  un modello che si ripete ne produce centinaia di migliaia.
+
+Un turno interrotto in modo duro non viene ricordato dal modello (resta nel log come `[stopped]`) e il suo costo non
+finisce in `cost-history.jsonl`, perché il provider non ha ancora comunicato l'uso. A 20.000 token compare comunque un avviso
+con il suggerimento di premere `Esc`. Gli avvisi di tipo *warning* (limiti di token al minuto, tetto sui tool) ora si vedono
+sempre, non solo con `--debug`.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

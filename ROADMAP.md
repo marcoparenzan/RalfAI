@@ -172,6 +172,10 @@ Modifica per sostituzione invece di riscrittura, ricerca e lettura a intervalli,
 e con un tetto; corretto anche un controllo dei percorsi che ammetteva cartelle con lo stesso prefisso.
 Dettagli in [USAGE.md](USAGE.md#strumenti-per-i-file).
 
+### Tetti per turno contro i cicli del modello
+`Limits:MaxToolCalls` (morbido), `MaxOutputTokens` e `MaxReasoningChars` (duri), configurabili e disattivabili.
+Dettagli in [USAGE.md](USAGE.md#limiti-per-turno).
+
 ## 📋 Pianificato
 
 ### Interfaccia grafica (Desktop/Web)

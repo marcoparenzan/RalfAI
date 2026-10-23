@@ -15,6 +15,7 @@ public sealed class AgentEngine
     private readonly List<ChatMessage> _pendingResumeMessages;
     private readonly List<AgentMessage> _messages;
     private readonly ConversationLogger _logger;
+    private readonly TurnLimits _limits;
     private readonly RateLimiter _rateLimiter;
     private readonly IConfiguration _configuration;
     private readonly string _provider;
@@ -49,12 +50,13 @@ public sealed class AgentEngine
 
     private AgentEngine(AIAgent agent, AgentSession session, string modelId, IAgentContext context, string targetFolder,
         ConversationLogger logger, RateLimiter limiter, SpeechService? speech, IConfiguration configuration,
-        string provider, List<ChatMessage> pending, List<AgentMessage> messages)
+        string provider, List<ChatMessage> pending, List<AgentMessage> messages, TurnLimits limits)
     {
         _agent = agent; _agentSession = session; ModelId = modelId; Context = context; TargetFolder = targetFolder;
         _logger = logger; _rateLimiter = limiter; Speech = speech; _configuration = configuration; _provider = provider;
         _pendingResumeMessages = pending; _messages = messages; ResumedMessageCount = messages.Count;
         _costHistory = new CostHistoryStore(targetFolder);
+        _limits = limits;
         // Ask the provider to expose a reasoning summary; Reasoning:Summary = "off" disables it.
         _requestReasoningSummary = !string.Equals(configuration["Reasoning:Summary"], "off", StringComparison.OrdinalIgnoreCase);
         // Optional: Reasoning:Effort = none | low | medium | high | xhigh (unset = provider default).
@@ -99,6 +101,7 @@ public sealed class AgentEngine
             tools.Add(AIFunctionFactory.Create(plugin.GenerateAI, name: "Image_GenerateAI"));
         }
 
+        var limits = TurnLimits.FromConfig(config);
         Action<ToolCallStart>? started = null;
         Action<ToolCallResult>? completed = null;
         var agent = chatClient.AsAIAgent(context.BuildSystemPrompt(targetFolder) + UniversalPrompt(speech is not null, imageGen is not null), "RalfAI", tools: tools)
@@ -106,6 +109,14 @@ public sealed class AgentEngine
                 Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>> next, CancellationToken token) =>
             {
                 var name = FriendlyToolName(fctx.Function.Name);
+                var callNumber = limits.CountToolCall();
+                if (limits.ToolBudgetIgnored(callNumber)) throw new TurnStoppedException(limits.ToolBudgetIgnoredMessage);
+                if (limits.ToolBudgetExceeded(callNumber))
+                {
+                    if (callNumber == limits.MaxToolCalls + 1)
+                        noticeHandler?.Invoke(new($"Tool call limit reached ({limits.MaxToolCalls} per turn) - asking the model to wrap up.", NoticeLevel.Warning));
+                    return limits.ToolBudgetMessage;
+                }
                 var description = string.IsNullOrWhiteSpace(fctx.Function.Description) ? name : fctx.Function.Description;
                 var args = string.Join(", ", fctx.Arguments.Where(x => x.Value is not null).Select(x => $"{x.Key}={x.Value}"));
                 var preview = args.Length > 120 ? args[..120] + "…" : args;
@@ -124,7 +135,7 @@ public sealed class AgentEngine
         var resumeForModel = TrimToBudget(history, resumeBudget);
         var engine = new AgentEngine(agent, session, modelId, context, targetFolder, logger, limiter, speech, config, provider,
             resumeForModel.Select(x => new ChatMessage(x.Role == "user" ? ChatRole.User : ChatRole.Assistant, x.Content)).ToList(),
-            history.Select(x => new AgentMessage(x.Role, x.Content)).ToList());
+            history.Select(x => new AgentMessage(x.Role, x.Content)).ToList(), limits);
         started = x => engine.ToolCallStarted?.Invoke(x);
         completed = x => engine.ToolCallCompleted?.Invoke(x);
         noticeHandler = x => engine.Notice?.Invoke(x);
@@ -152,6 +163,7 @@ public sealed class AgentEngine
                 await _rateLimiter.ThrottleAsync(_messages.Sum(m => m.Content.Length / 4 + 5), ct);
                 Progress?.Invoke(new("model", "Waiting for model response", timer.Elapsed));
                 var turn = new StreamingTurn();
+                _limits.StartTurn();
                 var options = _requestReasoningSummary || _reasoningEffort is not null
                     ? new ChatClientAgentRunOptions(new ChatOptions
                     {
@@ -174,6 +186,9 @@ public sealed class AgentEngine
                         turn.BeginMessage(update.MessageId, chunk => Streamed?.Invoke(chunk));
                     foreach (var content in update.Contents)
                         turn.Add(content, chunk => Streamed?.Invoke(chunk));
+
+                    if (_limits.CheckStream(turn.OutputTokensEstimate, turn.ReasoningChars) is { } stopReason)
+                        throw new TurnStoppedException(stopReason);
 
                     if (timer.Elapsed - lastRate >= TimeSpan.FromMilliseconds(250))
                     {
@@ -205,6 +220,14 @@ public sealed class AgentEngine
                 return new(thinking, display, null, usage, timer.Elapsed, turnSeconds > 0 ? turnTokens / turnSeconds : null);
             }
             catch (OperationCanceledException) { if (_messages.LastOrDefault()?.Role == "user") _messages.RemoveAt(_messages.Count - 1); throw; }
+            catch (Exception ex) when (FindStop(ex) is { } stop)
+            {
+                // The model looped past a limit: abandon the turn (it is not remembered) and say why.
+                timer.Stop();
+                if (_messages.LastOrDefault()?.Role == "user") _messages.RemoveAt(_messages.Count - 1);
+                _logger.LogAssistant(null, "[stopped] " + stop.Message);
+                return new(null, null, stop.Message, Duration: timer.Elapsed);
+            }
             // Not every deployment accepts a reasoning summary request: drop it for the session and retry.
             catch (Exception ex) when (_requestReasoningSummary && IsReasoningOptionError(ex))
             {
@@ -244,6 +267,13 @@ public sealed class AgentEngine
         if (close < 0) return (raw[(open + 7)..].Trim(), "");
         var thought = raw[(open + 7)..close].Trim();
         return (string.IsNullOrWhiteSpace(thought) ? null : thought, (raw[..open] + raw[(close + 8)..]).Trim());
+    }
+
+    private static TurnStoppedException? FindStop(Exception? ex)
+    {
+        for (; ex is not null; ex = ex.InnerException)
+            if (ex is TurnStoppedException stop) return stop;
+        return null;
     }
 
     private static bool IsReasoningOptionError(Exception ex) =>

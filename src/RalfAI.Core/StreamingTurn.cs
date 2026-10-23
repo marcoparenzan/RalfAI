@@ -88,6 +88,12 @@ internal sealed class StreamingTurn
     public string ReasoningSummary => _summary.ToString().Trim();
     public bool SawAnyText => _firstToken is not null;
 
+    /// <summary>Characters of reasoning shown so far this turn (summaries and inline think text).</summary>
+    public int ReasoningChars { get; private set; }
+
+    /// <summary>Output tokens so far: real counts of finished model calls plus an estimate for the one streaming now.</summary>
+    public long OutputTokensEstimate => _confirmedOutput + (long)(_charsSinceUsage / CharsPerToken);
+
     /// <summary>Summed provider-reported usage for the turn, or null when none was reported.</summary>
     public UsageDetails? Usage => !_usageSeen ? null : new UsageDetails
     {
@@ -117,6 +123,7 @@ internal sealed class StreamingTurn
             case TextReasoningContent { Text.Length: > 0 } reasoning:
                 var reasoningText = SeparateReasoningHeading(reasoning.Text);
                 _summary.Append(reasoningText);
+                ReasoningChars += reasoningText.Length;
                 Count(reasoningText.Length);
                 emit(new StreamChunk(StreamKind.Reasoning, reasoningText));
                 break;
@@ -125,7 +132,10 @@ internal sealed class StreamingTurn
                 _raw.Append(text.Text);
                 Count(text.Text.Length);
                 foreach (var (isThinking, part) in _splitter.Feed(text.Text))
+                {
+                    if (isThinking) ReasoningChars += part.Length;
                     emit(new StreamChunk(isThinking ? StreamKind.Reasoning : StreamKind.Answer, part));
+                }
                 break;
 
             case UsageContent usage when usage.Details is { } details:
