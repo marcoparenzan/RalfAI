@@ -18,6 +18,7 @@ public static class ContextRegistry
         {
             ["dotnet"]   = () => new DotNetContext(10),
             ["dotnet11"] = () => new DotNetContext(11),
+            ["rust"]     = () => new RustContext(),
             ["markdown"] = () => new MarkdownContext(),
             ["html"]     = () => new HtmlAppContext(),
         };

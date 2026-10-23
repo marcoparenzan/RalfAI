@@ -60,6 +60,16 @@ public static class ToolCatalog
                     AIFunctionFactory.Create(dotnet.RunCommand,   name: "DotNet_RunCommand"),
                 ];
             },
+            ["Rust"] = folder =>
+            {
+                var rust = new RustPlugin(folder);
+                return
+                [
+                    AIFunctionFactory.Create(rust.EnsureToolchain, name: "Rust_EnsureToolchain"),
+                    AIFunctionFactory.Create(rust.RunCargo,        name: "Rust_RunCargo"),
+                    AIFunctionFactory.Create(rust.RunRustup,       name: "Rust_RunRustup"),
+                ];
+            },
             ["StaticServer"] = folder =>
             {
                 var server = new StaticServerPlugin(folder);

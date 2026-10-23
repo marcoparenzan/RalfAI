@@ -45,6 +45,24 @@ Leve che contano, in ordine di effetto:
 In una prova (stesso compito, un campione ciascuno): 99 s e 133k token in ingresso senza queste
 misure, 76 s e 48k con le chiamate in parallelo, 54 s e 33k aggiungendo `Effort: low`.
 
+### Context Rust
+
+`--context rust` costruisce crate con Cargo (`cargo new/build/test/fmt/clippy`) e **scarica da solo gli
+strumenti Rust che servono**, in locale:
+
+- Se Rust c'è già (nel `PATH`, in `$CARGO_HOME` o in `~/.cargo`) viene usato così com'è.
+- Se manca, l'agente scarica il `rustup-init` ufficiale da `static.rust-lang.org`, ne **verifica lo
+  SHA-256** pubblicato e installa Rust stable in `~/.ralfai/rust` (o nella cartella indicata da
+  `RALFAI_RUST_HOME`). Non tocca il profilo utente né il `PATH`: RalfAI passa `CARGO_HOME`/`RUSTUP_HOME`
+  ai propri processi. Servono Internet e circa 1 GB di disco; la prima volta ci vogliono alcuni minuti.
+- Componenti, target e toolchain aggiuntivi (`rust-src`, `wasm32-unknown-unknown`, `nightly`…) li scarica
+  con `rustup` solo quando il compito li richiede; gli strumenti distribuiti come crate con `cargo install`.
+- Su Windows il linker è quello MSVC: i **Visual Studio Build Tools** ("Sviluppo di applicazioni desktop
+  con C++") non vengono installati da RalfAI; se mancano l'agente lo segnala all'avvio.
+- L'output di cargo oltre 30.000 caratteri viene accorciato (inizio e fine) per non appesantire il contesto.
+
+Per un profilo personalizzato in `.ralfai/profiles` basta `tools: [FileSystem, Web, Rust]`.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.
@@ -123,7 +141,7 @@ Markdig. Monaco è caricato da CDN e richiede connettività al primo avvio.
 
 ## Profili esterni
 
-Oltre ai context incorporati (`dotnet`, `dotnet11`, `markdown`, `html`) si possono definire profili come file
+Oltre ai context incorporati (`dotnet`, `dotnet11`, `rust`, `markdown`, `html`) si possono definire profili come file
 Markdown con frontmatter, senza ricompilare. Si cercano in `~/.ralfai/profiles/*.md` e in
 `<cartella target>/.ralfai/profiles/*.md` (il progetto vince sull'utente, entrambi vincono sui
 built-in con lo stesso nome). Il nome del file è la chiave da usare con `--context` e in `F6`.

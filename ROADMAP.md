@@ -162,6 +162,11 @@ risposta) e `RateChanged` (token/s istantanei, medi del turno e della sessione);
 righe e mostra la velocità sullo spinner. Il provider Foundry usa l'API Responses (`AzureAIFoundry:Api`).
 Dettagli in [USAGE.md](USAGE.md#streaming-ragionamento-e-velocità).
 
+### Context Rust con toolchain scaricata in locale
+`--context rust` (tool `Rust_EnsureToolchain`/`Rust_RunCargo`/`Rust_RunRustup`): usa il Rust già presente
+oppure scarica `rustup-init` verificandone lo SHA-256 e installa in `~/.ralfai/rust` senza toccare profilo e
+`PATH`; componenti e target extra via `rustup` su richiesta. Dettagli in [USAGE.md](USAGE.md#context-rust).
+
 ## 📋 Pianificato
 
 ### Interfaccia grafica (Desktop/Web)
