@@ -128,7 +128,10 @@ public sealed class AgentEngine
         Func<PermissionHandler?> permissionHandler = () => null;
         Action<ToolCallStart>? started = null;
         Action<ToolCallResult>? completed = null;
-        var agent = chatClient.AsAIAgent(context.BuildSystemPrompt(targetFolder) + UniversalPrompt(speech is not null, imageGen is not null), "RalfAI", tools: tools)
+        // Old tool output is stubbed in what is sent to the model (the session keeps everything) - see ContextCompactor.
+        Action<CompactionStats>? compacted = null;
+        var agentClient = new CompactingChatClient(chatClient, CompactionOptions.FromConfig(config), stats => compacted?.Invoke(stats));
+        var agent = agentClient.AsAIAgent(context.BuildSystemPrompt(targetFolder) + UniversalPrompt(speech is not null, imageGen is not null), "RalfAI", tools: tools)
             .AsBuilder().Use(async (AIAgent _, FunctionInvocationContext fctx,
                 Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>> next, CancellationToken token) =>
             {
@@ -174,6 +177,15 @@ public sealed class AgentEngine
             history.Select(x => new AgentMessage(x.Role, x.Content)).ToList(), limits,
             new UndoJournal(targetFolder, int.TryParse(config["Undo:Keep"], out var keep) && keep >= 0 ? keep : 10), permissions);
         permissionHandler = () => engine.Permission;
+        var reportedItems = 0;
+        compacted = stats =>
+        {
+            var items = stats.Results + stats.Arguments + stats.Images;
+            if (items <= reportedItems) return;           // only say so when more gets compacted
+            reportedItems = items;
+            engine.Notice?.Invoke(new($"Context compacted: {stats.Results} old tool results, {stats.Arguments} large arguments, {stats.Images} images " +
+                                      $"summarised (~{stats.CharsSaved / 4:N0} tokens saved per call).", NoticeLevel.Info));
+        };
         started = x => engine.ToolCallStarted?.Invoke(x);
         completed = x => engine.ToolCallCompleted?.Invoke(x);
         noticeHandler = x => engine.Notice?.Invoke(x);

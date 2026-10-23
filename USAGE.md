@@ -189,6 +189,29 @@ Configurazione (`Permissions` nel config):
 - Limite onesto: `build` e `test` eseguono comunque codice del progetto (target MSBuild, test), e un agente può scrivere un `.csproj` con
   un'azione `Exec`. La politica evita i casi evidenti, non è un sandbox.
 
+### Contesto: compattazione dei risultati vecchi
+
+Ogni chiamata al modello rimanda l'intera conversazione, e in una sessione lunga la maggior parte è output vecchio dei tool: file letti, corpi
+interi di file scritti, log di build, screenshot. RalfAI sostituisce il grosso di ciò che è vecchio con un segnaposto **nella copia inviata al
+modello**; la sessione, il log e `/undo` non cambiano:
+
+- un risultato vecchio diventa `[earlier tool result omitted to save context: 5,016 characters. It began: "...". Call the tool again if you need its content.]`;
+- il corpo di un file scritto, negli argomenti di una vecchia chiamata, diventa i primi 60 caratteri più `[N characters omitted…]` (il percorso resta);
+- le immagini restano solo negli ultimi 2 messaggi dell'utente.
+
+Gli ultimi 20.000 caratteri di output dei tool restano interi, così l'agente conserva la memoria di ciò che sta facendo adesso. I segnaposto sono
+identici a ogni chiamata (e non dipendono dalla lingua del computer), quindi il prefisso del prompt non cambia e la cache del provider continua a servire.
+Con `--debug` compare un avviso quando la compattazione aumenta.
+
+```json
+"Context": { "Compaction": "on", "RecentToolChars": 20000, "CompactMinChars": 600, "KeepImages": 2 }
+```
+
+`Compaction: "off"` la spegne; `RecentToolChars` è la finestra "intera" (più stretta = più risparmio, ma il modello può dover rileggere); sotto
+`CompactMinChars` nulla viene sostituito. **Misure** (sessione di 3 turni su 10 moduli da 76 KB: leggili tutti, rinomina un metodo, due domande):
+token in ingresso circa 256.000 senza compattazione, 178.000 con finestra 30.000, 155.000 con 20.000 (predefinito), 92.000 con 15.000, stessi file e risposte
+corrette, tempi simili. Con 60.000 non si guadagnava nulla. Sessioni molto più lunghe risparmiano di più.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

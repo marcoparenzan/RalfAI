@@ -208,6 +208,12 @@ spinner. Modalità `ask` / `allow` / `deny`, elenchi `Allow` e `Deny` a glob nel
 richiesto di nuovo, nessun gestore (pipe, Studio, Jupyter) = rifiutato con un messaggio chiaro al modello. 42 test, di cui 10 sul motore.
 Dettagli in [USAGE.md](USAGE.md#permessi-sui-comandi). Studio e Jupyter non possono ancora porre la domanda (vedi gli ultimi passi).
 
+### Compattazione dei risultati vecchi dei tool (2026-10-23)
+`CompactingChatClient` + `ContextCompactor` sostituiscono, nella copia inviata al modello, i risultati vecchi dei tool, i corpi dei file scritti e le
+immagini non recenti con segnaposto deterministici (sessione e `/undo` intatti). Finestra "intera" `Context:RecentToolChars` = 20.000 caratteri. Misura su una
+sessione di 3 turni: token in ingresso da circa 256.000 a circa 155.000 (−40%), risposte corrette; 60.000 non faceva risparmiare, quindi il valore
+predefinito è stato scelto sui dati. 22 test. Dettagli in [USAGE.md](USAGE.md#contesto-compattazione-dei-risultati-vecchi).
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità
@@ -215,11 +221,10 @@ L'ordine è un giudizio (piccoli lavori che sbloccano o proteggono quelli succes
 infine ciò che è grande). Quando un punto è fatto passa sotto "✅ Fatto" con la data.
 
 1. **Chiave API in chiaro** (vedi sotto).
-2. **Compattare i risultati vecchi dei tool** nel contesto di una sessione lunga (oggi si limita solo la storia ripresa).
-3. **Log di sessione in JSONL con riassunto** invece di un unico `session.md` riletto per intero a ogni apertura.
-4. **Variante solo ASCII** per i terminali che non disegnano frecce ed emoji.
-5. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
-6. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
+2. **Log di sessione in JSONL con riassunto** invece di un unico `session.md` riletto per intero a ogni apertura.
+3. **Variante solo ASCII** per i terminali che non disegnano frecce ed emoji.
+4. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
+5. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
 
 ### Interfaccia grafica (Desktop/Web)
 Nessuna UI grafica esiste oggi: solo la console (`RalfAI`, Spectre.Console) è implementata. Un
