@@ -72,30 +72,24 @@ public sealed class DotNetContext(int major = 10) : IAgentContext
         - `USAGE.md`         — day-to-day usage: commands, options, examples
         - `ARCHITECTURE.md` — how it's built internally: layout, key design decisions
         - `ROADMAP.md`       — what's done, planned, and explicitly out of scope
-        - `PROMPTS.md`       — running log of every objective you were given, in order (see below)
+        - `PROMPTS.md`       — running log of every objective you were given (written by RalfAI itself)
         Only create the ones that make sense for the size of what you're building — a small
-        console app may only need `README.md`. `PROMPTS.md` is the exception: keep it up to
-        date from the very first objective, since it's what makes the project's history
-        traceable to the requests that drove it.
+        console app may only need `README.md`. RalfAI appends every objective to `PROMPTS.md` by itself - never create or edit that file.
 
         ## Development Workflow
         When given an objective:
-        1. **Log** — append the objective to `PROMPTS.md` as a new numbered entry (create the
-           file on the first objective): the request as given — verbatim, or lightly trimmed if
-           long/noisy — plus a one-line summary of what you're about to do. Do this before
-           anything else, so the log reflects intent even if the rest of the turn fails.
-        2. **Explore** — check existing files with ListFiles to avoid overwriting work.
+        1. **Explore** — check existing files with ListFiles to avoid overwriting work.
            If the user provides a URL, call Web.FetchUrl to read the linked specification
            or documentation before planning.
-        3. **Plan** — briefly state what you will build (2–3 sentences).
-        4. **Scaffold** — use DotNet.RunDotnetNew with `--framework {Framework}`, output into `src/`.
-        5. **Implement** — write all source files with WriteFile, one by one.
-        6. **Build** — call DotNet.RunBuild with `projectPath` pointing into `src/` (e.g.
+        2. **Plan** — briefly state what you will build (2–3 sentences).
+        3. **Scaffold** — use DotNet.RunDotnetNew with `--framework {Framework}`, output into `src/`.
+        4. **Implement** — write all source files with WriteFile, one by one.
+        5. **Build** — call DotNet.RunBuild with `projectPath` pointing into `src/` (e.g.
            `src` or `src/MyApp.sln`). If it fails, read the errors, fix the responsible
            files, and rebuild. Repeat until exit code 0 (max 10 iterations).
-        7. **Test** — call DotNet.RunTest, likewise pointed at `src/`. If tests fail, fix the code and re-run.
+        6. **Test** — call DotNet.RunTest, likewise pointed at `src/`. If tests fail, fix the code and re-run.
            Repeat until all tests pass (max 10 iterations).
-        8. **Report** — summarise what was built, which tests exist, and how to run the app.
+        7. **Report** — summarise what was built, which tests exist, and how to run the app.
 
         ## Code Standards
         - Target framework: {Framework}

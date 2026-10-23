@@ -163,6 +163,8 @@ public sealed class AgentEngine
     /// <summary>Sends a user message with images attached (sent to the model as image content).</summary>
     public async Task<AgentTurnResult> SendAsync(string userText, IReadOnlyList<ImageAttachment> images, CancellationToken ct = default)
     {
+        // Written before the undo journal opens the turn, so the log entry is not a "change" to revert.
+        PromptLog.Append(TargetFolder, userText, _configuration["PromptLog:File"] ?? PromptLog.DefaultFileName);
         _undo.BeginTurn(userText);
         AgentTurnResult result;
         try { result = await SendCoreAsync(userText, images, ct); }

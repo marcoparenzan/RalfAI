@@ -57,25 +57,20 @@ public sealed class MarkdownContext : IAgentContext
         aren't about a software project (notes, specs, etc.), where file names should follow
         the user's own convention or a sensible topic-based one.
 
-        Regardless of what kind of Markdown content this is, also maintain `PROMPTS.md` at the
-        root: a running log of every objective you were given, in order (see Workflow below) —
-        it's what makes the doc set's history traceable to the requests that drove it.
+        Regardless of what kind of Markdown content this is, `PROMPTS.md` at the root is a running log
+        of every objective you were given. RalfAI appends every objective to `PROMPTS.md` by itself - never create or edit that file.
 
         ## Workflow
         When given an objective:
-        1. **Log** — append the objective to `PROMPTS.md` as a new numbered entry (create the
-           file on the first objective): the request as given — verbatim, or lightly trimmed if
-           long/noisy — plus a one-line summary of what you're about to do. Do this before
-           anything else, so the log reflects intent even if the rest of the turn fails.
-        2. **Explore** — check existing files with ListFiles to avoid overwriting work or
+        1. **Explore** — check existing files with ListFiles to avoid overwriting work or
            duplicating content. If the user provides a URL, call Web.FetchUrl to read the
            linked source material before writing.
-        3. **Plan** — briefly state what files you will create or update (2–3 sentences).
-        4. **Write** — produce clear, well-structured Markdown: sensible headings, short
+        2. **Plan** — briefly state what files you will create or update (2–3 sentences).
+        3. **Write** — produce clear, well-structured Markdown: sensible headings, short
            paragraphs, code fences for code, tables where they aid clarity.
-        5. **Review** — re-read what you wrote with ReadFile and fix inconsistencies, broken
+        4. **Review** — re-read what you wrote with ReadFile and fix inconsistencies, broken
            links, or missing sections before reporting.
-        6. **Report** — summarise which files were created or changed and why.
+        5. **Report** — summarise which files were created or changed and why.
 
         ## Rules
         - Keep file names lowercase-with-hyphens unless the user's existing convention differs.

@@ -130,6 +130,23 @@ vuote). Si può ripetere per tornare indietro di più turni.
 - **Configurazione**: `"Undo": { "Keep": 10 }` sono i turni conservati (`0` disattiva tutto). Le copie stanno nella cartella
   del progetto, come il log di sessione: se il progetto contiene segreti, anche le copie li contengono.
 
+### Registro delle richieste (`PROMPTS.md`)
+
+Ogni richiesta che invii viene aggiunta da RalfAI stesso a `PROMPTS.md` nella radice della cartella target, prima che il
+modello cominci a lavorare:
+
+```markdown
+## 31. "Aggiungi lo scenario RUST, con lo scaricamento dello strumento se manca"
+
+_2026-10-23 16:30_
+```
+
+Una richiesta su più righe o più lunga di 100 caratteri ha un titolo breve e il testo completo sotto (fino a 4.000
+caratteri). La numerazione prosegue dal numero più alto già nel file, qualunque formato abbia (`12. "testo"` o
+`## 12. "testo"`), quindi i file scritti a mano o da versioni precedenti continuano a funzionare. Non costa nessuna chiamata
+al modello, che infatti non è più incaricato di scriverlo, e non compare tra le modifiche annullabili con `/undo`.
+Con `"PromptLog": { "File": "" }` si disattiva; un altro nome di file si indica nella stessa chiave.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.

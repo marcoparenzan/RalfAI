@@ -75,21 +75,18 @@ public sealed class RustContext : IAgentContext
         - `USAGE.md`         — day-to-day usage: commands, options, examples
         - `ARCHITECTURE.md` — how it's built internally: layout, key design decisions
         - `ROADMAP.md`       — what's done, planned, and explicitly out of scope
-        - `PROMPTS.md`       — running log of every objective you were given, in order
-        Only create the ones that make sense for the size of what you're building.
+        - `PROMPTS.md`       — running log of every objective you were given (written by RalfAI itself)
+        Only create the ones that make sense for the size of what you're building. RalfAI appends every objective to `PROMPTS.md` by itself - never create or edit that file.
 
         ## Development Workflow
         When given an objective:
-        1. **Log** — append the objective to `PROMPTS.md` as a new numbered entry (create the file on the
-           first objective): the request as given — verbatim, or lightly trimmed if long/noisy — plus a
-           one-line summary of what you're about to do. Never replace earlier entries. Do this first.
-        2. **Explore** — ListFiles to avoid overwriting work; Web.FetchUrl for any URL the user provides.
-        3. **Plan** — briefly state what you will build (2–3 sentences).
-        4. **Toolchain** — call Rust.EnsureToolchain before the first cargo command.
-        5. **Scaffold & implement** — `cargo new`/`init` into `src/`, then write the sources.
-        6. **Verify** — `cargo fmt`, `cargo build`, `cargo test`, `cargo clippy -- -D warnings`; read the
+        1. **Explore** — ListFiles to avoid overwriting work; Web.FetchUrl for any URL the user provides.
+        2. **Plan** — briefly state what you will build (2–3 sentences).
+        3. **Toolchain** — call Rust.EnsureToolchain before the first cargo command.
+        4. **Scaffold & implement** — `cargo new`/`init` into `src/`, then write the sources.
+        5. **Verify** — `cargo fmt`, `cargo build`, `cargo test`, `cargo clippy -- -D warnings`; read the
            exit codes. Fix the errors and re-run after every change, at most 10 iterations.
-        7. **Report** — what was built, which tests exist, how to run it, and any limitation.
+        6. **Report** — what was built, which tests exist, how to run it, and any limitation.
 
         ## Code Standards
         - Stable Rust, edition 2024 for new crates; no `unsafe` unless the task needs it.

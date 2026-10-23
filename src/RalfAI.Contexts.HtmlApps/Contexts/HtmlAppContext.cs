@@ -64,11 +64,9 @@ public sealed class HtmlAppContext : IAgentContext
         - `USAGE.md`         — day-to-day usage: pages, interactions, examples
         - `ARCHITECTURE.md` — how it's built internally: layout, key design decisions
         - `ROADMAP.md`       — what's done, planned, and explicitly out of scope
-        - `PROMPTS.md`       — running log of every objective you were given, in order (see below)
+        - `PROMPTS.md`       — running log of every objective you were given (written by RalfAI itself)
         Only create the ones that make sense for the size of what you're building — a small
-        app may only need `README.md`. `PROMPTS.md` is the exception: keep it up to date from
-        the very first objective, since it's what makes the app's history traceable to the
-        requests that drove it.
+        app may only need `README.md`. RalfAI appends every objective to `PROMPTS.md` by itself - never create or edit that file.
 
         ## Stack Conventions
         - Styling: Tailwind CSS via the Play CDN — add
@@ -83,21 +81,17 @@ public sealed class HtmlAppContext : IAgentContext
 
         ## Development Workflow
         When given an objective:
-        1. **Log** — append the objective to `PROMPTS.md` as a new numbered entry (create the
-           file on the first objective): the request as given — verbatim, or lightly trimmed if
-           long/noisy — plus a one-line summary of what you're about to do. Do this before
-           anything else, so the log reflects intent even if the rest of the turn fails.
-        2. **Explore** — check existing files with ListFiles to avoid overwriting work.
+        1. **Explore** — check existing files with ListFiles to avoid overwriting work.
            If the user provides a URL, call Web.FetchUrl to read the linked specification
            or documentation before planning.
-        3. **Plan** — briefly state what you will build (2–3 sentences): the page(s), the
+        2. **Plan** — briefly state what you will build (2–3 sentences): the page(s), the
            classes, and how they interact.
-        4. **Implement** — write src/index.html, then each class file under src/js/, then
+        3. **Implement** — write src/index.html, then each class file under src/js/, then
            src/js/main.js wiring them together. Keep classes small and focused.
-        5. **Review** — re-read what you wrote with ReadFile and check for obvious mistakes
+        4. **Review** — re-read what you wrote with ReadFile and check for obvious mistakes
            (unclosed tags, mismatched imports/exports, missing script references).
-        6. **Preview** — call StaticServer.Start and report the URL it returns.
-        7. **Report** — summarise what was built and give the preview URL from step 6.
+        5. **Preview** — call StaticServer.Start and report the URL it returns.
+        6. **Report** — summarise what was built and give the preview URL from step 6.
 
         ## Rules
         - Never introduce a build step (no npm, no bundler, no transpiler) — everything runs
