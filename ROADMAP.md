@@ -221,6 +221,12 @@ dei tool accorciati (`Log:ToolOutputChars`) e rotazione oltre `Log:MaxMegabytes`
 modello trova in testa una nota con le richieste precedenti (una riga ciascuna), senza chiamate al modello. Su un progetto reale da 3 MB: avvio 136 ms la prima
 volta e 1 ms dopo. 15 test. Dettagli in [USAGE.md](USAGE.md#log-di-sessione).
 
+### Simboli e terminale: UTF-8 dove si può, ASCII dove serve (2026-10-23)
+Causa del `?` al posto di `❯`, frecce ed emoji: la console Windows con codepage OEM. `TerminalGlyphs` passa a UTF-8 sui terminali che lo supportano
+(o con l'uscita rediretta) e altrimenti sostituisce i simboli con equivalenti ASCII (`Ui:Glyphs` = auto / unicode / ascii, oppure `--ascii`), tenendo le lettere
+accentate. L'input da pipe è letto come UTF-8 (prima "è" diventava `├¿`) e la clipboard di Windows è letta in UTF-8. 12 test. Dettagli in
+[USAGE.md](USAGE.md#simboli-e-terminale---ascii).
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità
@@ -228,9 +234,8 @@ L'ordine è un giudizio (piccoli lavori che sbloccano o proteggono quelli succes
 infine ciò che è grande). Quando un punto è fatto passa sotto "✅ Fatto" con la data.
 
 1. **Chiave API in chiaro** (vedi sotto).
-2. **Variante solo ASCII** per i terminali che non disegnano frecce ed emoji.
-3. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
-4. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
+2. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
+3. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
 
 ### Interfaccia grafica (Desktop/Web)
 Nessuna UI grafica esiste oggi: solo la console (`RalfAI`, Spectre.Console) è implementata. Un

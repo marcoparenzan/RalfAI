@@ -50,6 +50,8 @@ using var fullScreen = FullScreenConsole.Enter();
 
 // Loaded before the folder picker so F4 (open in external editor) can use it there too.
 var configuration = RalfAIConfig.Load(configFlagValue);
+// Before anything is drawn: UTF-8 where the terminal copes, plain-ASCII stand-ins for what the console cannot show.
+TerminalGlyphs.Configure(configuration["Ui:Glyphs"], args.Contains("--ascii", StringComparer.Ordinal));
 var editorCommand = configuration["Editor"] ?? FileBrowser.DefaultEditor;
 
 string targetFolder;

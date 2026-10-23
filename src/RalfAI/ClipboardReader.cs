@@ -13,6 +13,7 @@ public static class ClipboardReader
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
                 UseShellExecute = false,
                 CreateNoWindow = true
             });
@@ -30,7 +31,7 @@ public static class ClipboardReader
     private static (string FileName, string Arguments) GetCommand()
     {
         if (OperatingSystem.IsWindows())
-            return ("powershell.exe", "-NoProfile -NonInteractive -Command Get-Clipboard -Raw");
+            return ("powershell.exe", "-NoProfile -NonInteractive -Command \"[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-Clipboard -Raw\"");
         if (OperatingSystem.IsMacOS()) return ("pbpaste", "");
         return ("sh", "-c \"command -v wl-paste >/dev/null && wl-paste --no-newline || xclip -selection clipboard -o\"");
     }

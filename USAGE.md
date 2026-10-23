@@ -228,6 +228,19 @@ testa trova una **nota** con le richieste precedenti dell'utente, una riga ciasc
 invece di indovinare. Costa poche centinaia di token e non richiede nessuna chiamata al modello. Su un progetto reale da 3 MB: migrazione in 0,1 s la
 prima volta, 1 ms dopo; la storia di ripresa pesa 113 KB.
 
+### Simboli e terminale (`--ascii`)
+
+Frecce, puntini, righe e icone dell'interfaccia hanno bisogno di un terminale che le mostri. Su Windows una console aperta con la codepage OEM (850, 437…)
+non sa rappresentarle e le scrive come `?`: era il `❯` del prompt che compariva come `?`. All'avvio RalfAI sceglie:
+
+- **terminale moderno** (Windows Terminal, VS Code, ConEmu, WSL; un locale UTF-8 su Linux/macOS) o **uscita rediretta** (file, pipe): l'uscita passa a
+  UTF-8 e i simboli si vedono;
+- **altrimenti**: i simboli vengono sostituiti con equivalenti semplici (`→` diventa `->`, `…` diventa `...`, le righe diventano `-`, `✎` diventa `~`,
+  le emoji diventano `[+]`, `(mic)`…). Le lettere accentate si vedono sempre.
+
+Si forza con `"Ui": { "Glyphs": "ascii" }` (valori `auto`, `unicode`, `ascii`; variabile d'ambiente `RALFAI_Ui__Glyphs`) oppure con `--ascii` sulla riga di comando.
+Anche l'input da pipe viene letto come UTF-8 (prima "è" arrivava come `├¿`) e il testo incollato dalla clipboard di Windows non perde più i caratteri fuori dalla codepage OEM.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.
