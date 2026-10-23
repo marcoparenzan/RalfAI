@@ -1,5 +1,0 @@
-D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\publish\RalfAI.Studio.Tool.exe
-D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\publish\RalfAI.Studio.Tool.dll
-D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\publish\RalfAI.Studio.Tool.deps.json
-D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\publish\RalfAI.Studio.Tool.runtimeconfig.json
-D:\Dev\MarcoParenzan\RalfAI\src\RalfAI.Studio.Tool\bin\Release\net10.0\publish\RalfAI.Studio.Tool.pdb

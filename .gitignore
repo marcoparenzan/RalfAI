@@ -1,2 +1,10 @@
 # Built NuGet packages (ops/install-tool.ps1 regenerates them)
 src/nupkg/
+
+# Build output
+bin/
+obj/
+
+# RalfAI state kept inside a project folder that is local to one machine
+.ralfai/undo/
+.ralfai/history.jsonl
