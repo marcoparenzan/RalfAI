@@ -5,7 +5,8 @@
 - `src/RalfAI.Studio`: host WinForms + BlazorWebView (Blazor Hybrid), file tree, Monaco e preview.
 - `src/RalfAI.Contexts.*`: strumenti specifici per tecnologia (`DotNet`, `Rust`, `StaticServer`, immagini).
 - Contesti: file YAML (`ContextStore`, in `src/RalfAI/Profiles`) nella cartella dei contesti e in `<target>/.ralfai/contexts`;
-  quelli forniti sono risorse incorporate (`src/RalfAI/Contexts/Defaults/*.yaml`) scritte su disco al primo avvio.
+  quelli forniti stanno in `config/contexts` (con `index.yaml`), inclusi nel tool e offerti anche online; `ContextSync`
+  li porta nella cartella senza toccare i file modificati dall'utente.
   `ContextRegistry` li elenca a ogni richiesta; l'unico contesto nel codice è `ContextDesignerContext` (`contexts`), che
   crea e modifica gli altri con `ContextsPlugin`. `ToolCatalog` collega i nomi in `tools` agli strumenti.
 - `src/RalfAI.Tests`: test xUnit di editor, metriche, strumenti sui file, `/undo`, limiti e del ciclo del turno (vedi sotto).

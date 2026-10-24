@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -19,14 +18,12 @@ namespace RalfAI.Profiles;
 /// <item><c>&lt;target&gt;/.ralfai/contexts</c>, for contexts that belong to one project.</item>
 /// </list>
 /// Older Markdown profiles (<c>profiles/*.md</c>, see <see cref="ProfileLoader"/>) are still read, under the YAML ones.
-/// The contexts that ship with RalfAI are written to the contexts folder the first time it is used, and from then on they
-/// are ordinary files: edit them, delete them (they do not come back) or add new ones.
+/// The contexts that ship with RalfAI (and those offered by a context source, see <see cref="ContextSync"/>) are written to the
+/// contexts folder, and from then on they are ordinary files: edit them, delete them (they do not come back) or add new ones.
 /// </summary>
 public static class ContextStore
 {
     public const string FolderName = "contexts";
-    private const string SeededListFile = ".defaults";
-    private const string ResourcePrefix = "RalfAI.ContextDefaults.";
 
     private static readonly Regex ValidKey = new("^[a-z0-9][a-z0-9_.-]{0,47}$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
@@ -75,6 +72,7 @@ public static class ContextStore
             foreach (var file in files.Order(StringComparer.OrdinalIgnoreCase))
             {
                 var key = Path.GetFileNameWithoutExtension(file);
+                if (key.Equals("index", StringComparison.OrdinalIgnoreCase)) continue;      // a context source's list, not a context
                 try
                 {
                     result[key] = new Entry(key, Parse(File.ReadAllText(file), key), file, inProject);
@@ -201,54 +199,20 @@ public static class ContextStore
 
     // ── Shipped contexts ─────────────────────────────────────────────────────
 
-    /// <summary>The contexts that ship with RalfAI, as (key, YAML).</summary>
-    public static IEnumerable<(string Key, string Yaml)> Defaults()
-    {
-        var assembly = typeof(ContextStore).Assembly;
-        foreach (var resource in assembly.GetManifestResourceNames().Where(n => n.StartsWith(ResourcePrefix, StringComparison.Ordinal)).Order())
-        {
-            using var stream = assembly.GetManifestResourceStream(resource)!;
-            using var reader = new StreamReader(stream);
-            yield return (resource[ResourcePrefix.Length..^".yaml".Length], reader.ReadToEnd());
-        }
-    }
-
     /// <summary>
-    /// Writes each shipped context the contexts folder has never had. A list of the ones already written is kept, so a context
-    /// the user deleted stays deleted, and a context added by a later version still arrives. Returns the keys written.
+    /// Adds the contexts built into RalfAI that the folder never had and updates the ones still unchanged (<see cref="ContextSync"/>).
+    /// Returns what it did; problems are reported through <paramref name="onError"/>.
     /// </summary>
-    public static IReadOnlyList<string> Seed(Action<string>? onError = null)
+    public static ContextSyncReport? Seed(Action<string>? onError = null)
     {
-        var written = new List<string>();
         try
         {
-            var listPath = Path.Combine(Folder, SeededListFile);
-            var seeded = File.Exists(listPath)
-                ? File.ReadAllLines(listPath).Select(l => l.Trim()).Where(l => l.Length > 0).ToHashSet(StringComparer.OrdinalIgnoreCase)
-                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            var pending = Defaults().Where(d => !seeded.Contains(d.Key)).ToList();
-            if (pending.Count == 0) return written;
-
-            Directory.CreateDirectory(Folder);
-            foreach (var (key, yaml) in pending)
-            {
-                var path = Path.Combine(Folder, key + ".yaml");
-                if (!File.Exists(path) && !File.Exists(Path.Combine(Folder, key + ".yml")))
-                {
-                    File.WriteAllText(path, yaml);
-                    written.Add(key);
-                }
-                seeded.Add(key);
-            }
-            File.WriteAllLines(listPath,
-                ["# Contexts RalfAI has already written here. Delete a line to get that context back at the next start."
-                    , .. seeded.Where(k => !k.StartsWith('#')).Order(StringComparer.OrdinalIgnoreCase)]);
+            return ContextSync.SeedBuiltIn(Folder);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException)
         {
             onError?.Invoke($"{Folder}: cannot write the shipped contexts: {ex.Message}");
+            return null;
         }
-        return written;
     }
 }

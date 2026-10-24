@@ -239,6 +239,17 @@ file invece di essere ignorato. `--export-context` sostituisce `--export-profile
 Nella console le righe degli strumenti mostrano solo la prima frase della descrizione. 30 test nuovi. Dettagli in
 [USAGE.md](USAGE.md#contesti-file-yaml).
 
+### Sorgente dei contesti, versioni, `dotnet10`, publish e global tool (2026-10-24)
+I contesti forniti stanno nel repo in `config/contexts` con un `index.yaml` (versione, data, impronta SHA-256 e impronte
+delle versioni precedenti); gli stessi file sono inclusi nel tool. All'avvio, se `Contexts:Check` è `true` (predefinito)
+o se sono passati `Contexts:CheckEveryDays` giorni, RalfAI legge la sorgente (`Contexts:Source` o `--contexts-source`,
+per difetto la cartella su GitHub), aggiunge i contesti che mancano, aggiorna quelli non modificati, lascia stare quelli
+cambiati (lo dice una volta) e quelli cancellati, poi rimette `Contexts:Check` a `false` nel file di configurazione.
+Stato in `.state.json`; i file della 1.15 non modificati vengono riconosciuti e aggiornati. `dotnet` segue l'ultima
+versione (oggi 10), `dotnet10` è nuovo. Nel gruppo DotNet: `RunPublish` e `InstallGlobalTool` (pack in `.ralfai/nupkg` +
+`dotnet tool update -g`, chiede il permesso). 29 test nuovi. La sorgente GitHub risponde 404 finché `config/contexts` non
+è su `main`. Dettagli in [USAGE.md](USAGE.md#contesti-file-yaml).
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità
@@ -247,7 +258,10 @@ infine ciò che è grande). Quando un punto è fatto passa sotto "✅ Fatto" con
 
 1. **Chiave API in chiaro** (vedi sotto).
 2. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai contesti YAML (un contesto potrebbe elencare i server MCP che usa).
-3. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
+3. **Interfaccia per gestire la configurazione** - finestre di dialogo per le impostazioni (provider, modello, limiti,
+   permessi, contesti, sorgente), scelta di file e cartelle con un browser, ricerca di cartelle. Da decidere se in
+   console (Spectre.Console) o in Studio.
+4. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
 
 ### Interfaccia grafica (Desktop/Web)
 Nessuna UI grafica esiste oggi: solo la console (`RalfAI`, Spectre.Console) è implementata. Un

@@ -2,11 +2,12 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>ralf</AssemblyName><RootNamespace>RalfAI</RootNamespace><NoWarn>$(NoWarn);SKEXP0070;SKEXP0001</NoWarn>
-    <PackAsTool>true</PackAsTool><ToolCommandName>ralf</ToolCommandName><PackageId>RalfAI</PackageId><Version>1.15.2</Version>
+    <PackAsTool>true</PackAsTool><ToolCommandName>ralf</ToolCommandName><PackageId>RalfAI</PackageId><Version>1.16.0</Version>
     <Description>RalfAI — an autonomous coding agent CLI for .NET, Markdown, and HTML/CSS/JS projects.</Description>
   </PropertyGroup>
   <ItemGroup><PackageReference Include="Spectre.Console" Version="0.57.1" /><PackageReference Include="YamlDotNet" Version="16.3.0" /></ItemGroup>
-  <ItemGroup><EmbeddedResource Include="Contexts\Defaults\*.yaml" LogicalName="RalfAI.ContextDefaults.%(Filename)%(Extension)" /></ItemGroup>
+  <ItemGroup><!-- config/contexts is also the online context source (ContextSync.DefaultSource): one copy of the files. -->
+    <EmbeddedResource Include="..\..\config\contexts\*.yaml" LogicalName="RalfAI.ContextDefaults.%(Filename)%(Extension)" /></ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RalfAI.Abstractions\RalfAI.Abstractions.csproj" /><ProjectReference Include="..\RalfAI.Core\RalfAI.Core.csproj" />
     <ProjectReference Include="..\RalfAI.Contexts.DotNet\RalfAI.Contexts.DotNet.csproj" /><ProjectReference Include="..\RalfAI.Contexts.Markdown\RalfAI.Contexts.Markdown.csproj" /><ProjectReference Include="..\RalfAI.Contexts.HtmlApps\RalfAI.Contexts.HtmlApps.csproj" />

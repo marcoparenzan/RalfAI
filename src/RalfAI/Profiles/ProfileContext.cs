@@ -47,6 +47,8 @@ public static class ToolCatalog
                     AIFunctionFactory.Create(dotnet.RunDotnetNew, name: "DotNet_RunDotnetNew"),
                     AIFunctionFactory.Create(dotnet.RunBuild,     name: "DotNet_RunBuild"),
                     AIFunctionFactory.Create(dotnet.RunTest,      name: "DotNet_RunTest"),
+                    AIFunctionFactory.Create(dotnet.RunPublish,   name: "DotNet_RunPublish"),
+                    AIFunctionFactory.Create(dotnet.InstallGlobalTool, name: "DotNet_InstallGlobalTool"),
                     AIFunctionFactory.Create(dotnet.RunCommand,   name: "DotNet_RunCommand"),
                 ];
             },

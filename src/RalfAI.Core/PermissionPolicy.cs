@@ -87,6 +87,9 @@ public sealed class PermissionPolicy
             "DotNet_RunDotnetNew" => string.Join(' ', new[] { "dotnet new", Text("template"), Text("name"), Text("additionalArgs") }.Where(p => p.Length > 0)),
             "DotNet_RunBuild" => ("dotnet build " + Text("projectPath")),
             "DotNet_RunTest" => ("dotnet test " + Text("projectPath")),
+            "DotNet_RunPublish" => string.Join(' ', new[] { "dotnet publish", Text("projectPath"), Text("additionalArgs") }.Where(p => p.Length > 0)),
+            // Packs, then installs software for the user: asks like 'dotnet tool install' does.
+            "DotNet_InstallGlobalTool" => "dotnet tool update -g " + Text("projectPath"),
             "Rust_RunCargo" => "cargo " + Text("arguments"),
             "Rust_RunRustup" => "rustup " + Text("arguments"),
             "Rust_EnsureToolchain" => "rust install-toolchain",

@@ -44,7 +44,8 @@ public sealed class ContextStoreTests : IDisposable
     // ── Shipped contexts ─────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData("dotnet", ".NET 10", "DotNet_RunBuild")]
+    [InlineData("dotnet", ".NET", "DotNet_InstallGlobalTool")]
+    [InlineData("dotnet10", ".NET 10", "DotNet_RunPublish")]
     [InlineData("dotnet11", ".NET 11", "DotNet_RunTest")]
     [InlineData("rust", "Rust", "Rust_RunCargo")]
     [InlineData("markdown", "Markdown", "Web_FetchUrl")]
@@ -64,7 +65,7 @@ public sealed class ContextStoreTests : IDisposable
     {
         ContextRegistry.All().ToList();
 
-        foreach (var key in new[] { "dotnet", "dotnet11", "rust", "markdown", "html" })
+        foreach (var key in new[] { "dotnet", "dotnet10", "dotnet11", "rust", "markdown", "html" })
             Assert.True(File.Exists(Path.Combine(ContextStore.Folder, key + ".yaml")), key);
     }
 
@@ -74,19 +75,8 @@ public sealed class ContextStoreTests : IDisposable
         ContextStore.Seed();
         File.Delete(Path.Combine(ContextStore.Folder, "rust.yaml"));
 
-        Assert.Empty(ContextStore.Seed());
+        Assert.Empty(ContextStore.Seed()!.Added);
         Assert.DoesNotContain(ContextRegistry.All(), c => c.Key == "rust");
-    }
-
-    [Fact]
-    public void AShippedContextTheFolderNeverHadArrivesLater()
-    {
-        ContextStore.Seed();
-        var list = Path.Combine(ContextStore.Folder, ".defaults");
-        File.WriteAllLines(list, File.ReadAllLines(list).Where(l => l != "html"));      // as if 'html' came with a newer version
-        File.Delete(Path.Combine(ContextStore.Folder, "html.yaml"));
-
-        Assert.Equal(["html"], ContextStore.Seed());
     }
 
     [Fact]

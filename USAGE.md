@@ -21,8 +21,18 @@ La testata del prompt riporta sempre `RalfAI v<version>`, context, modello e car
 ### Context .NET 10 e .NET 11
 
 `--context dotnet` genera progetti `net10.0` (C# 14); `--context dotnet11` genera progetti `net11.0`
-(C# 15, serve l'SDK 11 installato per compilarli). Sono due file YAML con gli stessi strumenti e lo stesso
-flusso (scaffold in `src/`, build, test); cambiano framework e versione di C# nel prompt.
+(C# 15, serve l'SDK 11 installato per compilarli). `--context dotnet` segue l'ultima versione uscita (oggi uguale a
+`dotnet10`). Sono file YAML con gli stessi strumenti e lo stesso flusso (scaffold in `src/`, build, test); cambiano
+framework e versione di C# nel prompt.
+
+Oltre a build e test, quando lo chiedi l'agente può:
+
+- **pubblicare** (`DotNet.RunPublish`): `dotnet publish` in Release in `publish/<progetto>`, con runtime
+  (`win-x64`, `linux-x64`…), self-contained, single file o AOT se richiesti;
+- **installare come global tool** (`DotNet.InstallGlobalTool`): aggiunge al .csproj `PackAsTool`, `ToolCommandName` e
+  `Version` se mancano, impacchetta in `.ralfai/nupkg` e installa o aggiorna con `dotnet tool update -g`. Per
+  aggiornare un tool già installato alza `Version`. Chiede il permesso, come ogni installazione; fallisce se il tool
+  è in esecuzione.
 Per cambiare al volo usa `F6`; la scelta è ricordata per cartella in `.ralfai/config.yaml`.
 
 ### Velocità
@@ -339,11 +349,47 @@ prompt: |
    altrimenti `~/.ralfai/contexts`. Mai la cartella d'installazione del tool, che un aggiornamento sostituisce;
 2. `<cartella target>/.ralfai/contexts/`, per i contesti di un solo progetto.
 
-**Contesti forniti.** `dotnet`, `dotnet11`, `rust`, `markdown` e `html` vengono scritti nella cartella dei contesti al
-primo avvio; da lì sono file come gli altri: si possono modificare o cancellare. Un contesto cancellato non torna
-(il file `.defaults` tiene l'elenco di quelli già scritti: togliendo una riga, quel contesto viene riscritto al prossimo
-avvio). Un contesto nuovo portato da una versione successiva arriva da solo; un file modificato non viene mai
-sovrascritto, quindi i miglioramenti futuri ai prompt forniti non toccano quelli già nella cartella.
+**Contesti forniti.** Stanno nel repo in [`config/contexts`](config/contexts), con un `index.yaml` che per ognuno dà
+`version`, `updated` e l'impronta SHA-256 del file (più quelle delle versioni precedenti). Sono: `dotnet` (l'ultima
+versione di .NET, oggi la 10: passerà a 11 quando uscirà), `dotnet10`, `dotnet11`, `rust`, `markdown`, `html`. Gli
+stessi file sono inclusi nel tool, quindi ci sono anche offline. Nella cartella dei contesti:
+
+- un contesto che la cartella non ha mai avuto viene **aggiunto**;
+- una versione più nuova **sostituisce** il file solo se è ancora esattamente quello scritto da RalfAI;
+- un file che hai **modificato non viene mai toccato**: RalfAI dice una volta che c'è una versione nuova;
+- un contesto che hai **cancellato non torna**.
+
+Cosa è stato scritto e quando è in `.state.json`, nella cartella dei contesti (per riavere un contesto cancellato o
+modificato: cancella il file e la sua voce lì dentro).
+
+**Controllo della sorgente.** All'avvio RalfAI può leggere i contesti da una sorgente, per prendere quelli nuovi e gli
+aggiornamenti senza aspettare una versione del tool:
+
+```json
+"Contexts": {
+  "Source": "https://github.com/marcoparenzan/RalfAI/config/contexts",
+  "Check": true,
+  "CheckEveryDays": 0
+}
+```
+
+- `Source`: un indirizzo web o una cartella. Gli indirizzi di pagina GitHub (`github.com/<utente>/<repo>/<percorso>`,
+  anche con `/tree/<ramo>/`) vengono letti dai file grezzi (`raw.githubusercontent.com`, ramo `main` se non indicato).
+  Il valore indicato è quello predefinito. Per una volta sola: `ralf --contexts-source <cartella o indirizzo>`, che
+  controlla sempre.
+- `Check`: `true` (anche quando manca) controlla al prossimo avvio; dopo un controllo riuscito RalfAI lo **rimette a
+  `false` nel file di configurazione**. Rimettilo a `true` per un altro controllo. Il file viene riscritto tenendo
+  tutte le impostazioni (cambia solo l'indentazione); se contiene commenti non viene toccato, e il controllo resta una
+  volta sola.
+- `CheckEveryDays`: se maggiore di 0, controlla anche quando l'ultimo controllo è più vecchio di tanti giorni.
+- Se la sorgente non risponde (offline, 404) RalfAI lo dice in una riga e riprova al prossimo avvio. Un contesto della
+  sorgente non valido (campo sconosciuto, strumento inesistente, nome che non è un nome di file) viene scartato.
+- La sorgente decide i prompt dei contesti che scarichi: usa solo sorgenti di cui ti fidi. Gli strumenti invece restano
+  quelli di RalfAI.
+
+**Pubblicare una versione nuova di un contesto** (nel repo): modifica il file in `config/contexts`, alza `version`,
+aggiorna `updated`, sposta il vecchio `sha256` in `previous` e scrivi il nuovo. Un test controlla che le impronte
+corrispondano ai file.
 
 **Creare un contesto con Ralf.** `ralf --context contexts` (o `F6` → Context designer) e chiedi, per esempio, "crea
 un contesto per script Python con pytest". Il designer elenca gli strumenti disponibili, parte dal contesto più

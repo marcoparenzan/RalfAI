@@ -1,0 +1,33 @@
+# Contexts offered by this source. RalfAI reads this file, then <name>.yaml for each context it needs.
+# When a context changes: raise its version, set updated, move the old sha256 into previous and put the new one
+# (RalfAI.Tests checks that every sha256 matches its file). See USAGE.md, "Contesti".
+updated: 2026-10-24
+contexts:
+  - name: dotnet
+    version: 2
+    updated: 2026-10-24
+    sha256: 3678fe67b68f79723be56f05fca613ef9aeeab400c6247d686fe8fb2c654a170
+    previous:
+      - beed1576b92c886fdc972be57b178cd6374eba22590e70000f9f2235b5d0cade
+  - name: dotnet10
+    version: 1
+    updated: 2026-10-24
+    sha256: 90de52e84c14ae1c90d454b39f5f88e2159d8fe8f8dcc1d1d5001d82d6a15348
+  - name: dotnet11
+    version: 2
+    updated: 2026-10-24
+    sha256: 829003790b47259a8c580ecd20b36ab5f38f5347100bcf8a52515fb4bf6a408d
+    previous:
+      - c6bd7eada067ce6c4b8dd6e042dd34d3b2f7f4a2fbc4708470eaa33862ea9605
+  - name: rust
+    version: 1
+    updated: 2026-10-24
+    sha256: b8fbc23e883b44379ad00fb2a4db7aaf48f209b293ce4c621286f4a0a296b32e
+  - name: markdown
+    version: 1
+    updated: 2026-10-24
+    sha256: d118a7d16a8979469e7bb6fdd6c63176dd339c4d9fda25d0e03558138313e9c3
+  - name: html
+    version: 1
+    updated: 2026-10-24
+    sha256: 83c5c7dc3067c8feb7dc52c43279c21b90830db644d4106776182b2279a8bf8f
