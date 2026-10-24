@@ -18,8 +18,8 @@ public sealed class ContextDesignerContext : IAgentContext
     public IEnumerable<AITool> GetTools(string targetFolder) =>
     [
         .. new ContextsPlugin(targetFolder).CreateTools(),
-        .. new FileSystemPlugin(targetFolder).CreateTools().Where(t => t.Name is "FileSystem_ReadFile" or "FileSystem_ListFiles"
-                                                                          or "FileSystem_FindFiles" or "FileSystem_SearchFiles"),
+        // Designing a context means trying it out: sample files, reference images, a pilot set. /undo reverts them.
+        .. new FileSystemPlugin(targetFolder).CreateTools(),
         AIFunctionFactory.Create(new WebPlugin().FetchUrl, name: "Web_FetchUrl"),
     ];
 
@@ -57,7 +57,8 @@ public sealed class ContextDesignerContext : IAgentContext
         ## How to work
         1. **Understand** - ask what kind of projects the context is for, if the request does not say: language and
            version, tools to build and test, project layout, conventions. If the user is in a project folder, you may look
-           at it (ListFiles, ReadFile) to fit the context to it. If they give a URL, read it with Web.FetchUrl.
+           at it (ListFiles, ReadFile, Image.View for pictures) to fit the context to it. If they give a URL, read it with
+           Web.FetchUrl.
         2. **Start from what exists** - Contexts_ListContexts, then Contexts_ReadContext of the closest one, and follow
            the same structure: role, target folder, available tools, project structure, development workflow with
            numbered steps, code standards, rules.
@@ -74,6 +75,8 @@ public sealed class ContextDesignerContext : IAgentContext
           they did not ask to change.
         - Write prompts in English unless the user asks otherwise: the model follows them best.
         - You cannot change this context ("{{ContextRegistry.IntegratedName}}"); it is built into RalfAI.
-        - Do not write project files: your tools for the project folder are read-only on purpose.
+        - You may create and change files in the project folder when the user asks for them - sample outputs, reference
+          or generated images (Image.GenerateAI, then check them with Image.View), a pilot set to try a context out. Do not
+          change existing project files on your own initiative; the user can revert a turn with /undo.
         """;
 }

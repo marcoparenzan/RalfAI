@@ -422,7 +422,8 @@ corrispondano ai file.
 un contesto per script Python con pytest". Il designer elenca gli strumenti disponibili, parte dal contesto più
 simile, scrive il YAML e lo salva dopo averlo controllato; il nuovo contesto è subito nel menu `F6`. Strumenti del
 designer: `Contexts.ListContexts`, `ReadContext`, `ListTools`, `SaveContext` (ambito `user` o `project`) e
-`DeleteContext`; sui file del progetto può solo leggere.
+`DeleteContext`. Per provare un contesto mentre lo progetta può anche scrivere nel progetto quando glielo chiedi (file di
+esempio, immagini generate con `Image.GenerateAI` e controllate con `Image.View`, un set pilota); `/undo` annulla il turno.
 
 **Regole del file.**
 

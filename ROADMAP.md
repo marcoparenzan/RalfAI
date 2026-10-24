@@ -265,6 +265,11 @@ disegno dell'utente. La sessione non usa più lo schermo alternativo (che non ha
 indietro, e aiuto, menu dei contesti e scelta della cartella si aprono sopra senza cancellarla (`Ui:FullScreen` per il
 comportamento di prima). 9 test nuovi.
 
+### Il Context designer può scrivere nel progetto (2026-10-24)
+Prima era di sola lettura sui file del progetto, e il suo prompt vietava di scriverci: non poteva salvare un set pilota di
+immagini generate per provare il contesto che stava progettando. Ora ha tutti gli strumenti `FileSystem` e la regola di
+scrivere quando l'utente lo chiede, senza cambiare di sua iniziativa i file esistenti; `/undo` resta disponibile.
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità

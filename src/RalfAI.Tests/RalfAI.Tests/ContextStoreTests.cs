@@ -240,12 +240,13 @@ public sealed class ContextStoreTests : IDisposable
     }
 
     [Fact]
-    public void TheDesignerCannotWriteProjectFiles()
+    public void TheDesignerCanWriteProjectFilesToTryAContextOut()
     {
         var names = new ContextDesignerContext().GetTools(Project).Select(t => t.Name).ToList();
         Assert.Contains("Contexts_SaveContext", names);
-        Assert.Contains("FileSystem_ReadFile", names);
-        Assert.DoesNotContain(names, n => n is "FileSystem_WriteFile" or "FileSystem_EditFile" or "FileSystem_DeleteFile");
+        Assert.Contains("FileSystem_WriteFile", names);
+        Assert.Contains("FileSystem_EditFile", names);
+        Assert.Contains("when the user asks", new ContextDesignerContext().BuildSystemPrompt(Project));
     }
 
     [Fact]
