@@ -334,7 +334,8 @@ prompt: |
 **Dove stanno**, dal meno al più forte (a parità di nome vince l'ultimo):
 
 1. la **cartella dei contesti**: `Contexts:Folder` se impostato; altrimenti `contexts\` accanto al file di
-   configurazione esterno (`--config` o `RALFAI_CONFIG_PATH`, per esempio `D:\Configurations\RalfAI\contexts`);
+   configurazione esterno (`--config` o `RALFAI_CONFIG_PATH`, per esempio `D:\Configurations\RalfAI\contexts`;
+   entrambi possono indicare il file oppure la cartella, nel qual caso si usa `config.json`, altrimenti `appsettings.json`);
    altrimenti `~/.ralfai/contexts`. Mai la cartella d'installazione del tool, che un aggiornamento sostituisce;
 2. `<cartella target>/.ralfai/contexts/`, per i contesti di un solo progetto.
 

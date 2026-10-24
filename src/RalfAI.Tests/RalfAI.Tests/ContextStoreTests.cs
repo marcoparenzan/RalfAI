@@ -277,4 +277,28 @@ public sealed class ContextFolderTests
         Assert.Equal(Path.Combine(@"D:\Configurations\RalfAI", "contexts"), ContextStore.DefaultFolder(null, @"D:\Configurations\RalfAI\config.json"));
         Assert.EndsWith(Path.Combine(".ralfai", "contexts"), ContextStore.DefaultFolder(null, null));
     }
+
+    [Fact]
+    public void TheConfigSettingMayNameTheFileOrItsFolder()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"ralf-cfg-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var file = Path.Combine(folder, "config.json");
+            Assert.Equal(file, RalfAIConfig.ExternalPath(file));
+            Assert.Equal(file, RalfAIConfig.ExternalPath(folder));                    // nothing there yet: the file it expects
+
+            File.WriteAllText(Path.Combine(folder, "appsettings.json"), "{}");
+            Assert.Equal(Path.Combine(folder, "appsettings.json"), RalfAIConfig.ExternalPath(folder + Path.DirectorySeparatorChar));
+
+            File.WriteAllText(file, "{}");
+            Assert.Equal(file, RalfAIConfig.ExternalPath($"\"{folder}\""));         // config.json first; quotes from a .cmd are tolerated
+            Assert.Equal(Path.Combine(folder, "contexts"), ContextStore.DefaultFolder(null, RalfAIConfig.ExternalPath(folder)));
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
 }
