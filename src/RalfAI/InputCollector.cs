@@ -450,13 +450,13 @@ public sealed class InputCollector(SpeechService? speech = null, Func<string>? t
         table.AddRow("[grey]F1[/]", "Show this table");
         table.AddRow("[red]F10 / Ctrl+Q[/]", "Quit RalfAI");
         table.AddRow("[yellow]Ctrl+C / Esc / Ctrl+X[/]", "While working: interrupt the current turn");
-        AnsiConsole.Clear();
+        // Drawn over the conversation, which comes back untouched when the panel closes.
+        using var overlay = FullScreenConsole.Overlay();
         AnsiConsole.WriteLine();
         AnsiConsole.Write(Align.Center(table));
         AnsiConsole.WriteLine();
         AnsiConsole.Write(Align.Center(new Markup("[dim]Premi un tasto per tornare…[/]")));
         Console.ReadKey(intercept: true);
-        AnsiConsole.Clear();
     }
 
     private static void ShowHelpOverlayPlain()

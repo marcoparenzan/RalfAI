@@ -69,7 +69,7 @@ public static partial class ImageAttachments
         return (images, warnings);
     }
 
-    public static (ImageAttachment? Image, string? Error) TryLoad(string fullPath)
+    public static (ImageAttachment? Image, string? Error) TryLoad(string fullPath, int maxSide = MaxSide)
     {
         try
         {
@@ -82,11 +82,12 @@ public static partial class ImageAttachments
             var size = Image.Identify(bytes) ?? throw new InvalidDataException("not a readable image");
             var (width, height, resized) = (size.Width, size.Height, false);
 
-            // Large PNG/JPEG screenshots cost many tokens for no gain: shrink to at most 2048 px.
-            if (Math.Max(width, height) > MaxSide && mediaType is "image/png" or "image/jpeg")
+            // Large images cost many tokens for no gain: shrink to at most maxSide px (WebP/GIF are re-encoded as PNG).
+            if (Math.Max(width, height) > maxSide)
             {
                 using var source = Image.Load(bytes);
-                source.Mutate(x => x.Resize(new ResizeOptions { Mode = ResizeMode.Max, Size = new Size(MaxSide, MaxSide) }));
+                source.Mutate(x => x.Resize(new ResizeOptions { Mode = ResizeMode.Max, Size = new Size(maxSide, maxSide) }));
+                if (mediaType is not "image/jpeg") mediaType = "image/png";
                 using var output = new MemoryStream();
                 if (mediaType == "image/png") source.Save(output, new PngEncoder());
                 else source.Save(output, new JpegEncoder { Quality = 90 });

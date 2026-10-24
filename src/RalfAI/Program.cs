@@ -62,13 +62,16 @@ var contextFlagValue = contextFlagIndex >= 0 && contextFlagIndex + 1 < args.Leng
     ? args[contextFlagIndex + 1]
     : null;
 
-// The whole interactive session — folder picker included — runs in the terminal's alternate
-// screen buffer, so nothing leaks into the user's normal scrollback and it's restored exactly
-// as it was on exit (same technique vim/less/htop use). No-ops when output isn't a real console.
-using var fullScreen = FullScreenConsole.Enter();
-
 // Loaded before the folder picker so F4 (open in external editor) can use it there too.
 var configuration = RalfAIConfig.Load(configFlagValue);
+
+// The chat runs in the normal screen buffer so the conversation stays in the terminal's scrollback. Ui:FullScreen true
+// (or --fullscreen) runs the whole session in the alternate buffer instead, like vim/less: nothing is left behind on exit,
+// but there is no scrolling back either. No-op when output isn't a real console.
+using var fullScreen = args.Contains("--fullscreen", StringComparer.Ordinal)
+                       || string.Equals(configuration["Ui:FullScreen"], "true", StringComparison.OrdinalIgnoreCase)
+    ? FullScreenConsole.Enter()
+    : null;
 ConfigureContexts(configuration);
 // --contexts-source <folder or URL> wins over Contexts:Source for this run, and always checks it.
 var sourceFlagIndex = Array.IndexOf(args, "--contexts-source");

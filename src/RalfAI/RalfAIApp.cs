@@ -615,6 +615,7 @@ public sealed class RalfAIApp
         var selected = Math.Max(0, options.FindIndex(o => o.Key == _contextKey));
         (string Key, IAgentContext Context)? choice = null;
 
+        using (FullScreenConsole.Overlay())
         AnsiConsole.Live(RenderContextMenu(options, selected)).Start(ctx =>
         {
             var done = false;
@@ -646,7 +647,6 @@ public sealed class RalfAIApp
             }
         });
 
-        AnsiConsole.Clear();
 
         if (choice is null)
         {
@@ -695,7 +695,6 @@ public sealed class RalfAIApp
     {
         var editorCommand = _config["Editor"] ?? FileBrowser.DefaultEditor;
         var picked = FileBrowser.Pick(_session.TargetFolder, editorCommand);
-        AnsiConsole.Clear();
 
         if (picked is null)
         {
@@ -735,7 +734,6 @@ public sealed class RalfAIApp
         _debug = !_debug;
         FolderConfigStore.SaveDebug(_session.TargetFolder, _debug);
 
-        AnsiConsole.Clear();
         AnsiConsole.MarkupLine(_debug
             ? "  [green]✓ Debug messages: ON[/] [dim](tool calls, rate-limit notices)[/]"
             : "  [dim]✓ Debug messages: OFF[/]");

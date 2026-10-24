@@ -56,6 +56,8 @@ public sealed class FileBrowser
             return string.IsNullOrWhiteSpace(path) ? null : path;
         }
 
+        // Drawn over the conversation, which comes back untouched when the picker closes.
+        using var overlay = FullScreenConsole.Overlay();
         return new FileBrowser(startDirectory, editorCommand).Run();
     }
 

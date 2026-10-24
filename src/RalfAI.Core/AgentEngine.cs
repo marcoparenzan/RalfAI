@@ -113,6 +113,9 @@ public sealed class AgentEngine
             AIFunctionFactory.Create(image.Grayscale, name: "Image_Grayscale"),
             AIFunctionFactory.Create(image.ConvertFormat, name: "Image_ConvertFormat")
         };
+        // Images:View false for a model that cannot take images.
+        var imageView = !string.Equals(config["Images:View"], "false", StringComparison.OrdinalIgnoreCase);
+        if (imageView) tools.Add(AIFunctionFactory.Create(new ImageViewPlugin(targetFolder).View, name: "Image_View"));
         if (speech is not null)
         {
             var plugin = new SpeechPlugin(speech);
@@ -132,8 +135,10 @@ public sealed class AgentEngine
         Action<ToolCallResult>? completed = null;
         // Old tool output is stubbed in what is sent to the model (the session keeps everything) - see ContextCompactor.
         Action<CompactionStats>? compacted = null;
-        var agentClient = new CompactingChatClient(chatClient, CompactionOptions.FromConfig(config), stats => compacted?.Invoke(stats));
-        var agent = agentClient.AsAIAgent(context.BuildSystemPrompt(targetFolder) + UniversalPrompt(speech is not null, imageGen is not null), "RalfAI", tools: tools)
+        // Image.View pictures are attached below the compactor, so they are never counted or stubbed as old images.
+        IChatClient viewingClient = imageView ? new ImageViewingChatClient(chatClient, targetFolder) : chatClient;
+        var agentClient = new CompactingChatClient(viewingClient, CompactionOptions.FromConfig(config), stats => compacted?.Invoke(stats));
+        var agent = agentClient.AsAIAgent(context.BuildSystemPrompt(targetFolder) + UniversalPrompt(speech is not null, imageGen is not null, imageView), "RalfAI", tools: tools)
             .AsBuilder().Use(async (AIAgent _, FunctionInvocationContext fctx,
                 Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>> next, CancellationToken token) =>
             {
@@ -406,7 +411,8 @@ public sealed class AgentEngine
     private static bool Is429(Exception ex) => ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase)
         || ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase) || (ex.InnerException is not null && Is429(ex.InnerException));
     private static string FriendlyToolName(string name) { var i = name.IndexOf('_'); return i > 0 ? name[..i] + "." + name[(i + 1)..] : name; }
-    private static string UniversalPrompt(bool speech, bool imageGen) => "\n\n## Engine tools\nAI.Ask and JPG/PNG manipulation are available."
+    private static string UniversalPrompt(bool speech, bool imageGen, bool imageView) => "\n\n## Engine tools\nAI.Ask and JPG/PNG manipulation are available."
+        + (imageView ? " Image.View shows you image files of the project (PNG, JPEG, GIF, WebP): when the content of a picture matters, look at it instead of guessing from its name." : "")
         + (imageGen ? " Image.GenerateAI is available." : "") + (speech ? " Speech.Speak and Speech.Listen are available." : "")
         + "\n\n## Efficiency\nEvery model round-trip is slow and re-sends the whole conversation. When several tool calls do not depend on each other "
         + "(writing multiple files, reading several files, listing folders), issue them together in the same response instead of one per turn, "

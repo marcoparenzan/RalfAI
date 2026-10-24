@@ -256,6 +256,15 @@ Spectre: le righe andavano a capo in più e i ridisegni (menu `F6`, spinner) sce
 stessa larghezza (misurata come la misura Spectre) e un test lo verifica. Inoltre Windows Terminal aperto come terminale
 predefinito di `cmd` (senza `WT_SESSION`) viene riconosciuto dalla pseudo console, quindi lì i simboli Unicode si vedono.
 
+### L'agente vede le immagini (`Image.View`) e la conversazione si scorre indietro (2026-10-24)
+`Image.View` (strumento del motore, in tutti i contesti) controlla i file e un `ImageViewingChatClient` allega le immagini come
+messaggio utente subito dopo il risultato, solo nel turno in cui sono state chieste: funziona con ogni provider, anche quelli
+che non accettano immagini nei risultati degli strumenti. Fino a 8 per chiamata, `low` 512 px / `high` 1536 px, WebP e GIF
+inclusi, percorsi limitati alla cartella; `Images:View` false per modelli senza visione. Provato col modello vero su un
+disegno dell'utente. La sessione non usa più lo schermo alternativo (che non ha cronologia): la conversazione si scorre
+indietro, e aiuto, menu dei contesti e scelta della cartella si aprono sopra senza cancellarla (`Ui:FullScreen` per il
+comportamento di prima). 9 test nuovi.
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità

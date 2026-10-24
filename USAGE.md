@@ -254,6 +254,30 @@ non sa rappresentarle e le scrive come `?`: era il `❯` del prompt che compariv
 Si forza con `"Ui": { "Glyphs": "ascii" }` (valori `auto`, `unicode`, `ascii`; variabile d'ambiente `RALFAI_Ui__Glyphs`) oppure con `--ascii` sulla riga di comando.
 Anche l'input da pipe viene letto come UTF-8 (prima "è" arrivava come `├¿`) e il testo incollato dalla clipboard di Windows non perde più i caratteri fuori dalla codepage OEM.
 
+### Cronologia: scorrere indietro (`Ui:FullScreen`)
+
+La conversazione resta nella cronologia del terminale: si scorre indietro con la rotella o con la barra di scorrimento.
+Le finestre a tutto schermo (aiuto `F1`, menu dei contesti `F6`, scelta della cartella `F7`) si aprono sopra la
+conversazione e, quando si chiudono, la lasciano com'era. `F5` (`/clear`) pulisce lo schermo di proposito.
+
+Prima tutta la sessione girava nello "schermo alternativo" del terminale (come vim e less), che non ha cronologia. Si può
+ancora scegliere con `"Ui": { "FullScreen": true }` o `--fullscreen`: all'uscita il terminale torna com'era, ma non si scorre
+indietro.
+
+### Vedere le immagini del progetto (`Image.View`)
+
+L'agente può guardare le immagini della cartella (PNG, JPEG, GIF, WebP), non solo leggerne il nome: lo strumento
+`Image.View` riceve fino a 8 percorsi per chiamata e il modello vede le immagini subito dopo. Serve per descrivere uno
+stile grafico, leggere uno screenshot, confrontare versioni di un disegno. Con `detail: low` le immagini sono ridotte a
+512 px (costa poco, basta per stile e composizione); con `high` (predefinito) a 1536 px. Gli SVG sono testo e si leggono
+con `ReadFile`.
+
+- Le immagini sono allegate solo durante il turno che le ha chieste; nei turni dopo resta la descrizione fatta dal modello
+  (non vengono rimandate a ogni richiesta). Per riguardarle l'agente richiama lo strumento.
+- Per un modello che non accetta immagini: `"Images": { "View": false }`.
+- Diverso dagli allegati (`@file.png` o `Ctrl+V` nel prompt), che scegli tu: con `Image.View` è l'agente a decidere quali
+  guardare.
+
 ### Progresso e costi
 
 Lo spinner mostra preparazione, rate limit, attesa modello, tool, estrazione usage e salvataggio.
