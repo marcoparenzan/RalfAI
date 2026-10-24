@@ -243,10 +243,13 @@ prima volta, 1 ms dopo; la storia di ripresa pesa 113 KB.
 Frecce, puntini, righe e icone dell'interfaccia hanno bisogno di un terminale che le mostri. Su Windows una console aperta con la codepage OEM (850, 437…)
 non sa rappresentarle e le scrive come `?`: era il `❯` del prompt che compariva come `?`. All'avvio RalfAI sceglie:
 
-- **terminale moderno** (Windows Terminal, VS Code, ConEmu, WSL; un locale UTF-8 su Linux/macOS) o **uscita rediretta** (file, pipe): l'uscita passa a
-  UTF-8 e i simboli si vedono;
-- **altrimenti**: i simboli vengono sostituiti con equivalenti semplici (`→` diventa `->`, `…` diventa `...`, le righe diventano `-`, `✎` diventa `~`,
-  le emoji diventano `[+]`, `(mic)`…). Le lettere accentate si vedono sempre.
+- **terminale moderno** (Windows Terminal, anche quando apre `cmd` come terminale predefinito; VS Code, ConEmu, WSL; un locale UTF-8
+  su Linux/macOS) o **uscita rediretta** (file, pipe): l'uscita passa a UTF-8 e i simboli si vedono. Su Windows il terminale moderno
+  si riconosce dalla console "pseudo" (ConPTY) che usa, oltre che da `WT_SESSION`;
+- **altrimenti**: i simboli vengono sostituiti con caratteri semplici **della stessa larghezza** (`→` diventa `>`, `…` diventa `.`,
+  le righe diventano `-`, `✎` diventa `~`, un'emoji due caratteri). La stessa larghezza conta: con sostituti più lunghi (`...`) le
+  righe andavano a capo dove Spectre non se l'aspettava, e menu e spinner si ridisegnavano uno sotto l'altro. Le lettere accentate si
+  vedono sempre.
 
 Si forza con `"Ui": { "Glyphs": "ascii" }` (valori `auto`, `unicode`, `ascii`; variabile d'ambiente `RALFAI_Ui__Glyphs`) oppure con `--ascii` sulla riga di comando.
 Anche l'input da pipe viene letto come UTF-8 (prima "è" arrivava come `├¿`) e il testo incollato dalla clipboard di Windows non perde più i caratteri fuori dalla codepage OEM.

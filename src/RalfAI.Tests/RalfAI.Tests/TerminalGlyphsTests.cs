@@ -19,13 +19,13 @@ public sealed class TerminalGlyphsTests
 
     [Fact]
     public void ArrowsBulletsAndPunctuationBecomeTheirAsciiEquivalents()
-        => Assert.Equal("> Type... (@ files . / commands . ^ history) -> v <- - x", Through(Encoding.ASCII, "❯ Type… (@ files · / commands · ↑ history) → ↓ ← — ✗"));
+        => Assert.Equal("> Type. (@ files . / commands . ^ history) > v < - x", Through(Encoding.ASCII, "❯ Type… (@ files · / commands · ↑ history) → ↓ ← — ✗"));
 
     [Fact]
     public void EmojiAreReplacedAsAWholeNotHalfASurrogatePair()
     {
-        Assert.Equal("[+] a.png", Through(Encoding.ASCII, "📎 a.png"));
-        Assert.Equal("(mic) listening (spk)", Through(Encoding.ASCII, "🎤 listening 🔊"));
+        Assert.Equal("+  a.png", Through(Encoding.ASCII, "📎 a.png"));
+        Assert.Equal("o  listening < ", Through(Encoding.ASCII, "🎤 listening 🔊"));
     }
 
     [Fact]
@@ -34,7 +34,22 @@ public sealed class TerminalGlyphsTests
         var sink = new StringWriter();
         var writer = new GlyphFallbackWriter(sink, Encoding.ASCII);
         foreach (var c in "x📎y") writer.Write(c);
-        Assert.Equal("x[+]y", sink.ToString());
+        Assert.Equal("x+ y", sink.ToString());
+    }
+
+    [Fact]
+    public void EveryStandInTakesTheSameColumnsSoSpectreLayoutsAndRedrawsStayAligned()
+    {
+        foreach (var symbol in GlyphFallbackWriter.KnownSymbols.Append("☃").Append("🦀"))
+            Assert.True(GlyphFallbackWriter.Columns(symbol) == GlyphFallbackWriter.Columns(GlyphFallbackWriter.StandIn(symbol)), symbol);
+    }
+
+    [Fact]
+    public void APseudoConsoleCountsAsAModernTerminalEvenWithoutWtSession()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        Assert.Equal(GlyphMode.Unicode, TerminalGlyphs.Decide("auto", false, false, _ => null, pseudoConsole: true));
+        Assert.Equal(GlyphMode.Ascii, TerminalGlyphs.Decide("auto", false, false, _ => null, pseudoConsole: false));
     }
 
     [Fact]
@@ -52,7 +67,7 @@ public sealed class TerminalGlyphsTests
         var oem850 = CodePagesEncodingProvider.Instance.GetEncoding(850)!;
 
         // è, à, ù and the middle dot exist in code page 850; the arrow and the check mark do not.
-        Assert.Equal("è à ù · -> v", Through(oem850, "è à ù · → ✓"));
+        Assert.Equal("è à ù · > v", Through(oem850, "è à ù · → ✓"));
     }
 
     [Fact]
@@ -62,7 +77,7 @@ public sealed class TerminalGlyphsTests
         var writer = new GlyphFallbackWriter(sink, new UTF8Encoding(false), replaceSymbols: true);
         writer.Write("Perché è già → ✓ ─ 📎 · ×");
 
-        Assert.Equal("Perché è già -> v - [+] · ×", sink.ToString());
+        Assert.Equal("Perché è già > v - +  · ×", sink.ToString());
     }
 
     [Fact]

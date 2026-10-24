@@ -11,10 +11,10 @@ public enum GlyphMode { Unicode, Ascii }
 /// Makes the arrows, bullets and emoji of the UI show up - or degrade cleanly. On Windows a console defaults to an OEM code page
 /// (850, 437…) that cannot represent them, so they came out as "?". At startup:
 /// <list type="bullet">
-/// <item><c>unicode</c> (or <c>auto</c> on a terminal known to cope - Windows Terminal, VS Code, ConEmu, or a UTF-8 locale; and always when output
+/// <item><c>unicode</c> (or <c>auto</c> on a terminal known to cope - a pseudo console such as Windows Terminal or VS Code, ConEmu, or a UTF-8 locale; and always when output
 /// is redirected): output is switched to UTF-8.</item>
 /// <item><c>ascii</c> (or <c>auto</c> elsewhere): symbols - arrows, box drawing, bullets, emoji - are replaced by plain equivalents
-/// (<c>→</c> becomes <c>-&gt;</c>, <c>…</c> becomes <c>...</c>, emoji become short words), and so is anything else the console encoding cannot show.
+/// of the same width (<c>→</c> becomes <c>&gt;</c>, <c>…</c> becomes <c>.</c>), and so is anything else the console encoding cannot show.
 /// Accented Latin letters are kept.</item>
 /// </list>
 /// Set it with <c>Ui:Glyphs</c> (auto | unicode | ascii) or <c>--ascii</c>.
@@ -23,7 +23,7 @@ public static class TerminalGlyphs
 {
     public static GlyphMode Configure(string? setting, bool forceAscii = false)
     {
-        var mode = Decide(setting, forceAscii, Console.IsOutputRedirected, Environment.GetEnvironmentVariable);
+        var mode = Decide(setting, forceAscii, Console.IsOutputRedirected, Environment.GetEnvironmentVariable, IsPseudoConsole());
         var utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         try
         {
@@ -47,7 +47,30 @@ public static class TerminalGlyphs
         return mode;
     }
 
-    internal static GlyphMode Decide(string? setting, bool forceAscii, bool outputRedirected, Func<string, string?> env)
+    /// <summary>Whether the console is a ConPTY pseudo console: its window is then a hidden "PseudoConsoleWindow".</summary>
+    private static bool IsPseudoConsole()
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        try
+        {
+            var window = GetConsoleWindow();
+            if (window == IntPtr.Zero) return false;
+            var name = new StringBuilder(64);
+            return GetClassName(window, name, name.Capacity) > 0 && name.ToString() == "PseudoConsoleWindow";
+        }
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    private static extern IntPtr GetConsoleWindow();
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
+
+    internal static GlyphMode Decide(string? setting, bool forceAscii, bool outputRedirected, Func<string, string?> env, bool pseudoConsole = false)
     {
         if (forceAscii) return GlyphMode.Ascii;
 
@@ -62,7 +85,9 @@ public static class TerminalGlyphs
 
         if (OperatingSystem.IsWindows())
         {
-            var modern = env("WT_SESSION") is not null || env("TERM_PROGRAM") is not null || env("ConEmuPID") is not null || env("WSL_DISTRO_NAME") is not null;
+            // A pseudo console is a modern terminal drawing the text (Windows Terminal - also when it opens cmd as the default
+            // terminal, where WT_SESSION is not set - VS Code, …), not the old console window.
+            var modern = pseudoConsole || env("WT_SESSION") is not null || env("TERM_PROGRAM") is not null || env("ConEmuPID") is not null || env("WSL_DISTRO_NAME") is not null;
             return modern ? GlyphMode.Unicode : GlyphMode.Ascii;
         }
 
@@ -74,18 +99,34 @@ public static class TerminalGlyphs
 /// <summary>Passes text through, replacing the characters the target encoding cannot represent with plain equivalents.</summary>
 public sealed class GlyphFallbackWriter : TextWriter
 {
+    // Every stand-in takes exactly as many columns as the character it replaces: Spectre lays text out (wrapping, panels,
+    // live redraws that move the cursor up N lines) before it reaches this writer, so a wider stand-in ("..." for "…")
+    // made lines wrap where Spectre did not expect it and every redraw landed lower on the screen.
     private static readonly Dictionary<string, string> Fallbacks = new()
     {
-        ["…"] = "...", ["—"] = "-", ["–"] = "-", ["−"] = "-", ["‑"] = "-",
+        ["…"] = ".", ["—"] = "-", ["–"] = "-", ["−"] = "-", ["‑"] = "-",
         ["·"] = ".", ["•"] = "*", ["●"] = "*", ["○"] = "o", ["■"] = "#", ["█"] = "#", ["▓"] = "#", ["▒"] = "=", ["░"] = ".",
-        ["→"] = "->", ["←"] = "<-", ["↑"] = "^", ["↓"] = "v", ["↩"] = "<-", ["⇒"] = "=>", ["▶"] = ">", ["❯"] = ">", ["›"] = ">", ["»"] = ">>",
-        ["✻"] = "*", ["✎"] = "~", ["⚠"] = "!", ["⛔"] = "x", ["✓"] = "v", ["✔"] = "v", ["✗"] = "x", ["✘"] = "x", ["×"] = "x",
-        ["📎"] = "[+]", ["🎤"] = "(mic)", ["🔊"] = "(spk)", ["📁"] = "[dir]", ["📄"] = "[file]",
-        ["“"] = "\"", ["”"] = "\"", ["‘"] = "'", ["’"] = "'", ["«"] = "<<",
+        ["→"] = ">", ["←"] = "<", ["↑"] = "^", ["↓"] = "v", ["↩"] = "<", ["⇒"] = ">", ["▶"] = ">", ["❯"] = ">", ["›"] = ">", ["»"] = ">",
+        ["✻"] = "*", ["✎"] = "~", ["⚠"] = "!", ["✓"] = "v", ["✔"] = "v", ["✗"] = "x", ["✘"] = "x", ["×"] = "x",
+        ["⛔"] = "x ", ["📎"] = "+ ", ["🎤"] = "o ", ["🔊"] = "< ", ["📁"] = "# ", ["📄"] = "= ",
+        ["“"] = "\"", ["”"] = "\"", ["‘"] = "'", ["’"] = "'", ["«"] = "<",
         ["─"] = "-", ["━"] = "-", ["═"] = "=", ["│"] = "|", ["┃"] = "|", ["║"] = "|",
         ["┌"] = "+", ["┐"] = "+", ["└"] = "+", ["┘"] = "+", ["├"] = "+", ["┤"] = "+", ["┬"] = "+", ["┴"] = "+", ["┼"] = "+",
         ["╭"] = "+", ["╮"] = "+", ["╰"] = "+", ["╯"] = "+", ["╔"] = "+", ["╗"] = "+", ["╚"] = "+", ["╝"] = "+",
     };
+
+    internal static IEnumerable<string> KnownSymbols => Fallbacks.Keys;
+
+    /// <summary>Columns the element takes on screen, measured the way Spectre measures it.</summary>
+    internal static int Columns(string element) => new Spectre.Console.Rendering.Segment(element).CellCount();
+
+    /// <summary>The stand-in for <paramref name="element"/>, padded or cut to the same number of columns.</summary>
+    internal static string StandIn(string element)
+    {
+        var width = Columns(element);
+        var plain = Fallbacks.TryGetValue(element, out var known) ? known : "?";
+        return plain.Length >= width ? plain[..Math.Max(width, 0)] : plain.PadRight(width);
+    }
 
     private readonly TextWriter _inner;
     private readonly bool _replaceSymbols;
@@ -151,7 +192,7 @@ public sealed class GlyphFallbackWriter : TextWriter
         if (element.Length == 1 && element[0] < 128) return element;
         var isLatinLetterOrPunctuation = element.Length == 1 && element[0] <= 0x024F;     // Latin-1 Supplement, Latin Extended-A/B
         if ((!_replaceSymbols || isLatinLetterOrPunctuation) && CanShow(element)) return element;
-        return Fallbacks.TryGetValue(element, out var plain) ? plain : "?";
+        return StandIn(element);
     }
 
     private bool CanShow(string element)

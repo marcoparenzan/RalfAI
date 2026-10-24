@@ -250,6 +250,12 @@ versione (oggi 10), `dotnet10` è nuovo. Nel gruppo DotNet: `RunPublish` e `Inst
 `dotnet tool update -g`, chiede il permesso). 29 test nuovi. La sorgente GitHub risponde 404 finché `config/contexts` non
 è su `main`. Dettagli in [USAGE.md](USAGE.md#contesti-file-yaml).
 
+### Menu e spinner che si ripetevano in modalità ASCII (2026-10-24)
+I sostituti ASCII erano più lunghi dei simboli (`...` per `…`, `->` per `→`) e venivano applicati dopo l'impaginazione di
+Spectre: le righe andavano a capo in più e i ridisegni (menu `F6`, spinner) scendevano ogni volta. Ora ogni sostituto ha la
+stessa larghezza (misurata come la misura Spectre) e un test lo verifica. Inoltre Windows Terminal aperto come terminale
+predefinito di `cmd` (senza `WT_SESSION`) viene riconosciuto dalla pseudo console, quindi lì i simboli Unicode si vedono.
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità
