@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <PackageId>RalfAI.Providers</PackageId>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Authors>Marco Parenzan</Authors>
     <Description>Provider-agnostic Microsoft.Extensions.AI IChatClient factory (OpenAI, Anthropic, Azure AI Foundry), extracted from RalfAI so any project reading the same config shape can get a chat client without depending on RalfAI's CLI/agent machinery.</Description>
   </PropertyGroup>

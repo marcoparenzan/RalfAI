@@ -192,7 +192,11 @@ public sealed class ImageGenerationService
         form.Add(new StringContent("1"), "n");
         form.Add(new StringContent(size), "size");
         form.Add(new StringContent("high"), "quality");
-        form.Add(new StringContent("high"), "input_fidelity");
+        // Some Foundry image deployments (for example gpt-image-2.5-flare) reject
+        // input_fidelity instead of ignoring it. Only send it to model families
+        // that expose the parameter.
+        if (SupportsInputFidelity(ModelId))
+            form.Add(new StringContent("high"), "input_fidelity");
         form.Add(new StringContent(transparentBackground ? "transparent" : "opaque"), "background");
         form.Add(new StringContent("png"), "output_format");
 
@@ -235,6 +239,9 @@ public sealed class ImageGenerationService
             ? new Uri(value[..^generationPath.Length] + "/images/edits")
             : new Uri(value.TrimEnd('/') + "/images/edits");
     }
+
+    private static bool SupportsInputFidelity(string modelId) =>
+        !modelId.Contains("flare", StringComparison.OrdinalIgnoreCase);
 
     private static Uri BuildFoundryImageEndpoint(string endpoint)
     {

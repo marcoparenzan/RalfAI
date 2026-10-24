@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <PackageId>RalfAI.Core</PackageId>
-    <Version>1.0.4</Version>
+    <Version>1.0.6</Version>
     <Authors>Marco Parenzan</Authors>
     <Description>RalfAI's Agent Framework core (AgentEngine, IAgentContext plumbing, tool-call/progress events, cost history) extracted so other hosts can embed the same agent engine RalfAI's own CLI/Studio use.</Description>
   </PropertyGroup>
