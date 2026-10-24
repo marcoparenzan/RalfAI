@@ -18,9 +18,16 @@ ContextRegistry.ProfileError = msg => Console.Error.WriteLine($"ralf: skipped co
 void ConfigureContexts(Microsoft.Extensions.Configuration.IConfiguration? config)
     => RalfAI.Profiles.ContextStore.Configure(config, RalfAIConfig.ExternalPath(configFlagValue));
 
+// --list-contexts and --export-context print the files' text: UTF-8 when redirected, so "—" and "…" survive `> file.yaml`.
+void ConfigureForPrinting(Microsoft.Extensions.Configuration.IConfiguration? config)
+{
+    ConfigureContexts(config);
+    TerminalGlyphs.Configure(config?["Ui:Glyphs"], args.Contains("--ascii", StringComparer.Ordinal));
+}
+
 if (args.Contains("--list-contexts", StringComparer.Ordinal))
 {
-    ConfigureContexts(TryLoadConfig());
+    ConfigureForPrinting(TryLoadConfig());
     Console.WriteLine($"Contexts folder: {RalfAI.Profiles.ContextStore.Folder}");
     foreach (var (key, ctx) in ContextRegistry.All(Directory.GetCurrentDirectory()))
         Console.WriteLine($"{key,-10} {ctx.Name} — {ctx.Description}");
@@ -32,7 +39,7 @@ var exportIndex = Array.IndexOf(args, "--export-context");
 if (exportIndex < 0) exportIndex = Array.IndexOf(args, "--export-profile");
 if (exportIndex >= 0)
 {
-    ConfigureContexts(TryLoadConfig());
+    ConfigureForPrinting(TryLoadConfig());
     var exportName = exportIndex + 1 < args.Length ? args[exportIndex + 1] : "";
     try
     {
