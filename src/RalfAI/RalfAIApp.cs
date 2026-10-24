@@ -351,7 +351,9 @@ public sealed class RalfAIApp
         // Update the spinner status to the current tool — kept even with debug off, it's
         // transient progress feedback rather than debug noise. Shows the human-readable
         // [Description] instead of the raw Plugin.Function name.
-        _liveStatus?.Status($"[grey]{Markup.Escape(FitStatus(call.Description + "…"))}[/]");
+        // The description is written for the model and often runs to several sentences: the first one says what it does.
+        var description = FirstSentence(call.Description);
+        _liveStatus?.Status($"[grey]{Markup.Escape(FitStatus(description + "…"))}[/]");
 
         // Also leave a permanent line above the spinner — always, not just with --debug — so
         // the screen scrolls through what the agent did instead of only ever showing the
@@ -360,9 +362,15 @@ public sealed class RalfAIApp
         // --debug adds the raw tool name/args on top; the tool's own result preview
         // (OnToolCallCompleted) stays debug-only, that's the genuinely verbose part.
         AnsiConsole.MarkupLine(_debug
-            ? $"  [dim]·[/] [grey]{Markup.Escape(call.Description)}[/] " +
+            ? $"  [dim]·[/] [grey]{Markup.Escape(description)}[/] " +
               $"[dim]({Markup.Escape(call.Name)})[/][dim]({Markup.Escape(call.ArgsPreview)})[/]"
-            : $"  [dim]·[/] [grey]{Markup.Escape(call.Description)}…[/]");
+            : $"  [dim]·[/] [grey]{Markup.Escape(description)}…[/]");
+    }
+
+    private static string FirstSentence(string text)
+    {
+        var end = text.IndexOf(". ", StringComparison.Ordinal);
+        return (end > 0 ? text[..end] : text).TrimEnd('.', ' ');
     }
 
     private void OnToolCallCompleted(ToolCallResult call)

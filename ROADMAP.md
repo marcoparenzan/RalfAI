@@ -227,6 +227,18 @@ Causa del `?` al posto di `❯`, frecce ed emoji: la console Windows con codepag
 accentate. L'input da pipe è letto come UTF-8 (prima "è" diventava `├¿`) e la clipboard di Windows è letta in UTF-8. 12 test. Dettagli in
 [USAGE.md](USAGE.md#simboli-e-terminale---ascii).
 
+### Contesti come file YAML e Context designer (2026-10-24)
+I contesti non sono più nel codice: `dotnet`, `dotnet11`, `rust`, `markdown` e `html` sono file YAML (`name`, `description`,
+`tools`, `prompt`) nella cartella dei contesti, accanto al file di configurazione esterno (o `Contexts:Folder`, o
+`~/.ralfai/contexts`), più `<target>/.ralfai/contexts` per i singoli progetti. Quelli forniti vengono scritti al primo
+avvio e poi sono file come gli altri (cancellati non tornano). L'elenco è letto a ogni richiesta, quindi un file nuovo è
+subito in `F6` e in `--list-contexts`. Nel codice resta solo `contexts` (Context designer), che con gli strumenti
+`Contexts.*` elenca strumenti e contesti, legge, controlla e salva i YAML. Provato col modello vero: ha creato un contesto
+Python valido al primo tentativo. Ora un nome di strumento sbagliato dentro un gruppo esistente (`Web_Fetch`) blocca il
+file invece di essere ignorato. `--export-context` sostituisce `--export-profile`; i vecchi profili `.md` sono ancora letti.
+Nella console le righe degli strumenti mostrano solo la prima frase della descrizione. 30 test nuovi. Dettagli in
+[USAGE.md](USAGE.md#contesti-file-yaml).
+
 ## 📋 Pianificato
 
 ### Prossimi passi, in ordine di priorità
@@ -234,7 +246,7 @@ L'ordine è un giudizio (piccoli lavori che sbloccano o proteggono quelli succes
 infine ciò che è grande). Quando un punto è fatto passa sotto "✅ Fatto" con la data.
 
 1. **Chiave API in chiaro** (vedi sotto).
-2. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai profili esterni.
+2. **Client MCP** - strumenti aggiunti senza ricompilare (database, browser, CI); si abbina ai contesti YAML (un contesto potrebbe elencare i server MCP che usa).
 3. **Studio e kernel Jupyter alla pari della console** - il motore emette già streaming, velocità, allegati, riepilogo delle modifiche e richieste di permesso; manca la parte grafica (oggi in Studio e Jupyter i comandi che chiedono un permesso vengono rifiutati, salvo regole `Permissions:Allow`).
 
 ### Interfaccia grafica (Desktop/Web)

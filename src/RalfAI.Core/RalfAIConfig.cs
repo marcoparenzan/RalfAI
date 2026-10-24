@@ -17,9 +17,16 @@ namespace RalfAI;
 /// </summary>
 public static class RalfAIConfig
 {
-    public static IConfiguration Load(string? explicitConfigPath = null)
+    /// <summary>The external config file in use (--config or RALFAI_CONFIG_PATH), or null for the bundled appsettings.json.</summary>
+    public static string? ExternalPath(string? explicitConfigPath = null)
     {
         var configPath = explicitConfigPath ?? Environment.GetEnvironmentVariable("RALFAI_CONFIG_PATH");
+        return string.IsNullOrWhiteSpace(configPath) ? null : Path.GetFullPath(configPath);
+    }
+
+    public static IConfiguration Load(string? explicitConfigPath = null)
+    {
+        var configPath = ExternalPath(explicitConfigPath);
 
         var builder = new ConfigurationBuilder();
         if (!string.IsNullOrWhiteSpace(configPath))

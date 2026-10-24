@@ -7,40 +7,52 @@ if (args.Contains("--version", StringComparer.Ordinal) || args.Contains("-v", St
     return 0;
 }
 
+// --config wins over the RALFAI_CONFIG_PATH environment variable (see RalfAIConfig.Load).
+var configFlagIndex = Array.IndexOf(args, "--config");
+var configFlagValue = configFlagIndex >= 0 && configFlagIndex + 1 < args.Length
+    ? args[configFlagIndex + 1]
+    : null;
+
+// Contexts are YAML files in a folder next to the config file (or Contexts:Folder); see ContextStore.
+ContextRegistry.ProfileError = msg => Console.Error.WriteLine($"ralf: skipped context {msg}");
+void ConfigureContexts(Microsoft.Extensions.Configuration.IConfiguration? config)
+    => RalfAI.Profiles.ContextStore.Configure(config, RalfAIConfig.ExternalPath(configFlagValue));
+
 if (args.Contains("--list-contexts", StringComparer.Ordinal))
 {
-    ContextRegistry.ProfileError = msg => Console.Error.WriteLine($"ralf: skipped profile {msg}");
+    ConfigureContexts(TryLoadConfig());
+    Console.WriteLine($"Contexts folder: {RalfAI.Profiles.ContextStore.Folder}");
     foreach (var (key, ctx) in ContextRegistry.All(Directory.GetCurrentDirectory()))
         Console.WriteLine($"{key,-10} {ctx.Name} — {ctx.Description}");
     return 0;
 }
 
-// --export-profile <name>: print a built-in context as a profile file, as a starting point
-// for ~/.ralfai/profiles/<name>.md or <target>/.ralfai/profiles/<name>.md.
-var exportIndex = Array.IndexOf(args, "--export-profile");
+// --export-context <name>: print a context as YAML, as a starting point for a new one.
+var exportIndex = Array.IndexOf(args, "--export-context");
+if (exportIndex < 0) exportIndex = Array.IndexOf(args, "--export-profile");
 if (exportIndex >= 0)
 {
+    ConfigureContexts(TryLoadConfig());
     var exportName = exportIndex + 1 < args.Length ? args[exportIndex + 1] : "";
-    var builtIn = ContextRegistry.CreateBuiltIn(exportName);
-    if (builtIn is null)
+    try
     {
-        Console.Error.WriteLine($"Unknown built-in context '{exportName}'. Try: dotnet, markdown, html.");
+        Console.Write(RalfAI.Profiles.ContextStore.ToYaml(ContextRegistry.Create(exportName, Directory.GetCurrentDirectory())));
+        return 0;
+    }
+    catch (ArgumentException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
         return 1;
     }
-    Console.WriteLine(RalfAI.Profiles.ProfileLoader.Export(builtIn));
-    return 0;
 }
 
-var positional = args.Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToArray();
+// Values of flags (--context rust, --config x.json) are not the target folder.
+var flagsWithValue = new[] { "--context", "--config" };
+var positional = args.Where((a, i) => !a.StartsWith("--", StringComparison.Ordinal)
+                                      && (i == 0 || !flagsWithValue.Contains(args[i - 1], StringComparer.Ordinal))).ToArray();
 var contextFlagIndex = Array.IndexOf(args, "--context");
 var contextFlagValue = contextFlagIndex >= 0 && contextFlagIndex + 1 < args.Length
     ? args[contextFlagIndex + 1]
-    : null;
-
-// --config wins over the RALFAI_CONFIG_PATH environment variable (see RalfAIConfig.Load).
-var configFlagIndex = Array.IndexOf(args, "--config");
-var configFlagValue = configFlagIndex >= 0 && configFlagIndex + 1 < args.Length
-    ? args[configFlagIndex + 1]
     : null;
 
 // The whole interactive session — folder picker included — runs in the terminal's alternate
@@ -50,6 +62,7 @@ using var fullScreen = FullScreenConsole.Enter();
 
 // Loaded before the folder picker so F4 (open in external editor) can use it there too.
 var configuration = RalfAIConfig.Load(configFlagValue);
+ConfigureContexts(configuration);
 // Before anything is drawn: UTF-8 where the terminal copes, plain-ASCII stand-ins for what the console cannot show.
 TerminalGlyphs.Configure(configuration["Ui:Glyphs"], args.Contains("--ascii", StringComparer.Ordinal));
 var editorCommand = configuration["Editor"] ?? FileBrowser.DefaultEditor;
@@ -85,8 +98,18 @@ var contextKey = contextFlagValue
     ?? FolderConfigStore.LoadContext(targetFolder)
     ?? configuration["AgentContext"]
     ?? ContextRegistry.DefaultName;
-ContextRegistry.ProfileError = msg => Console.Error.WriteLine($"ralf: skipped profile {msg}");
-IAgentContext context = ContextRegistry.Create(contextKey, targetFolder);
+IAgentContext context;
+try
+{
+    context = ContextRegistry.Create(contextKey, targetFolder);
+}
+catch (ArgumentException ex)
+{
+    // A context remembered by the folder may have been deleted or renamed since: start with the context designer.
+    Console.Error.WriteLine($"ralf: {ex.Message}");
+    contextKey = ContextRegistry.IntegratedName;
+    context = ContextRegistry.Create(contextKey, targetFolder);
+}
 FolderConfigStore.SaveContext(targetFolder, contextKey);
 
 // --debug flag wins, then the target folder's remembered setting, then off by default.
@@ -97,3 +120,9 @@ FolderConfigStore.SaveDebug(targetFolder, debug);
 var app = await RalfAIApp.CreateAsync(configuration, targetFolder, contextKey, context, debug);
 await app.RunAsync();
 return 0;
+
+Microsoft.Extensions.Configuration.IConfiguration? TryLoadConfig()
+{
+    try { return RalfAIConfig.Load(configFlagValue); }
+    catch (Exception ex) when (ex is IOException or InvalidDataException or FormatException) { return null; }
+}

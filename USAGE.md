@@ -21,8 +21,8 @@ La testata del prompt riporta sempre `RalfAI v<version>`, context, modello e car
 ### Context .NET 10 e .NET 11
 
 `--context dotnet` genera progetti `net10.0` (C# 14); `--context dotnet11` genera progetti `net11.0`
-(C# 15, serve l'SDK 11 installato per compilarli). Sono lo stesso context con la versione come parametro:
-stessi tool, stesso flusso (scaffold in `src/`, build, test), cambiano framework e prompt.
+(C# 15, serve l'SDK 11 installato per compilarli). Sono due file YAML con gli stessi strumenti e lo stesso
+flusso (scaffold in `src/`, build, test); cambiano framework e versione di C# nel prompt.
 Per cambiare al volo usa `F6`; la scelta è ricordata per cartella in `.ralfai/config.yaml`.
 
 ### Velocità
@@ -61,7 +61,7 @@ strumenti Rust che servono**, in locale:
   con C++") non vengono installati da RalfAI; se mancano l'agente lo segnala all'avvio.
 - L'output di cargo oltre 30.000 caratteri viene accorciato (inizio e fine) per non appesantire il contesto.
 
-Per un profilo personalizzato in `.ralfai/profiles` basta `tools: [FileSystem, Web, Rust]`.
+Per un contesto personalizzato basta `tools: [FileSystem, Web, Rust]` (vedi [Contesti](#contesti-file-yaml)).
 
 ### Strumenti per i file
 
@@ -317,26 +317,54 @@ Markdig. Monaco è caricato da CDN e richiede connettività al primo avvio.
 .\ops\install-tool.ps1 -Local # manifest locale sotto src
 ```
 
-## Profili esterni
+## Contesti (file YAML)
 
-Oltre ai context incorporati (`dotnet`, `dotnet11`, `rust`, `markdown`, `html`) si possono definire profili come file
-Markdown con frontmatter, senza ricompilare. Si cercano in `~/.ralfai/profiles/*.md` e in
-`<cartella target>/.ralfai/profiles/*.md` (il progetto vince sull'utente, entrambi vincono sui
-built-in con lo stesso nome). Il nome del file è la chiave da usare con `--context` e in `F6`.
+Un contesto dice a RalfAI come lavorare su un tipo di progetto: ruolo, strumenti, flusso, regole. I contesti sono
+**file YAML**, uno per contesto; il nome del file è il nome da usare con `--context` e nel menu `F6`
+(`/switch-context`). Nel codice ne resta uno solo, **`contexts`** (Context designer), che serve a crearli e modificarli.
 
-```markdown
----
-name: Note di riunione
-description: Scrive verbali in Markdown
-tools: [FileSystem, Web_FetchUrl]   # gruppi (FileSystem, Web, DotNet, StaticServer) o singoli tool
----
-Sei un assistente che lavora in {{targetFolder}}. ...
+```yaml
+name: "Note di riunione"                 # nella testata e nel menu
+description: "Scrive verbali in Markdown" # una riga
+tools: [FileSystem, Web_FetchUrl]        # gruppi interi o singoli strumenti
+prompt: |
+  Sei un assistente che lavora in {{targetFolder}}. ...
 ```
 
-- `{{targetFolder}}` nel corpo viene sostituito col percorso assoluto della cartella target.
-- I tool restano codice: il profilo sceglie per nome, non ne definisce di nuovi.
-- Un profilo non valido viene saltato con un avviso su stderr, senza bloccare l'avvio.
-- `ralf --export-profile dotnet` stampa un built-in come profilo, come punto di partenza.
+**Dove stanno**, dal meno al più forte (a parità di nome vince l'ultimo):
+
+1. la **cartella dei contesti**: `Contexts:Folder` se impostato; altrimenti `contexts\` accanto al file di
+   configurazione esterno (`--config` o `RALFAI_CONFIG_PATH`, per esempio `D:\Configurations\RalfAI\contexts`);
+   altrimenti `~/.ralfai/contexts`. Mai la cartella d'installazione del tool, che un aggiornamento sostituisce;
+2. `<cartella target>/.ralfai/contexts/`, per i contesti di un solo progetto.
+
+**Contesti forniti.** `dotnet`, `dotnet11`, `rust`, `markdown` e `html` vengono scritti nella cartella dei contesti al
+primo avvio; da lì sono file come gli altri: si possono modificare o cancellare. Un contesto cancellato non torna
+(il file `.defaults` tiene l'elenco di quelli già scritti: togliendo una riga, quel contesto viene riscritto al prossimo
+avvio). Un contesto nuovo portato da una versione successiva arriva da solo; un file modificato non viene mai
+sovrascritto, quindi i miglioramenti futuri ai prompt forniti non toccano quelli già nella cartella.
+
+**Creare un contesto con Ralf.** `ralf --context contexts` (o `F6` → Context designer) e chiedi, per esempio, "crea
+un contesto per script Python con pytest". Il designer elenca gli strumenti disponibili, parte dal contesto più
+simile, scrive il YAML e lo salva dopo averlo controllato; il nuovo contesto è subito nel menu `F6`. Strumenti del
+designer: `Contexts.ListContexts`, `ReadContext`, `ListTools`, `SaveContext` (ambito `user` o `project`) e
+`DeleteContext`; sui file del progetto può solo leggere.
+
+**Regole del file.**
+
+- `{{targetFolder}}` nel prompt diventa il percorso assoluto della cartella target.
+- `tools` nomina gruppi (`FileSystem`, `Web`, `DotNet`, `Rust`, `StaticServer`, `Contexts`) o singoli strumenti
+  (`FileSystem_ReadFile`). Un nome sbagliato blocca il file con un messaggio che elenca quelli validi.
+- Gli strumenti restano codice: un contesto sceglie quali usare, non ne definisce di nuovi.
+- Un file non valido (campo sconosciuto, prompt mancante, strumento inesistente) viene saltato con un avviso su
+  stderr che indica la riga, senza bloccare l'avvio.
+- Se la cartella ricorda un contesto che non esiste più, RalfAI parte col Context designer.
+
+**Riga di comando.** `ralf --list-contexts` mostra la cartella e i contesti; `ralf --export-context dotnet` stampa un
+contesto come YAML, come punto di partenza.
+
+I vecchi profili Markdown con frontmatter (`~/.ralfai/profiles/*.md`, `<target>/.ralfai/profiles/*.md`) vengono
+ancora letti, con precedenza più bassa dei YAML.
 
 ## Editor: menzioni `@` e cronologia
 

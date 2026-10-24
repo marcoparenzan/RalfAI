@@ -7,17 +7,6 @@ using Xunit;
 public class RustContextTests
 {
     [Fact]
-    public void RegistryIncludesRustWithAllItsTools()
-    {
-        var context = ContextRegistry.CreateBuiltIn("RUST");
-        Assert.IsType<RustContext>(context);
-        var names = context!.GetTools(Path.GetTempPath()).Select(tool => tool.Name).ToList();
-        Assert.Contains("Rust_EnsureToolchain", names);
-        Assert.Contains("Rust_RunCargo", names);
-        Assert.Contains("Rust_RunRustup", names);
-    }
-
-    [Fact]
     public void WorkspaceTraversalIsRejected()
     {
         var root = Path.Combine(Path.GetTempPath(), "rust-workspace");

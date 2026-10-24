@@ -60,6 +60,7 @@ public static class ToolCatalog
                     AIFunctionFactory.Create(rust.RunRustup,       name: "Rust_RunRustup"),
                 ];
             },
+            ["Contexts"] = folder => new ContextsPlugin(folder).CreateTools(),
             ["StaticServer"] = folder =>
             {
                 var server = new StaticServerPlugin(folder);
@@ -72,6 +73,38 @@ public static class ToolCatalog
         };
 
     public static IEnumerable<string> GroupNames => Groups.Keys;
+
+    /// <summary>Every group with its tools, built against <paramref name="targetFolder"/> (used to describe them).</summary>
+    public static IEnumerable<(string Group, IReadOnlyList<AITool> Tools)> Describe(string targetFolder)
+        => Groups.Select(g => (g.Key, (IReadOnlyList<AITool>)g.Value(targetFolder).ToList()));
+
+    /// <summary>Tool names written the short way: a group name where all of its tools are there, single names otherwise.</summary>
+    public static IReadOnlyList<string> Compact(IEnumerable<string> toolNames)
+    {
+        var names = toolNames.ToList();
+        var present = names.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>();
+        var covered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var name in names)
+        {
+            if (covered.Contains(name)) continue;
+            var group = name.Contains('_') ? name[..name.IndexOf('_')] : name;
+            if (Groups.TryGetValue(group, out var factory))
+            {
+                var all = factory(Path.GetTempPath()).Select(t => t.Name).ToList();
+                if (all.All(present.Contains))
+                {
+                    result.Add(group);
+                    covered.UnionWith(all);
+                    continue;
+                }
+            }
+            result.Add(name);
+            covered.Add(name);
+        }
+        return result;
+    }
 
     public static IEnumerable<AITool> Resolve(IEnumerable<string> entries, string targetFolder)
     {
@@ -94,13 +127,18 @@ public static class ToolCatalog
                 throw new ArgumentException(
                     $"Unknown tool '{entry}'. Available groups: {string.Join(", ", Groups.Keys)}");
 
+            var matched = false;
             foreach (var tool in Group(group))
             {
                 var wanted = entry.Contains('_')
                     ? string.Equals(tool.Name, entry, StringComparison.OrdinalIgnoreCase)
                     : true;
+                matched |= wanted;
                 if (wanted && seen.Add(tool.Name)) result.Add(tool);
             }
+            if (!matched)
+                throw new ArgumentException(
+                    $"Unknown tool '{entry}'. {group} has: {string.Join(", ", Group(group).Select(t => t.Name))}");
         }
         return result;
     }

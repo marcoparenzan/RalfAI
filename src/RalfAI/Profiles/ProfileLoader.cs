@@ -3,9 +3,9 @@ using RalfAI.Contexts;
 namespace RalfAI.Profiles;
 
 /// <summary>
-/// Finds and parses profile files (<c>*.md</c> with frontmatter) from, in increasing precedence:
-/// <c>~/.ralfai/profiles</c> and <c>&lt;target&gt;/.ralfai/profiles</c>. The registry key is the
-/// file name without extension.
+/// Reads the older Markdown profile files (<c>*.md</c> with frontmatter) from <c>~/.ralfai/profiles</c> and
+/// <c>&lt;target&gt;/.ralfai/profiles</c>. Contexts are now YAML files (<see cref="ContextStore"/>); these are still
+/// loaded so existing profiles keep working. The registry key is the file name without extension.
 /// </summary>
 public static class ProfileLoader
 {
@@ -17,19 +17,17 @@ public static class ProfileLoader
     public static string ProjectFolder(string targetFolder) =>
         Path.Combine(targetFolder, ".ralfai", FolderName);
 
-    /// <summary>Loaded profiles keyed by name; project profiles override user ones.</summary>
-    public static Dictionary<string, ProfileContext> LoadAll(string? targetFolder, Action<string>? onError = null)
+    /// <summary>The profiles of one folder, keyed by file name.</summary>
+    public static Dictionary<string, (ProfileContext Context, string Path)> LoadFolder(string folder, Action<string>? onError = null)
     {
-        var result = new Dictionary<string, ProfileContext>(StringComparer.OrdinalIgnoreCase);
-        var folders = new List<string> { UserFolder };
-        if (targetFolder is not null) folders.Add(ProjectFolder(targetFolder));
+        var result = new Dictionary<string, (ProfileContext, string)>(StringComparer.OrdinalIgnoreCase);
+        if (!Directory.Exists(folder)) return result;
 
-        foreach (var folder in folders.Where(Directory.Exists))
         foreach (var file in Directory.EnumerateFiles(folder, "*.md").Order(StringComparer.OrdinalIgnoreCase))
         {
             try
             {
-                result[Path.GetFileNameWithoutExtension(file)] = Parse(File.ReadAllText(file), Path.GetFileNameWithoutExtension(file));
+                result[Path.GetFileNameWithoutExtension(file)] = (Parse(File.ReadAllText(file), Path.GetFileNameWithoutExtension(file)), file);
             }
             catch (Exception ex) when (ex is IOException or FormatException or ArgumentException)
             {
@@ -83,22 +81,6 @@ public static class ProfileLoader
         ToolCatalog.Resolve(tools, Path.GetTempPath()).ToList();
 
         return new ProfileContext(name, description, tools, body);
-    }
-
-    /// <summary>Serializes a context as a profile file (used by --export-profile).</summary>
-    public static string Export(IAgentContext context)
-    {
-        // The placeholder survives interpolation, so built-in prompts export as templates.
-        var prompt = context.BuildSystemPrompt(ProfileContext.TargetFolderPlaceholder);
-        var tools = context.GetTools(Path.GetTempPath()).Select(t => t.Name);
-        return $"""
-            ---
-            name: {context.Name}
-            description: {context.Description}
-            tools: [{string.Join(", ", tools)}]
-            ---
-            {prompt}
-            """;
     }
 
     private static string StripComment(string value)

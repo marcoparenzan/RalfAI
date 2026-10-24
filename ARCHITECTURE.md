@@ -3,7 +3,11 @@
 - `src/RalfAI`: frontend CLI Spectre.Console e pacchetto `dotnet tool`.
 - `src/RalfAI.Core`: Agent Framework, provider, strumenti, metriche e storico costi.
 - `src/RalfAI.Studio`: host WinForms + BlazorWebView (Blazor Hybrid), file tree, Monaco e preview.
-- `src/RalfAI.Contexts.*`: contesti DotNet, Markdown e HTML.
+- `src/RalfAI.Contexts.*`: strumenti specifici per tecnologia (`DotNet`, `Rust`, `StaticServer`, immagini).
+- Contesti: file YAML (`ContextStore`, in `src/RalfAI/Profiles`) nella cartella dei contesti e in `<target>/.ralfai/contexts`;
+  quelli forniti sono risorse incorporate (`src/RalfAI/Contexts/Defaults/*.yaml`) scritte su disco al primo avvio.
+  `ContextRegistry` li elenca a ogni richiesta; l'unico contesto nel codice è `ContextDesignerContext` (`contexts`), che
+  crea e modifica gli altri con `ContextsPlugin`. `ToolCatalog` collega i nomi in `tools` agli strumenti.
 - `src/RalfAI.Tests`: test xUnit di editor, metriche, strumenti sui file, `/undo`, limiti e del ciclo del turno (vedi sotto).
 - `ops/install-tool.ps1`: packaging e install/update globale o locale.
 
